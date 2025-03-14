@@ -1,0 +1,367 @@
+## Read in and preprocess raw data
+```{r helper_read_raw_fun}
+#| cache.vars: [read_raw, pick_cutoff, pull_species_cutoff]
+# species_pattern - either "", "^mm10---" or "^GRCh38-"
+
+read_raw <- function(i,
+                     samples_tsv,
+                     species_pattern = "",
+                     organism = NULL,
+                     ncount_min = NA,
+                     ncount_max = NA,
+                     mt_percent_max = NA,
+                     save_qs_dir = "output/seurat_objects/individual/",
+                     h5_folder = "/home/gdrobertslab/lab/Counts_2/",
+                     min_n_cells = 50,
+                     annotate_ref,
+                     annotate_labels,
+                     annotate_species = "") {
+    sample_name <- samples_tsv$Sample_ID[i]
+
+    ncount_min <-
+        pick_cutoff(
+            ncount_min,
+            samples_tsv$subset_nCount_RNA_min[i],
+            0,
+            species_pattern
+        )
+    ncount_max <-
+        pick_cutoff(
+            ncount_max,
+            samples_tsv$subset_nCount_RNA_max[i],
+            Inf,
+            species_pattern
+        )
+    mt_percent_max <-
+        pick_cutoff(
+            mt_percent_max,
+            samples_tsv$subset_percent.mt_max[i],
+            100,
+            species_pattern
+        )
+
+    path_h5 <-
+        paste0(h5_folder, "/", sample_name, "/filtered_feature_bc_matrix.h5")
+
+    counts <- tibble::tibble(sample_name = sample_name)
+
+    if (!file.exists(path_h5)) {
+        stop(paste(sample_name, "h5 file does not exist"))
+    } else {
+        sobj <-
+            rrrSingleCellUtils::tenx_load_qc(
+                h5_file = path_h5,
+                species_pattern = species_pattern,
+                violin_plot = FALSE
+            )
+
+        pre_filt_hist <-
+            rrrSingleCellUtils::feature_hist(
+                sobj,
+                features = c("nCount_RNA", "percent.mt"),
+                cutoff_table = tibble::tibble(
+                    feature = c("nCount_RNA", "percent.mt"),
+                    min_val = c(ncount_min, mt_percent_max),
+                    max_val = c(ncount_max, NA)
+                )
+            )
+        ggplot2::ggsave(
+            paste0(
+                "output/figures/pre_filter_hist_",
+                sample_name,
+                dplyr::if_else(
+                    organism == "",
+                    "",
+                    paste0("_", organism)
+                ),
+                ".pdf"
+            ),
+            pre_filt_hist,
+            width = 10,
+            height = 5
+        )
+
+        counts$n_cells_pre_filter <- ncol(sobj)
+
+        counts$n_cells_post_filter <-
+            sobj@meta.data %>%
+            as.data.frame() %>%
+            filter(
+                nCount_RNA > ncount_min &
+                nCount_RNA < ncount_max &
+                percent.mt < mt_percent_max
+            ) %>%
+            nrow()
+
+        if (counts$n_cells_post_filter >= min_n_cells) {
+            counts$kept <- TRUE
+            sobj <-
+                subset(
+                    sobj,
+                    nCount_RNA > ncount_min &
+                    nCount_RNA < ncount_max &
+                    percent.mt < mt_percent_max
+                ) %>%
+                rrrSingleCellUtils::process_seurat()
+
+            # Add metadata to Seurat object from samples_tsv
+            for (colname in colnames(samples_tsv)) {
+                sobj[[colname]] <- samples_tsv[[colname]][i]
+            }
+
+            # Annotate celltypes
+            sobj <-
+                rrrSingleCellUtils::annotate_celltypes(
+                    sobj,
+                    species = annotate_species,
+                    ref = annotate_ref,
+                    labels = annotate_labels
+                )
+
+            qs::qsave(
+                sobj,
+                dplyr::if_else(
+                    organism == "",
+                    paste0(save_qs_dir, "/", sample_name, ".qs"),
+                    paste0(save_qs_dir, "/", sample_name, "_", organism, ".qs")
+                )
+            )
+
+            message(sample_name, " sobject made and saved")
+
+        } else {
+            counts$kept <- FALSE
+            message(
+                paste0(
+                    sample_name,
+                    " started with ",
+                    ncol(sobj),
+                    " cells but has ",
+                    counts$n_cells_post_filter,
+                    " cells left after filtering which is less than ",
+                    min_n_cells,
+                    " hence it was discarded"
+                )
+            )
+        }
+    }
+    return(counts)
+}
+
+pick_cutoff <- function(arg_provided,
+                        from_sample_tsv,
+                        default,
+                        species_pattern) {
+    from_sample_tsv <- pull_species_cutoff(from_sample_tsv, species_pattern)
+    if (is.na(arg_provided)) {
+        if (is.na(from_sample_tsv)) {
+            return(default)
+        } else {
+            return(from_sample_tsv)
+        }
+    } else {
+        return(arg_provided)
+    }
+}
+
+# Pull the cutoff value from the sample tsv data if it's in there
+pull_species_cutoff <- function(from_sample_tsv,
+                                species_pattern) {
+    if (species_pattern != "") {
+        if (!grepl(
+                # we don't want the caret in the pattern for this
+                stringr::str_remove(species_pattern, "^\\^"),
+                from_sample_tsv
+            )) {
+            stop(
+                "Species pattern provided but not found in from_sample_tsv. ",
+                "Species_pattern: ",
+                species_pattern,
+                ". Cutoff info from sample sheet: ",
+                from_sample_tsv
+            )
+        }
+        cutoff <-
+            stringr::str_match(
+                from_sample_tsv,
+                paste0(stringr::str_remove(species_pattern, "\\^"), "([0-9]+)")
+            )[1, 2]
+        return(as.numeric(cutoff))
+    } else {
+        # If from_sample_tsv has letters in it, species pattern likely there
+        # We need to specify scientific = F so that 100,000 != 1e+05 which
+        # has an "e" :-| and so fails here
+        if (grepl("[a-zA-Z]", format(from_sample_tsv, scientific = FALSE))) {
+            stop(
+                "Sample cutoff value is not just a number but species_pattern ",
+                "not provided. Species_pattern: ",
+                species_pattern,
+                ". Cutoff from sample sheet: ",
+                from_sample_tsv
+            )
+        # Otherwise it's either a number or NA
+        } else {
+            return(from_sample_tsv)
+        }
+    }
+}
+```
+
+```{r helper_gsea_plot}
+#| cache.vars: gsea_dotplot
+gsea_dotplot <- function(data, x_col = "z_score") {
+    lab4plot <-
+        tibble::tibble(
+            y = c(-2.5, 2.5),
+            x = c(0.2, 0.2),
+            label = c("Downregulated", "Upregulated")
+        )
+
+    plot_name <-
+        ggplot2::ggplot() +
+        ggplot2::geom_point(
+            data = data,
+            ggplot2::aes(
+                x = -1 * order,
+                y = get(x_col),
+                color = -log10(padj),
+                size = size
+            ),
+            stat = "identity",
+            alpha = 0.8
+        ) +
+        ggplot2::coord_flip() +
+        ggplot2::geom_text(
+            data = data,                #text for pathways names
+            aes(
+                x = -1 * order,
+                y = get(x_col) + (y_pos * 5),
+                hjust = justify_y,
+                label = pathway
+            ),
+                size = 2,
+                fontface = "bold"
+        ) +
+        geom_text(
+            data = lab4plot,    #text for upregulated/downregulated
+            aes(
+                x = x,
+                y = y,
+                label = label
+            ),
+            fontface = "bold",
+            size = 2.5
+        ) +
+        ggplot2::scale_fill_manual(
+            values = rrrSingleCellUtils::plot_cols,
+            name = paste0(x_col, " > 0")
+        ) +
+        ggplot2::theme(
+            strip.background = ggplot2::element_rect(
+                color = "white",
+                fill = "white"
+            ),
+            panel.grid.major = ggplot2::element_blank(),
+            panel.grid.minor = ggplot2::element_blank(),
+            panel.border = ggplot2::element_blank(),
+            axis.line.x = ggplot2::element_line(color = "black"),
+            axis.line.y = ggplot2::element_blank(),
+            axis.title.x = ggplot2::element_text(size = 7),
+            axis.ticks.y = ggplot2::element_blank(),
+            plot.title = ggplot2::element_text(size = 7, face = "bold"),
+            axis.text.y = ggplot2::element_blank(),
+            axis.text.x = ggplot2::element_text(size = 7),
+            legend.title = ggplot2::element_text(size = 7, face = "bold")
+        ) +
+        ggplot2::labs(
+            title = data$sample[1],
+            y = "NES",
+            x = ""
+        ) +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
+        ggplot2::ylim(-6, 6) +
+        ggplot2::scale_color_gradient(low = plot_cols[2], high = plot_cols[1])
+
+    return(plot_name)
+}
+```
+
+## Confirm that we have HDF5 available
+```{r helper_h5_check}
+#| cache.vars: hdf5_check
+
+#' Check for HDF5 File Support
+#'
+#' This function checks for the availability of HDF5 file support in the current R environment.
+#'
+#' @return Logical value indicating whether HDF5 support is available.
+hdf5_check <- function() {
+    h5_return <-
+        suppressWarnings(
+            try(
+                system(
+                    "which h5pfc",
+                    intern = TRUE,
+                    ignore.stderr = TRUE
+                )
+            )
+        ) |>
+        length() > 0
+    if (!h5_return) {
+        stop(
+            "\nYou need to have h5pfc installed to read in h5_files. ",
+            "Perhaps ml load HDF5 before you start R?\n"
+        )
+    }
+}
+```
+
+## Confirm that Seurat version installed is > 5
+```{r helper_seurat_check}
+#| cache.vars: seurat_version_check
+
+#' Check Seurat Version
+#'
+#' This function checks the version of the Seurat package installed in the R environment.
+#' It ensures that the correct version of Seurat is being used for downstream analysis.
+#'
+#' @return A message indicating the version of Seurat installed.
+seurat_version_check <- function() {
+    if (packageVersion("Seurat") < "5.0.0") {
+        stop(
+            "Please install Seurat version 5.0.0 or higher. ",
+            "You are currently using version ",
+            packageVersion("Seurat")
+        )
+    }
+}
+```
+
+```{r helper_confirm_mclapply_worked}
+#| cache.vars: confirm_mclapply_worked
+#' Confirm mclapply Worked And Dump Error Messages If Not
+#'
+#' This function checks if the `mclapply` function executed successfully on the provided input list.
+#'
+#' @param input_list A list that was processed by `mclapply`.
+#' @return The input list if `mclapply` was successful or the error messages if it failed.
+confirm_mclapply_worked <- function(input_list) {
+    if (length(input_list) == 0) {
+        stop("Empty input list")
+    }
+
+    has_error <- FALSE
+    for (item in input_list) {
+        if (inherits(item, "try-error")) {
+                warning("mclapply failed with error: ", item[[1]])
+            has_error <- TRUE
+        }
+    }
+
+    if (has_error) {
+        stop("mclapply failed")
+    } else {
+        return(input_list)
+    }
+}
+```

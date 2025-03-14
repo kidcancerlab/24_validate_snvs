@@ -1,0 +1,85 @@
+## Merge the mouse data by species and make DimPlots
+```{r merge_dimplots_mouse}
+#| dependson: read_raw_mouse
+sobj_qs_dir <- "output/seurat_objects/individual"
+
+sobj_list <-
+    lapply(
+        samples_tsv$Sample_ID,
+        function(x) {
+            qs::qread(file.path(sobj_qs_dir, paste0(x, "_mouse.qs")))
+    })
+
+merged_sobj_mouse <-
+    merge(sobj_list[[1]], sobj_list[-1]) %>%
+    process_seurat() %>%
+    JoinLayers()
+
+qs::qsave(merged_sobj_mouse, "output/seurat_objects/merged/merged_mouse.qs")
+
+plot_name <-
+    DimPlot(
+        merged_sobj_mouse,
+        group.by = "cell_type",
+        split.by = "Name",
+        label = TRUE,
+        repel = TRUE,
+        ncol = 2
+    ) +
+    theme(aspect.ratio = 1)
+ggsave(
+    "output/figures/dimplot_mouse_cell_type_by_description.pdf",
+    plot_name,
+    width = 10,
+    height = 10
+)
+plot_name
+```
+
+## Table of cell types for mouse data
+```{r merge_mouse_cell_type_table}
+#| dependson: merge_dimplots_mouse
+merged_sobj_mouse <- qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+
+table(merged_sobj_mouse$cell_type, merged_sobj_mouse$Name) %>%
+    as.data.frame() %>%
+    pivot_wider(names_from = "Var2", values_from = "Freq") %>%
+    DT::datatable()
+```
+
+## Merge the human data by species and make DimPlots
+```{r merge_dimplots_human}
+#| dependson: read_raw_human
+sobj_qs_dir <- "output/seurat_objects/individual"
+
+sobj_list <-
+    lapply(
+        samples_tsv$Sample_ID,
+        function(x) {
+            qs::qread(file.path(sobj_qs_dir, paste0(x, "_human.qs")))
+    })
+
+merged_sobj_human <-
+    merge(sobj_list[[1]], sobj_list[-1]) %>%
+    process_seurat() %>%
+    JoinLayers()
+
+qs::qsave(merged_sobj_human, "output/seurat_objects/merged/merged_human.qs")
+
+plot_name <-
+    DimPlot(
+        merged_sobj_human,
+        split.by = "Name",
+        label = TRUE,
+        repel = TRUE,
+        ncol = 2
+    ) +
+    theme(aspect.ratio = 1)
+ggsave(
+    "output/figures/dimplot_human_by_description.pdf",
+    plot_name,
+    width = 10,
+    height = 10
+)
+plot_name
+```

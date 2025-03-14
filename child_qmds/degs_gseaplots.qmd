@@ -1,0 +1,293 @@
+## Differential expression analyses
+We are going to compare between each cell type between:
+
+- PBS and Dox
+- PBS and Magrolimab
+- PBS and Dox+Magrolimab
+- Dox and Dox+Magrolimab
+- Magrolimab and Dox+Magrolimab
+
+This will separate out the effect of each drug and the combination of both drugs.
+
+### Make table of comparisons
+```{r de_cmp_list}
+#| cache.vars: [de_comps, p_adj_cutoff, fc_cutoff, min_de_genes]
+de_comps <-
+    list(
+        pbs_vs_dox     = list(group_1 = "PBS", group_2 = "Dox"),
+        pbs_vs_mag     = list(group_1 = "PBS", group_2 = "Magrolimab"),
+        pbs_vs_dox_mag = list(group_1 = "PBS", group_2 = "Dox+Mag"),
+        dox_vs_dox_mag = list(group_1 = "Dox", group_2 = "Dox+Mag"),
+        mag_vs_dox_mag = list(group_1 = "Magrolimab", group_2 = "Dox+Mag")
+    )
+
+p_adj_cutoff <- 0.05
+fc_cutoff <- 1
+min_de_genes <- 50
+```
+
+### Perform differential expression analysis on mouse data
+```{r de_analyses_mouse}
+#| dependson: [merge_dimplots_mouse, cmp_list]
+#| cache.vars: [de_res_list, fc_list]
+merged_sobj_mouse <- qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+
+cell_types <- unique(merged_sobj_mouse$cell_type)
+min_cells_group <- 20
+
+de_res_list <- list()
+fc_list <- list()
+
+for (one_type in cell_types) {
+    for (de_comparison in names(de_comps)) {
+        label <- paste0(de_comparison, ".", one_type)
+        cell_type_table <-
+            merged_sobj_mouse@meta.data %>%
+            filter(cell_type == one_type &
+                   (Name == de_comps[[de_comparison]]$group_1 |
+                    Name == de_comps[[de_comparison]]$group_2)) %>%
+            group_by(Name) %>%
+            summarise(n = n())
+
+        # Only proceed if we have enough cells in both groups
+        if (nrow(cell_type_table) == 2 &&
+            min(cell_type_table$n, Inf) > min_cells_group) {
+            de_res_list[[label]] <-
+                subset(merged_sobj_mouse, cell_type == one_type) %>%
+                FindMarkers(
+                    group.by = "Name",
+                    ident.1 = de_comps[[de_comparison]]$group_1,
+                    ident.2 = de_comps[[de_comparison]]$group_2,
+                ) %>%
+                rownames_to_column("gene") %>%
+                mutate(
+                    significant = p_val_adj < p_adj_cutoff &
+                    abs(avg_log2FC) > fc_cutoff
+                )
+
+            # Get fold change values for GSEA if we have some DE genes
+            if (nrow(de_res_list[[label]]) > min_de_genes) {
+                fc_list[[label]] <-
+                    subset(merged_sobj_mouse, cell_type == one_type) %>%
+                    FoldChange(
+                        group.by = "Name",
+                        ident.1 = de_comps[[de_comparison]]$group_1,
+                        ident.2 = de_comps[[de_comparison]]$group_2
+                    ) %>%
+                    rownames_to_column("gene") %>%
+                    arrange(desc(avg_log2FC)) %>%
+                    pull(avg_log2FC, name = gene)
+            }
+        }
+    }
+}
+```
+
+### Differential analysis on human tumor cells
+```{r de_analyses_human}
+#| dependson: [merge_dimplots_human, cmp_list]
+#| cache.vars: [de_res_list, fc_list]
+merged_sobj_human <- qs::qread("output/seurat_objects/merged/merged_human.qs")
+
+for (de_comparison in names(de_comps)) {
+    de_res_list[[paste0(de_comparison, ".tumor")]] <-
+        FindMarkers(
+            merged_sobj_human,
+            group.by = "Name",
+            ident.1 = de_comps[[de_comparison]]$group_1,
+            ident.2 = de_comps[[de_comparison]]$group_2,
+        ) %>%
+        rownames_to_column("gene") %>%
+        mutate(
+            significant = p_val_adj < p_adj_cutoff &
+                abs(avg_log2FC) > fc_cutoff,
+            group_1 = de_comps[[de_comparison]]$group_1,
+            group_2 = de_comps[[de_comparison]]$group_2
+        ) %>%
+        left_join(
+            subset(
+                merged_sobj_human,
+                Name == de_comps[[de_comparison]]$group_1 |
+                    Name == de_comps[[de_comparison]]$group_2
+            ) %>%
+                AverageExpression(group.by = "Name") %>%
+                unlist() %>%
+                as.data.frame() %>%
+                rownames_to_column("gene") %>%
+                rename_with(
+                    ~ str_remove(., "^RNA.") %>% paste0("_avg_expr"),
+                    .cols = -gene
+                )
+        )
+
+    n_de_genes <-
+        filter(
+            de_res_list[[paste0(de_comparison, ".tumor")]],
+            significant == TRUE
+        ) %>%
+        nrow()
+
+    # Get fold change values for GSEA if we have some DE genes
+    if (n_de_genes > min_de_genes) {
+        fc_list[[paste0(de_comparison, ".tumor")]] <-
+            FoldChange(
+                merged_sobj_human,
+                group.by = "Name",
+                ident.1 = de_comps[[de_comparison]]$group_1,
+                ident.2 = de_comps[[de_comparison]]$group_2
+            ) %>%
+            rownames_to_column("gene") %>%
+            arrange(desc(avg_log2FC)) %>%
+            pull(avg_log2FC, name = gene)
+    }
+}
+```
+
+## Create volcano plots and save DE results
+```{r de_volcano_plots}
+#| results: "asis"
+#| dependson: [de_analyses_mouse, de_analyses_human]
+volc_plots <- list()
+for (comparison in names(de_res_list)) {
+    if (nrow(de_res_list[[comparison]]) > 0) {
+        volc_plots[[comparison]] <-
+            de_res_list[[comparison]] %>%
+            ggplot(
+                aes(
+                    x = avg_log2FC,
+                    y = -log10(p_val),
+                    color = significant
+                )
+            ) +
+            geom_point(alpha = 0.5) +
+            ggrepel::geom_text_repel(
+                data = . %>% filter(significant),
+                aes(label = gene),
+                size = 2
+            ) +
+            labs(
+                x = "log2 fold change",
+                y = "-log10(p-value)",
+                title = comparison,
+                color = "Significant"
+            )
+        ggsave(
+            paste0("output/figures/volcano_plots/volcano_", comparison, ".png"),
+            volc_plots[[comparison]],
+            width = 6,
+            height = 5
+        )
+
+        de_res_list[[comparison]] %>%
+            write_tsv(paste0("output/degs/", comparison, ".tsv"))
+    }
+}
+
+# Make a tabset of volcano plots
+qreport::maketabs(volc_plots)
+```
+
+## Venn diagram of tumor DE genes for different comparisons
+This will show how many genes are differentially expressed across the different comparisons.
+```{r de_venn_diagram}
+#| dependson: de_analyses_human
+#| fig.height: 10
+#| fig.width: 10
+tumor_comps <-
+    lapply(
+        de_res_list[grep("tumor", names(de_res_list), value = TRUE)],
+        function(x) {
+            filter(x, significant == TRUE) %>%
+                pull(gene)
+    })
+
+tumor_venn <-
+    ggvenn::ggvenn(tumor_comps, padding = 0.5)
+ggsave(
+    "output/figures/venn_tumor_degs.pdf",
+    tumor_venn,
+    width = 10,
+    height = 10
+)
+tumor_venn
+```
+
+## GSEA analysis
+This will identify pathways that are enriched in the differentially expressed genes.
+```{r de_gsea}
+#| results: "asis"
+#| dependson: [de_analyses_human, de_analyses_mouse, helper_gsea_plot]
+
+#GSEA Miltilevel
+cat_tib <- dplyr::tribble(
+    ~category, ~subcategory,   ~cat_expl,
+    "H",        "",            "Hallmark_paths",
+    "C2",      "CP:KEGG",      "KEGG",
+    "C3",      "TFT:GTRD",     "Transcription_factor_targets",
+    "C5",      "GO:BP",        "GO Biological Process",
+    "C5",      "GO:MF",        "GO Molecular Function",
+    "C6",       "",            "Oncogenic_signature")
+
+gsea_plot_list <- list()
+
+set.seed(1337)
+for (cmp_group in names(fc_list)) {
+    species <-
+        if_else(
+            grepl("tumor", cmp_group),
+            "Homo sapiens",
+            "Mus musculus"
+        )
+    for (i in seq_len(nrow(cat_tib))) {
+        gsea_ref <-
+            msigdbr::msigdbr(
+                species = species,
+                category = cat_tib$category[i],
+                subcategory = cat_tib$subcategory[i]
+            ) %>%
+                split(x = .$gene_symbol, f = .$gs_name)
+
+        gsea_output <-
+            fgsea::fgseaMultilevel(
+                gsea_ref,
+                fc_list[[cmp_group]],
+                minSize = 10,
+                maxSize = 500,
+                nPermSimple = 10000
+            ) %>%
+                filter(padj < 0.05) %>%
+                arrange(desc(NES)) %>%
+                select(-leadingEdge) %>%
+                mutate(
+                    order = seq_len(n()),
+                    justify_y = if_else(NES > 0, 1, 0),
+                    y_pos = if_else(NES > 0, -0.1, 0.1)
+                )
+
+        if (nrow(gsea_output) > 0) {
+            write_tsv(
+                gsea_output,
+                paste0("output/gsea/gsea_", cmp_group, ".tsv")
+            )
+
+            gsea_plot_list[[paste(cmp_group, cat_tib$cat_expl[i])]] <-
+                gsea_dotplot(gsea_output, x_col = "NES")
+
+            ggsave(
+                paste0(
+                    "output/figures/gsea/gsea_",
+                    cmp_group, "_",
+                    cat_tib$cat_expl[i],
+                    ".png"
+                ),
+                gsea_plot_list[[paste(cmp_group, cat_tib$cat_expl[i])]],
+                width = 6,
+                height = 5
+            )
+        }
+
+    }
+}
+
+qreport::maketabs(gsea_plot_list)
+```

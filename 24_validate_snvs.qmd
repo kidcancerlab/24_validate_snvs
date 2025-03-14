@@ -1,0 +1,140 @@
+---
+title: "Placeholder Title For Template"
+author: "You!"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
+format:
+    html:
+        toc: true
+        toc_float: true
+        toc_depth: 5
+        number_sections: false
+        code-fold: true
+        code-link: true
+        df-print: kable
+        embed-resources: true
+        self_contained: true
+execute:
+    cache: true
+knitr:
+    opts_chunk:
+        cache.lazy: false
+        cache.vars: ""
+        warning: false
+        message: false
+lightbox: true
+---
+
+```{r setup}
+#| include: FALSE
+library(rrrSingleCellUtils)
+library(Seurat)
+library(tidyverse)
+theme_set(theme_bw())
+theme_update(plot.title = element_text(hjust = 0.5))
+
+set.seed(1337)
+```
+
+# Load in functions
+
+{{< include child_qmds/helper_functions.qmd >}}
+
+# Set up directory structure
+```{bash mkdirs}
+for directoryName in \
+    output \
+    output/counts \
+    output/degs \
+    output/gsea \
+    output/figures \
+    output/figures/volcano_plots \
+    output/figures/gsea \
+    output/seurat_objects/individual \
+    output/seurat_objects/merged
+do
+    if [ ! -d ${directoryName} ]
+    then
+        mkdir -p ${directoryName}
+    fi
+done
+```
+
+## Check required software is available
+```{r h5_check}
+#| cache: false
+hdf5_check()
+
+seurat_version_check()
+```
+
+Control: do this on 10x flex single cell data
+
+potential datasets for validation
+
+- GSE246498
+    - ZsGreen in tumor cells
+    - I think this has no tumor cells
+- GSE247228
+    - lentiviral green fluorescent protein (GFP) in tumor cells
+    - data looks like it will work
+    - https://pmc.ncbi.nlm.nih.gov/articles/PMC10830842/
+- GSE179077
+    - fluorescent UnaG reporter in tumor cells
+    - https://pmc.ncbi.nlm.nih.gov/articles/PMC10527169/
+    - data looks good
+- GSE201615
+    - Cas9 in tumor cells
+    - https://pmc.ncbi.nlm.nih.gov/articles/PMC9249098/
+    - data looks good, wonder if low UMI counts
+- GSE158700
+    - Cas9 and EGFP
+    - https://pmc.ncbi.nlm.nih.gov/articles/PMC8168823/
+    - this may be a bit tough as the tumors were induced by KO
+- GSE215239
+    - GFP and luciferase in tumor cells
+    - no paper yet
+    - has no tumor controls
+    - likely would work, needs testing
+- GSE189856
+    - pEGFP in some tumor cells, I think?
+    - https://pmc.ncbi.nlm.nih.gov/articles/PMC10468402/#Sec11
+    - not sure if it's good
+- GSE215394
+    - GFP in tumor cells
+    - https://pmc.ncbi.nlm.nih.gov/articles/PMC10951347/
+    - meh? All cells seem bunched, only tumor and macs?
+- GSE232335 <- gfp normal cells
+    - I don't think there are tumor cells in the data
+
+maybe human data to use:
+tumor[title] AND "homo sapiens"[orgn] AND ("single cell" OR "singlecell" OR "single-cell") AND "10x" NOT "sorted"
+- GSE253013
+
+Make fasta
+make gtf
+
+Make new reference with cat of mouse and tumor markers
+
+Align to new ref
+
+
+# Read in raw data and process to Seurat objects
+The metadata for all samples is stored in misc/sample_metadata.tsv.
+
+Note that in the sample_metadata, for samples with multiple references, the cutoff format is "GRCh38-40000;mm10---20000" where the species_pattern is at the beginning of the string, followed by the cutoff value (no dash or anything). This is split from the second cutoff value by a semicolon. If there is only one reference, just use the cutoff value, no species pattern is needed.
+
+{{< include child_qmds/read_raw_data.qmd >}}
+
+# Merge the data by species and make DimPlots
+
+{{< include child_qmds/merge_dimplots.qmd >}}
+
+# Run differential expression and GSEA
+
+{{< include child_qmds/degs_gseaplots.qmd >}}
+
+
+# Session info
+```{r session_info}
+sessionInfo()
+```
