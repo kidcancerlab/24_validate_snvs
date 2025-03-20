@@ -1,0 +1,19 @@
+Before I download all the available data, I'm going to test it on the control samples from GSE247228.
+
+The sra Run numbers are as follows:
+    - SRR26705626
+    - SRR26705627
+    - SRR26705629
+
+## Get FASTQ Files
+
+I'll be using SRA-Toolkit/2.10.8 for this. Specifically, the `fasterq-dump` function.
+
+```{bash get-computing-power}
+srun_l -c 12 -p himem --x11 --pty bash
+```
+
+```{bash get-fastqs}
+ml SRA-Toolkit/2.10.8
+fasterq-dump -O input/fastqs SRR26705626 SRR26705627 SRR26705629
+```

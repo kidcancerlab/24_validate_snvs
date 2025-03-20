@@ -1,5 +1,5 @@
 ---
-title: "Placeholder Title For Template"
+title: "Get "
 author: "You!"
 date: "`r format(Sys.time(), '%m/%d/%Y')`"
 format:
@@ -50,7 +50,9 @@ for directoryName in \
     output/figures/volcano_plots \
     output/figures/gsea \
     output/seurat_objects/individual \
-    output/seurat_objects/merged
+    output/seurat_objects/merged \
+    input \
+    input/fastqs
 do
     if [ ! -d ${directoryName} ]
     then
