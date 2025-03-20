@@ -1,2 +1,4 @@
+#Folders that will be recreated by running code
 output
 input
+custom_ref

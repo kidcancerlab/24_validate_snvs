@@ -52,7 +52,8 @@ for directoryName in \
     output/seurat_objects/individual \
     output/seurat_objects/merged \
     input \
-    input/fastqs
+    input/fastqs \
+    custom_ref
 do
     if [ ! -d ${directoryName} ]
     then
