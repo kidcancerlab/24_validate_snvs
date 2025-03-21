@@ -54,7 +54,11 @@ cellranger mkref --output-dir custom_ref/demo_GFP \
     --genome demo_GFP \
     --fasta custom_ref/genome.fa \
     --genes custom_ref/genes.gtf
+```
 
+## Make BAMs Aligned to New Genome
+
+```{r mk-bams}
 # We need to convert our fastq names to a cellranger compatible format
 # I'll just be doing this for SRR26
 mv input/fastqs/SRR26705626/SRR26705626_1.fastq \
@@ -73,3 +77,27 @@ done
 #run cellranger count!
 sbatch cellranger_count.sh
 ```
+
+## Look at New Object
+
+```{r}
+sobj <- tenx_load_qc("counts/SRR26705626/outs/filtered_feature_bc_matrix", violin_plot = FALSE)
+
+sum(rownames(sobj) == "GFP")
+
+feature_hist(sobj,
+             features = c("nCount_RNA", "percent.mt"),
+             cutoff_table =
+    tribble(~feature, ~min_val, ~max_val,
+            "nCount_RNA", 1200, 50000,
+            "percent.mt", 0, 10))
+
+sobj <- subset(sobj,
+               nCount_RNA >= 1200 &
+               nCount_RNA <= 50000 &
+               percent.mt < 10) %>%
+    process_seurat()
+```
+
+Weirdly, I'm not seeing any GFP expression in any of the cells. I'm going to pull in the counts matrix to make sure that GFP was present in there to begin with (which I believe it should be).
+
