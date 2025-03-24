@@ -29,11 +29,14 @@ I will first need to create a file named GFP.fa containing the nucleotide sequen
 grep -v "^>" custom_ref/GFP.fa | tr -d "\n" | wc
 #922 bases
 
-#lets make a custom gtf for gfp; \t helps us make new columns that are needed in the gtf
-echo -e 'GFP\tunknown\texon\t1\t922\t.\t+\t.\tgene_id "GFP"; transcript_id "GFP"; gene_biotype "proetin_coding";' > custom_ref/GFP.gtf
+#lets make a custom gtf for gfp; \t helps us make new columns that are needed in the gtf; we need both the exon and transcript lines 
+echo -e 'GFP\tunknown\texon\t1\t922\t.\t+\t.\tgene_id "GFP"; transcript_id "GFP"; gene_biotype "proetin_coding";\n'\
+'GFP\tunknown\ttranscript\t1\t922\t.\t+\t.\tgene_id "GFP"; transcript_id "GFP"; gene_biotype "proetin_coding";\n'\
+'GFP\tunknown\tgene\t1\t922\t.\t+\t.\tgene_id "GFP"; gene_name "GFP"; gene_biotype "proetin_coding";' > custom_ref/GFP.gtf
 
 #copy mm10 reference FASTA over (so we can modify it and not screw up the og)
 cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa custom_ref/genome.fa
+chmod 744 custom_ref/*
 
 #append GFP.fa to end of mm10 genome
 cat custom_ref/GFP.fa >> custom_ref/genome.fa
@@ -56,15 +59,69 @@ cellranger mkref --output-dir custom_ref/demo_GFP \
     --genes custom_ref/genes.gtf
 ```
 
+## See why no GFP reads
+
+### Gonna try aligning to reference with just gfp
+```{bash just-gfp-ref}
+cellranger mkref --output-dir custom_ref/just_GFP \
+    --genome just_GFP \
+    --fasta custom_ref/GFP.fa \
+    --genes custom_ref/GFP.gtf
+
+mkdir just_gfp_counts
+cellranger count \
+    --id SRR26705626 \
+    --output-dir just_gfp_counts/SRR26705626 \
+    --fastqs input/fastqs/SRR26705626/ \
+    --localcores 10 \
+    --transcriptome custom_ref/just_GFP \
+    --nosecondary \
+    --disable-ui \
+    --create-bam true
+
+## see how many reads map to gfp chromosome
+samtools idxstat just_gfp_counts/SRR26705626/outs/possorted_genome_bam.bam
+```
+
+### Going to add gfp sequences to a fastq and try aligning that 
+
+```{bash just-gfp-ref}
+#Going to append my gfp sequence to my fastq
+#downsample junk_fastq
+mkdir -p small_fastqs/out
+ml seqtk
+mkdir -p small_fastqs/SRR26705626
+seqtk sample -s100 input/fastqs/SRR26705626/SRR26705626_S1_R1_001.fastq 10000 > small_fastqs/SRR26705626/SRR26705626_S1_R1_001.fastq
+seqtk sample -s100 input/fastqs/SRR26705626/SRR26705626_S1_R2_001.fastq 10000 > small_fastqs/SRR26705626/SRR26705626_S1_R2_001.fastq
+
+# I then manually added in 50 gfp-derived reads into fastq R1, replacing the last 50 reads
+
+#Going to call cellranger count with GFP only reference
+ml cellranger
+cellranger count \
+    --id SRR26705626 \
+    --output-dir small_fastqs/out/SRR26705626 \
+    --fastqs small_fastqs/SRR26705626 \
+    --localcores 10 \
+    --transcriptome custom_ref/just_GFP \
+    --nosecondary \
+    --disable-ui \
+    --create-bam true
+
+#see how many reads map to gfp chromosome
+samtools idxstat small_fastqs/out/SRR26705626/outs/possorted_genome_bam.bam
+```
+
+
 ## Make BAMs Aligned to New Genome
 
 ```{r mk-bams}
 # We need to convert our fastq names to a cellranger compatible format
 # I'll just be doing this for SRR26
-mv input/fastqs/SRR26705626/SRR26705626_1.fastq \
-    input/fastqs/SRR26705626/SRR26705626_S1_R1_001.fastq
-mv input/fastqs/SRR26705626/SRR26705626_2.fastq \
-    input/fastqs/SRR26705626/SRR26705626_S1_R2_001.fastq
+# mv input/fastqs/SRR26705626/SRR26705626_1.fastq \
+#     input/fastqs/SRR26705626/SRR26705626_S1_R1_001.fastq
+# mv input/fastqs/SRR26705626/SRR26705626_2.fastq \
+#     input/fastqs/SRR26705626/SRR26705626_S1_R2_001.fastq
 
 for sra in SRR26705626 SRR26705627 SRR26705629
 do
@@ -97,7 +154,57 @@ sobj <- subset(sobj,
                nCount_RNA <= 50000 &
                percent.mt < 10) %>%
     process_seurat()
+
+r_feature_plot(sobj, features = c("GFP", "Gfp", "gfp"))
 ```
 
 Weirdly, I'm not seeing any GFP expression in any of the cells. I'm going to pull in the counts matrix to make sure that GFP was present in there to begin with (which I believe it should be).
 
+The counts matrix from geo is in misc/SRR26705626.h5
+
+```{r check-geo-matrix}
+og_sobj <- tenx_load_qc(h5_file = "misc/SRR26705626.h5",
+                        violin_plot = FALSE)
+
+feature_hist(og_sobj, features = c("nCount_RNA", "percent.mt"))
+
+#using same cutoffs as before
+og_sobj <- subset(og_sobj,
+               nCount_RNA >= 1200 &
+               nCount_RNA <= 50000 &
+               percent.mt < 10) %>%
+    process_seurat()
+
+r_dim_plot(og_sobj)
+
+r_feature_plot(og_sobj, features = c("Gfp", "GFP", "gfp"))
+grep("GFP", rownames(og_sobj), ignore.case = TRUE, value = TRUE)
+
+#annotate tumor cells using their markers
+
+
+#Seems like I'm using the wrong name for GFP, so I'm going to run find markers and see what has the biggest difference in pct expressing for tumor
+tumor_feats <- c("Crabp1", "Pebp1", "Tm4sf1", "Igfbp4", "Sdc2", "Emp2", "Ank")
+r_dim_plot(og_sobj) | r_feature_plot(og_sobj, tumor_feats, pt.size = 0.5)
+
+#8 4 and 10 look like our tumor cells
+og_sobj$tumor <- ifelse(og_sobj$seurat_clusters %in% c(4, 8, 10),
+                        "tumor",
+                        "not_tumor")
+
+Idents(og_sobj) <- og_sobj$tumor
+og_genes <- FindAllMarkers(og_sobj, only.pos = TRUE)
+head(og_genes)
+#Sort for positive in tumors and highly expressed in tumors
+og_genes %>%
+    subset(cluster == "tumor" &
+           p_val_adj < 0.05) %>%
+    select(avg_log2FC,
+           pct.1,
+           pct.2,
+           gene) %>%
+    mutate(pct.diff = pct.1 - pct.2) %>%
+    arrange(desc(pct.diff)) %>%
+    head(n = 50)
+
+```
