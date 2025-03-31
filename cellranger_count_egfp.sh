@@ -10,9 +10,10 @@
 #SBATCH --wait
 
 set -e
-
+ml cellranger
 #make array of values
-sra_array=(SRR26705626 SRR26705627 SRR26705629)
+# sra_array=(SRR26705626 SRR26705627 SRR26705629)
+sra_array=(SRR26705628 SRR26705630 SRR26705631)
 sra_id=${sra_array[$SLURM_ARRAY_TASK_ID]}
 
 mv counts/output/${SLURM_JOBID}.txt counts/output/${sra_id}.txt
@@ -25,7 +26,7 @@ cellranger count \
     --output-dir counts/${sra_id} \
     --fastqs input/fastqs/${sra_id}/ \
     --localcores 20 \
-    --transcriptome custom_ref/demo_GFP \
+    --transcriptome custom_ref/eGFP/demo_eGFP \
     --nosecondary \
     --disable-ui \
     --create-bam true
