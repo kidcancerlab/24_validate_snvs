@@ -9,16 +9,23 @@ The sra Run numbers are as follows:
 
 I'll be using SRA-Toolkit/2.10.8 for this. Specifically, the `fasterq-dump` function.
 
+### GSE247228
+
 ```{bash get-computing-power}
 srun_l -c 12 -p himem --x11 --pty bash
 ```
 
 ```{bash get-fastqs}
 ml SRA-Toolkit/2.10.8
-fasterq-dump --outdir input/fastqs --progress SRR26705626 SRR26705627 SRR26705629
+fasterq-dump --outdir input/fastqs/GSE247228 --progress SRR26705626 SRR26705627 SRR26705629 SRR26705628 SRR26705630 SRR26705631
+```
 
-#get other fastqs from this paper
-fasterq-dump --outdir input/fastqs --progress SRR26705628 SRR26705630 SRR26705631
+### GSE179077
+
+Fluorescent UnaG in hypoxic glioblastoma cells
+
+```{bash get-unag-fastqs}
+fasterq-dump --outdir input/fastqs/GSE179077 --progress SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
 ```
 
 ## Update Reference Genome
@@ -101,28 +108,27 @@ cellranger mkref --output-dir custom_ref/unag/unag_ref \
     --localcores=8
 ```
 
-## Make BAMs Aligned to New Genome
+## Run cellranger count
+
+### On eGFP data From GSE247228
 
 ```{r mk-bams}
 # We need to convert our fastq names to a cellranger compatible format
-# I'll just be doing this for SRR26
-# mv input/fastqs/SRR26705626/SRR26705626_1.fastq \
-#     input/fastqs/SRR26705626/SRR26705626_S1_R1_001.fastq
-# mv input/fastqs/SRR26705626/SRR26705626_2.fastq \
-#     input/fastqs/SRR26705626/SRR26705626_S1_R2_001.fastq
 
-for sra in SRR26705628 SRR26705630 SRR26705631
+for sra in SRR26705626 SRR26705627 SRR26705628 SRR26705629 SRR26705630 SRR26705631
 do
     mkdir input/fastqs/${sra}
-    mv input/fastqs/${sra}_1.fastq \
-        input/fastqs/${sra}/${sra}_S1_R1_001.fastq
-    mv input/fastqs/${sra}_2.fastq \
-        input/fastqs/${sra}/${sra}_S1_R2_001.fastq
+    mv input/fastqs/GSE247228/${sra}_1.fastq \
+        input/fastqs/GSE247228/${sra}/${sra}_S1_R1_001.fastq
+    mv input/fastqs/GSE247228/${sra}_2.fastq \
+        input/fastqs/GSE247228/${sra}/${sra}_S1_R2_001.fastq
 done
 
 #run cellranger count!
 sbatch cellranger_count_egfp.sh
 ```
+
+### On unag data from 
 
 ## Look at New Object
 
