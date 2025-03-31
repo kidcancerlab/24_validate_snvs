@@ -16,6 +16,9 @@ srun_l -c 12 -p himem --x11 --pty bash
 ```{bash get-fastqs}
 ml SRA-Toolkit/2.10.8
 fasterq-dump --outdir input/fastqs --progress SRR26705626 SRR26705627 SRR26705629
+
+#get other fastqs from this paper
+fasterq-dump --outdir input/fastqs --progress SRR26705628 SRR26705630 SRR26705631
 ```
 
 ## Update Reference Genome
@@ -39,7 +42,7 @@ cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa custom_ref/genome.fa
 chmod 744 custom_ref/*
 
 #append GFP.fa to end of mm10 genome
-cat custom_ref/GFP.fa >> custom_ref/genome.fa
+cat custom_ref/eGFP.fa >> custom_ref/genome.fa
 
 #check that GFP "chromosome" is present
 grep ">" custom_ref/genome.fa
@@ -50,68 +53,32 @@ chmod 744 custom_ref/*
 gunzip custom_ref/genes.gtf.gz
 
 #append GFP gtf to mm10 gene file
-cat custom_ref/GFP.gtf >> custom_ref/genes.gtf
+cat custom_ref/eGFP.gtf >> custom_ref/genes.gtf
 
 #Time to make our new reference using cellranger mkref
-cellranger mkref --output-dir custom_ref/demo_GFP \
-    --genome demo_GFP \
+cellranger mkref --output-dir custom_ref/demo_eGFP \
+    --genome demo_eGFP \
     --fasta custom_ref/genome.fa \
     --genes custom_ref/genes.gtf
 ```
 
-## See why no GFP reads
+Now I'm going to make a genome containing the hypoxic reporter element plus unag.
 
-### Gonna try aligning to reference with just gfp
-```{bash just-gfp-ref}
-cellranger mkref --output-dir custom_ref/just_GFP \
-    --genome just_GFP \
-    --fasta custom_ref/GFP.fa \
-    --genes custom_ref/GFP.gtf
+```{bash make-unag-ref}
+#making a folder within custom ref for this, otherwise it'll get too cluttered
+mkdir custom_ref/unag/
 
-mkdir just_gfp_counts
-cellranger count \
-    --id SRR26705626 \
-    --output-dir just_gfp_counts/SRR26705626 \
-    --fastqs input/fastqs/SRR26705626/ \
-    --localcores 10 \
-    --transcriptome custom_ref/just_GFP \
-    --nosecondary \
-    --disable-ui \
-    --create-bam true
+grep -v "^>" custom_ref/unag/hre_unag.fa | tr -d "\n" | wc
+#8646 bases
 
-## see how many reads map to gfp chromosome
-samtools idxstat just_gfp_counts/SRR26705626/outs/possorted_genome_bam.bam
+
+echo -e 'HRE-dUnaG\tunknown\texon\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transcript_id "HRE-dUnaG"; gene_biotype "proetin_coding";\n'\
+'HRE-dUnaG\tunknown\ttranscript\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transcript_id "HRE-dUnaG"; gene_biotype "proetin_coding";\n'\
+'HRE-dUnaG\tunknown\tgene\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; gene_name "HRE-dUnaG"; gene_biotype "proetin_coding";' > custom_ref/unag/hre_unag.gtf
+
+#Going to append the gtf and fasta to the mm10
+
 ```
-
-### Going to add gfp sequences to a fastq and try aligning that 
-
-```{bash just-gfp-ref}
-#Going to append my gfp sequence to my fastq
-#downsample junk_fastq
-mkdir -p small_fastqs/out
-ml seqtk
-mkdir -p small_fastqs/SRR26705626
-seqtk sample -s100 input/fastqs/SRR26705626/SRR26705626_S1_R1_001.fastq 10000 > small_fastqs/SRR26705626/SRR26705626_S1_R1_001.fastq
-seqtk sample -s100 input/fastqs/SRR26705626/SRR26705626_S1_R2_001.fastq 10000 > small_fastqs/SRR26705626/SRR26705626_S1_R2_001.fastq
-
-# I then manually added in 50 gfp-derived reads into fastq R1, replacing the last 50 reads
-
-#Going to call cellranger count with GFP only reference
-ml cellranger
-cellranger count \
-    --id SRR26705626 \
-    --output-dir small_fastqs/out/SRR26705626 \
-    --fastqs small_fastqs/SRR26705626 \
-    --localcores 10 \
-    --transcriptome custom_ref/just_GFP \
-    --nosecondary \
-    --disable-ui \
-    --create-bam true
-
-#see how many reads map to gfp chromosome
-samtools idxstat small_fastqs/out/SRR26705626/outs/possorted_genome_bam.bam
-```
-
 
 ## Make BAMs Aligned to New Genome
 
@@ -138,24 +105,24 @@ sbatch cellranger_count.sh
 ## Look at New Object
 
 ```{r}
-sobj <- tenx_load_qc("counts/SRR26705626/outs/filtered_feature_bc_matrix", violin_plot = FALSE)
+sobj <- tenx_load_qc("counts/SRR26705629/outs/filtered_feature_bc_matrix", violin_plot = FALSE) 
+sobj <- process_seurat(sobj)
+r_feature_plot(sobj, features = c("eGFP"))
+sum(rownames(sobj) == "eGFP")
 
-sum(rownames(sobj) == "GFP")
+# feature_hist(sobj,
+#              features = c("nCount_RNA", "percent.mt"),
+#              cutoff_table =
+#     tribble(~feature, ~min_val, ~max_val,
+#             "nCount_RNA", 1200, 80000,
+#             "percent.mt", 0, 10))
 
-feature_hist(sobj,
-             features = c("nCount_RNA", "percent.mt"),
-             cutoff_table =
-    tribble(~feature, ~min_val, ~max_val,
-            "nCount_RNA", 1200, 50000,
-            "percent.mt", 0, 10))
+# sobj <- subset(sobj,
+#                nCount_RNA >= 1200 &
+#                nCount_RNA <= 50000 &
+#                percent.mt < 10) %>%
+#     process_seurat()
 
-sobj <- subset(sobj,
-               nCount_RNA >= 1200 &
-               nCount_RNA <= 50000 &
-               percent.mt < 10) %>%
-    process_seurat()
-
-r_feature_plot(sobj, features = c("GFP", "Gfp", "gfp"))
 ```
 
 Weirdly, I'm not seeing any GFP expression in any of the cells. I'm going to pull in the counts matrix to make sure that GFP was present in there to begin with (which I believe it should be).
