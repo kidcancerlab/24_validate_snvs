@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --job-name=mk_counts_%j
-#SBATCH --output=counts/output/%j.txt
-#SBATCH --error=counts/output/%j.txt
+#SBATCH --output=counts/GSE247228/output/%j.txt
+#SBATCH --error=counts/GSE247228/output/%j.txt
 #SBATCH --array=0-2
 #SBATCH --cpus-per-task=20
 #SBATCH --partition=himem,general
