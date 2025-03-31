@@ -23,8 +23,8 @@ echo Running cellranger count for $sra_id
 #Run cellranger
 cellranger count \
     --id ${sra_id} \
-    --output-dir counts/${sra_id} \
-    --fastqs input/fastqs/${sra_id}/ \
+    --output-dir counts/GSE247228/${sra_id} \
+    --fastqs input/fastqs/GSE247228/${sra_id}/ \
     --localcores 20 \
     --transcriptome custom_ref/eGFP/demo_eGFP \
     --nosecondary \
