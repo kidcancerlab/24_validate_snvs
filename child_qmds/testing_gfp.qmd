@@ -25,6 +25,7 @@ fasterq-dump --outdir input/fastqs/GSE247228 --progress SRR26705626 SRR26705627 
 Fluorescent UnaG in hypoxic glioblastoma cells
 
 ```{bash get-unag-fastqs}
+mkdir input/fastqs/GSE179077
 fasterq-dump --outdir input/fastqs/GSE179077 --progress SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
 ```
 
@@ -71,6 +72,8 @@ cellranger mkref --output-dir custom_ref/eGFP/demo_eGFP \
     --genes custom_ref/eGFP/genes.gtf
 ```
 
+### HRE-UnaG
+
 Now I'm going to make a genome containing the hypoxic reporter element plus unag.
 
 ```{bash make-unag-ref}
@@ -112,12 +115,12 @@ cellranger mkref --output-dir custom_ref/unag/unag_ref \
 
 ### On eGFP data From GSE247228
 
-```{r mk-bams}
+```{bash mk-bams}
 # We need to convert our fastq names to a cellranger compatible format
 
 for sra in SRR26705626 SRR26705627 SRR26705628 SRR26705629 SRR26705630 SRR26705631
 do
-    mkdir input/fastqs/${sra}
+    mkdir input/fastqs/GSE247228/${sra}
     mv input/fastqs/GSE247228/${sra}_1.fastq \
         input/fastqs/GSE247228/${sra}/${sra}_S1_R1_001.fastq
     mv input/fastqs/GSE247228/${sra}_2.fastq \
@@ -128,7 +131,19 @@ done
 sbatch cellranger_count_egfp.sh
 ```
 
-### On unag data from 
+### On unag data from GSE179077
+
+```{bash mk-bams-GSE179077}
+#rename to cellranger compatible format
+for sra in SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
+do
+    mkdir input/fastqs/GSE179077/${sra}
+    mv input/fastqs/GSE179077/${sra}_1.fastq \
+        input/fastqs/GSE179077/${sra}/${sra}_S1_R1_001.fastq
+    mv input/fastqs/GSE179077/${sra}_2.fastq \
+        input/fastqs/GSE179077/${sra}/${sra}_S1_R2_001.fastq
+done
+```
 
 ## Look at New Object
 
