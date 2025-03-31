@@ -23,43 +23,45 @@ fasterq-dump --outdir input/fastqs --progress SRR26705628 SRR26705630 SRR2670563
 
 ## Update Reference Genome
 
-I need to add the GFP sequence to our reference genome before aligning our fastqs. I'll be adding it to our 10x-mm10 reference genome. Our new reference will be in custom_ref/10x-mm10-gfp
+I need to add the fluorescent reporter sequence to our reference genome before aligning our fastqs. I'll be adding it to our 10x-mm10 reference genome.
+
+### eGFP
 
 I will first need to create a file named GFP.fa containing the nucleotide sequence for our GFP protein.
 
 ```{bash make-new-ref}
 #get number of bases in GFP.fa
-grep -v "^>" custom_ref/GFP.fa | tr -d "\n" | wc
-#922 bases
+grep -v "^>" custom_ref/eGFP/eGFP.fa | tr -d "\n" | wc
+#720 bases
 
 #lets make a custom gtf for gfp; \t helps us make new columns that are needed in the gtf; we need both the exon and transcript lines 
-echo -e 'GFP\tunknown\texon\t1\t922\t.\t+\t.\tgene_id "GFP"; transcript_id "GFP"; gene_biotype "proetin_coding";\n'\
-'GFP\tunknown\ttranscript\t1\t922\t.\t+\t.\tgene_id "GFP"; transcript_id "GFP"; gene_biotype "proetin_coding";\n'\
-'GFP\tunknown\tgene\t1\t922\t.\t+\t.\tgene_id "GFP"; gene_name "GFP"; gene_biotype "proetin_coding";' > custom_ref/GFP.gtf
+echo -e 'eGFP\tunknown\texon\t1\t720\t.\t+\t.\tgene_id "eGFP"; transcript_id "eGFP"; gene_biotype "proetin_coding";\n'\
+'eGFP\tunknown\ttranscript\t1\t720\t.\t+\t.\tgene_id "eGFP"; transcript_id "eGFP"; gene_biotype "proetin_coding";\n'\
+'eGFP\tunknown\tgene\t1\t720\t.\t+\t.\tgene_id "eGFP"; gene_name "eGFP"; gene_biotype "proetin_coding";' > custom_ref/eGFP/eGFP.gtf
 
 #copy mm10 reference FASTA over (so we can modify it and not screw up the og)
-cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa custom_ref/genome.fa
-chmod 744 custom_ref/*
+cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa custom_ref/eGFP/genome.fa
+chmod 744 custom_ref/eGFP/*
 
 #append GFP.fa to end of mm10 genome
-cat custom_ref/eGFP.fa >> custom_ref/genome.fa
+cat custom_ref/eGFP/eGFP.fa >> custom_ref/eGFP/genome.fa
 
 #check that GFP "chromosome" is present
-grep ">" custom_ref/genome.fa
+grep ">" custom_ref/eGFP/genome.fa
 
 #copy over original gtf and gunzip
-cp /home/gdrobertslab/lab/GenRef/10x-mm10/genes/genes.gtf.gz custom_ref/.
-chmod 744 custom_ref/*
-gunzip custom_ref/genes.gtf.gz
+cp /home/gdrobertslab/lab/GenRef/10x-mm10/genes/genes.gtf.gz custom_ref/eGFP/.
+chmod 744 custom_ref/eGFP/*
+gunzip custom_ref/eGFP/genes.gtf.gz
 
 #append GFP gtf to mm10 gene file
-cat custom_ref/eGFP.gtf >> custom_ref/genes.gtf
+cat custom_ref/eGFP/eGFP.gtf >> custom_ref/eGFP/genes.gtf
 
 #Time to make our new reference using cellranger mkref
-cellranger mkref --output-dir custom_ref/demo_eGFP \
+cellranger mkref --output-dir custom_ref/eGFP/demo_eGFP \
     --genome demo_eGFP \
-    --fasta custom_ref/genome.fa \
-    --genes custom_ref/genes.gtf
+    --fasta custom_ref/eGFP/genome.fa \
+    --genes custom_ref/eGFP/genes.gtf
 ```
 
 Now I'm going to make a genome containing the hypoxic reporter element plus unag.
@@ -77,7 +79,26 @@ echo -e 'HRE-dUnaG\tunknown\texon\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transc
 'HRE-dUnaG\tunknown\tgene\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; gene_name "HRE-dUnaG"; gene_biotype "proetin_coding";' > custom_ref/unag/hre_unag.gtf
 
 #Going to append the gtf and fasta to the mm10
+cp /home/gdrobertslab/lab/GenRef/10x-mm10/genes/genes.gtf.gz custom_ref/unag/genes.gtf.gz
 
+cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa custom_ref/unag/genome.fa
+
+chmod 744 custom_ref/unag
+
+gunzip custom_ref/unag/genes.gtf.gz
+
+#cat gtf and fasta for hre-unag to mm10 reference files
+cat custom_ref/unag/hre_unag.fa >> custom_ref/unag/genome.fa
+cat custom_ref/unag/hre_unag.gtf >> custom_ref/unag/genes.gtf
+
+#make reference
+ml cellranger
+cellranger mkref --output-dir custom_ref/unag/unag_ref \
+    --genome unag_ref \
+    --fasta custom_ref/unag/genome.fa \
+    --genes custom_ref/unag/genes.gtf \
+    --jobmode=local \
+    --localcores=8
 ```
 
 ## Make BAMs Aligned to New Genome
@@ -90,16 +111,17 @@ echo -e 'HRE-dUnaG\tunknown\texon\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transc
 # mv input/fastqs/SRR26705626/SRR26705626_2.fastq \
 #     input/fastqs/SRR26705626/SRR26705626_S1_R2_001.fastq
 
-for sra in SRR26705626 SRR26705627 SRR26705629
+for sra in SRR26705628 SRR26705630 SRR26705631
 do
-    mv input/fastqs/${sra}/${sra}_1.fastq \
+    mkdir input/fastqs/${sra}
+    mv input/fastqs/${sra}_1.fastq \
         input/fastqs/${sra}/${sra}_S1_R1_001.fastq
-    mv input/fastqs/${sra}/${sra}_2.fastq \
+    mv input/fastqs/${sra}_2.fastq \
         input/fastqs/${sra}/${sra}_S1_R2_001.fastq
 done
 
 #run cellranger count!
-sbatch cellranger_count.sh
+sbatch cellranger_count_egfp.sh
 ```
 
 ## Look at New Object
