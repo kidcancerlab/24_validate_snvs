@@ -143,6 +143,9 @@ do
     mv input/fastqs/GSE179077/${sra}_2.fastq \
         input/fastqs/GSE179077/${sra}/${sra}_S1_R2_001.fastq
 done
+
+#run cellranger count
+sbatch cellranger_count_unag.sh
 ```
 
 ## Look at Counts for Our Reporter
@@ -154,11 +157,11 @@ done
 cutoff_tbl <- tribble(      ~sample,     ~feature, ~min_val, ~max_val,
                       "SRR26705626", "nCount_RNA",     1000,    40000,
                       "SRR26705626", "percent.mt",        0,       10, 
-                      "SRR26705627", "nCount_RNA",     1000,    50000,
+                      "SRR26705627", "nCount_RNA",     1000,    60000,
                       "SRR26705627", "percent.mt",        0,       10,
                       "SRR26705628", "nCount_RNA",     1000,    50000,
                       "SRR26705628", "percent.mt",        0,       10,
-                      "SRR26705629", "nCount_RNA",     1000,    60000,
+                      "SRR26705629", "nCount_RNA",     1000,    75000,
                       "SRR26705629", "percent.mt",        0,       10,
                       "SRR26705630", "nCount_RNA",     1000,    50000,
                       "SRR26705630", "percent.mt",        0,       10,
@@ -173,7 +176,8 @@ obj_list <- lapply(sample_names, function(x) {
                                 "/outs/filtered_feature_bc_matrix"),
                          violin_plot = FALSE)
     sobj$eGFP_exp <- GetAssayData(sobj, layer = "counts")["eGFP", ]
-    sobj@assays$RNA$counts <- sobj@assays$RNA$counts[rownames(sobj) != "eGFP", ]
+    subset(sobj, features = rownames(sobj)[rownames(sobj) != "eGFP"])
+    # sobj@assays$RNA$counts <- sobj@assays$RNA$counts[rownames(sobj) != "eGFP", ]
     return(sobj)
 })
 names(obj_list) <- sample_names
@@ -187,12 +191,53 @@ qc_plts <- lapply(sample_names, function(x) {
                  cutoff_table = cuts) +
         ggtitle(x)
 })
-grid.arrange(grobs = qc_plts)
 
-#make egfp feature plots
-egfp_by_clust <- lapply(sample_names, function(x) {
+png("output/figures/GSE247228/qc_grid.png", height = 2000, width = 1600)
+grid.arrange(grobs = qc_plts)
+dev.off()
+
+#qc and make egfp feature plots
+obj_list <- lapply(sample_names, function(x) {
     ob <- obj_list[[x]]
+    cuts <- subset(cutoff_tbl, sample == x) %>%
+        column_to_rownames("feature")
+    ob <- subset(ob,
+                 nCount_RNA > cuts["nCount_RNA", "min_val"] &
+                 nCount_RNA < cuts["nCount_RNA", "max_val"] &
+                 percent.mt < cuts["percent.mt", "max_val"]) %>%
+        process_seurat()
+    ob$sample_id <- x
+    png(paste0("output/figures/GSE247228/dimplot_egfp_", x, ".png"),
+        width = 1000,
+        height = 600)
+    print(dimplot_better(ob, group = "seurat_clusters") |
+    r_feature_plot(ob, features = "eGFP_exp"))
+    dev.off()
     
+    return(ob)
 })
 
+merged_obs <- merge(obj_list[[1]], obj_list[-1]) %>%
+    process_seurat()
+merged_obs <- JoinLayers(merged_obs)
+#check for batch effects
+dimplot_better(merged_obs, "sample_id")
+
+#Going to binarize eGFP_exp
+merged_obs$binarized_eGFP <- merged_obs$eGFP_exp > 0
+
+dimplot_better(merged_obs, group  = "seurat_clusters")| r_feature_plot(merged_obs, features = "binarized_eGFP", pt.size = 0.3)
+```
+
+It seems like clusters 6, 9, and 11 are our eGFP expressing cells. I'm going to save this off as a seurat object as well as just a metadata file.
+
+```{r write-off-GSE247228}
+merged_obs$is_tumor <- merged_obs$seurat_clusters %in% c(6, 9, 11)
+
+qs::qsave(merged_obs, "output/seurat_objects/merged_GSE247288.qs")
+rownames_to_column(merged_obs@meta.data, "bc") %>%
+    write.table(file = "output/metadata/metadata_GSE247288.tsv",
+                sep = "\t",
+                row.names = FALSE,
+                quote = FALSE)
 ```

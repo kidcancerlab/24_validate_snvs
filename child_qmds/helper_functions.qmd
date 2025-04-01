@@ -365,3 +365,29 @@ confirm_mclapply_worked <- function(input_list) {
     }
 }
 ```
+
+## Plotting Functions
+
+```{r dimplot-better}
+dimplot_better <- function(object,
+                           group_by = NULL,
+                           cols,
+                           ncol = 1,
+                           label.size = 2.5,
+                           split_by = NULL,
+                           ...) {
+    DimPlot(object,
+            group.by = group_by,
+            split.by = split_by,
+            ncol = ncol,
+            label.size = label.size,
+            label = T,
+            repel = T,
+            shuffle = T,
+            label.box = T,
+            #raster.dpi = c(500, 500),
+            cols = c(plot_cols, sample(rainbow(1000))),
+            ...) +
+        coord_fixed()
+}
+```
