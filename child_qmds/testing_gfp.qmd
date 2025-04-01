@@ -145,76 +145,54 @@ do
 done
 ```
 
-## Look at New Object
+## Look at Counts for Our Reporter
+
+### GSE247228
 
 ```{r}
-sobj <- tenx_load_qc("counts/SRR26705629/outs/filtered_feature_bc_matrix", violin_plot = FALSE) 
-sobj <- process_seurat(sobj)
-r_feature_plot(sobj, features = c("eGFP"))
-sum(rownames(sobj) == "eGFP")
+#cutoffs for feature hists
+cutoff_tbl <- tribble(      ~sample,     ~feature, ~min_val, ~max_val,
+                      "SRR26705626", "nCount_RNA",     1000,    40000,
+                      "SRR26705626", "percent.mt",        0,       10, 
+                      "SRR26705627", "nCount_RNA",     1000,    50000,
+                      "SRR26705627", "percent.mt",        0,       10,
+                      "SRR26705628", "nCount_RNA",     1000,    50000,
+                      "SRR26705628", "percent.mt",        0,       10,
+                      "SRR26705629", "nCount_RNA",     1000,    60000,
+                      "SRR26705629", "percent.mt",        0,       10,
+                      "SRR26705630", "nCount_RNA",     1000,    50000,
+                      "SRR26705630", "percent.mt",        0,       10,
+                      "SRR26705631", "nCount_RNA",     1000,    40000, 
+                      "SRR26705631", "percent.mt",        0,       10) 
 
-# feature_hist(sobj,
-#              features = c("nCount_RNA", "percent.mt"),
-#              cutoff_table =
-#     tribble(~feature, ~min_val, ~max_val,
-#             "nCount_RNA", 1200, 80000,
-#             "percent.mt", 0, 10))
+#read in data
+sample_names <- grep("SRR", list.files("counts/GSE247228/"), value = TRUE)
+obj_list <- lapply(sample_names, function(x) {
+    sobj <- tenx_load_qc(paste0("counts/GSE247228/",
+                                x,
+                                "/outs/filtered_feature_bc_matrix"),
+                         violin_plot = FALSE)
+    sobj$eGFP_exp <- GetAssayData(sobj, layer = "counts")["eGFP", ]
+    sobj@assays$RNA$counts <- sobj@assays$RNA$counts[rownames(sobj) != "eGFP", ]
+    return(sobj)
+})
+names(obj_list) <- sample_names
 
-# sobj <- subset(sobj,
-#                nCount_RNA >= 1200 &
-#                nCount_RNA <= 50000 &
-#                percent.mt < 10) %>%
-#     process_seurat()
+qc_plts <- lapply(sample_names, function(x) {
+    cuts <- subset(cutoff_tbl, sample == x) %>%
+        select(feature, min_val, max_val)
+    ob <- obj_list[[x]]
+    feature_hist(ob,
+                 features = c("nCount_RNA", "percent.mt"),
+                 cutoff_table = cuts) +
+        ggtitle(x)
+})
+grid.arrange(grobs = qc_plts)
 
-```
-
-Weirdly, I'm not seeing any GFP expression in any of the cells. I'm going to pull in the counts matrix to make sure that GFP was present in there to begin with (which I believe it should be).
-
-The counts matrix from geo is in misc/SRR26705626.h5
-
-```{r check-geo-matrix}
-og_sobj <- tenx_load_qc(h5_file = "misc/SRR26705626.h5",
-                        violin_plot = FALSE)
-
-feature_hist(og_sobj, features = c("nCount_RNA", "percent.mt"))
-
-#using same cutoffs as before
-og_sobj <- subset(og_sobj,
-               nCount_RNA >= 1200 &
-               nCount_RNA <= 50000 &
-               percent.mt < 10) %>%
-    process_seurat()
-
-r_dim_plot(og_sobj)
-
-r_feature_plot(og_sobj, features = c("Gfp", "GFP", "gfp"))
-grep("GFP", rownames(og_sobj), ignore.case = TRUE, value = TRUE)
-
-#annotate tumor cells using their markers
-
-
-#Seems like I'm using the wrong name for GFP, so I'm going to run find markers and see what has the biggest difference in pct expressing for tumor
-tumor_feats <- c("Crabp1", "Pebp1", "Tm4sf1", "Igfbp4", "Sdc2", "Emp2", "Ank")
-r_dim_plot(og_sobj) | r_feature_plot(og_sobj, tumor_feats, pt.size = 0.5)
-
-#8 4 and 10 look like our tumor cells
-og_sobj$tumor <- ifelse(og_sobj$seurat_clusters %in% c(4, 8, 10),
-                        "tumor",
-                        "not_tumor")
-
-Idents(og_sobj) <- og_sobj$tumor
-og_genes <- FindAllMarkers(og_sobj, only.pos = TRUE)
-head(og_genes)
-#Sort for positive in tumors and highly expressed in tumors
-og_genes %>%
-    subset(cluster == "tumor" &
-           p_val_adj < 0.05) %>%
-    select(avg_log2FC,
-           pct.1,
-           pct.2,
-           gene) %>%
-    mutate(pct.diff = pct.1 - pct.2) %>%
-    arrange(desc(pct.diff)) %>%
-    head(n = 50)
+#make egfp feature plots
+egfp_by_clust <- lapply(sample_names, function(x) {
+    ob <- obj_list[[x]]
+    
+})
 
 ```
