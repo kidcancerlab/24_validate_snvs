@@ -241,3 +241,47 @@ rownames_to_column(merged_obs@meta.data, "bc") %>%
                 row.names = FALSE,
                 quote = FALSE)
 ```
+
+### GSE179077
+
+```{r unag-exp}
+sample_names <- grep("SRR", list.files("counts/GSE179077"), value = TRUE)
+obj_list <- lapply(sample_names, function(x) {
+    tenx_load_qc(paste0("counts/GSE179077/",
+                        x,
+                        "/outs/filtered_feature_bc_matrix"),
+                 violin_plot = FALSE)
+})
+names(obj_list) <- sample_names
+
+#make qc plots
+qc_plts <- lapply(names(obj_list), function(ob_name) {
+    cuts <- tribble(    ~feature, ~min_val, ~max_val,
+                    "nCount_RNA",     1000,    10000,
+                    "percent.mt",        0,       10)
+    ob <- obj_list[[ob_name]]
+    feature_hist(ob,
+                 c("nCount_RNA", "percent.mt"),
+                 cutoff_table = cuts) +
+        ggtitle(ob_name)
+})
+
+grid.arrange(grobs = qc_plts)
+
+#subset objects
+obj_list <- lapply(obj_list, function(ob) {
+    subset(ob, subset = nCount_RNA > 1000 &
+                        nCount_RNA < 10000 &
+                        percent.mt < 10) %>%
+        process_seurat()
+})
+
+plts <- lapply(obj_list, r_feature_plot, features = "HRE-dUnaG", pt.size = 0.5)
+
+grid.arrange(grobs = plts)
+
+merged_gbm <- merge(obj_list[[1]], obj_list[-2]) %>%
+    process_seurat()
+
+r_feature_plot(merged_gbm, features = "HRE-dUnaG")
+```
