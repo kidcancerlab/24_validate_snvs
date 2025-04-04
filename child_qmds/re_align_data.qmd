@@ -29,6 +29,31 @@ mkdir input/fastqs/GSE179077
 fasterq-dump --outdir input/fastqs/GSE179077 --progress SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
 ```
 
+### GSE201615
+
+Does it have dsRED?
+
+For this I'm thinking I make the new reference containing dsRED, cas9... and maybe Ccne-dsRED conjugate? I can't tell exactly what's going on with their experimental methods.
+
+
+```{bash}
+mkdir input/fastqs/GSE201615
+fasterq-dump --outdir input/fastqs/GSE201615 --progress --split-spot SRR18932562
+
+fastq-dump --outdir input/fastqs/GSE201615 --split-files SRR18932562
+
+#we have 3 fastqs for each; one is the Index and the other two are our Read files
+#_1 is I1
+#_2 is R1
+#_3 is R2
+mv input/fastqs/GSE201615/SRR18932562_1.fastq \
+    input/fastqs/GSE201615/SRR18932562_S1_I1_001.fastq
+mv input/fastqs/GSE201615/SRR18932562_2.fastq \
+    input/fastqs/GSE201615/SRR18932562_S1_R1_001.fastq
+mv input/fastqs/GSE201615/SRR18932562_3.fastq \
+    input/fastqs/GSE201615/SRR18932562_S1_R2_001.fastq
+```
+
 ## Update Reference Genome
 
 I need to add the fluorescent reporter sequence to our reference genome before aligning our fastqs. I'll be adding it to our 10x-mm10 reference genome.
@@ -109,6 +134,38 @@ cellranger mkref --output-dir custom_ref/unag/unag_ref \
     --genes custom_ref/unag/genes.gtf \
     --jobmode=local \
     --localcores=8
+```
+
+### RFP
+
+also known as dsRed
+
+I'm going to make a reference with just RFP and see if downsampled fastqs have any reads that map to it.
+
+```{bash make-rfp-ref}
+mkdir custom_ref/RFP
+grep -v "^>" custom_ref/RFP/RFP.fa | tr -d "\n" | wc
+#678 bases
+
+echo -e 'RFP\tunknown\texon\t1\t678\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "proetin_coding";\n'\
+'RFP\tunknown\ttranscript\t1\t678\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "proetin_coding";\n'\
+'RFP\tunknown\tgene\t1\t678\t.\t+\t.\tgene_id "RFP"; gene_name "RFP"; gene_biotype "proetin_coding";' > custom_ref/RFP/RFP.gtf
+
+#make just RFP reference
+ml cellranger
+cellranger mkref --output-dir custom_ref/RFP/just_RFP \
+    --genome just_RFP \
+    --fasta custom_ref/RFP/RFP.fa \
+    --genes custom_ref/RFP/RFP.gtf \
+    --jobmode=local
+```
+
+#### Downsample and Check for RFP Reads
+
+I want to make sure I'm using the right version of RFP so I'm going to downsample the FASTQ input/fastqs/GSE201615/SRR18932562.fastq and see if it aligns.
+
+```{bash downsample-GSE201615}
+
 ```
 
 ## Run cellranger count
@@ -247,41 +304,36 @@ rownames_to_column(merged_obs@meta.data, "bc") %>%
 ```{r unag-exp}
 sample_names <- grep("SRR", list.files("counts/GSE179077"), value = TRUE)
 obj_list <- lapply(sample_names, function(x) {
-    tenx_load_qc(paste0("counts/GSE179077/",
+    ob <- tenx_load_qc(paste0("counts/GSE179077/",
                         x,
                         "/outs/filtered_feature_bc_matrix"),
                  violin_plot = FALSE)
+    ob$unag_exp <- GetAssayData(ob, layer = "counts")["HRE-dUnaG", ]
+    
+    png(paste0("output/figures/GSE179077/qc_", x, ".png"),
+        height = 600,
+        width = 800)
+    feature_hist(ob,
+                 features = c("nCount_RNA", "percent.mt"),
+                 cutoff_table = tribble(    ~feature, ~min_val, ~max_val,
+                                        "nCount_RNA",     1000,    10000,
+                                        "percent.mt",        0,       10))
+    dev.off()
+    
+    ob <- subset(ob, features = rownames(ob)[rownames(ob) != "HRE-dUnaG"],
+                     subset = nCount_RNA >= 1000 &
+                     nCount_RNA <= 10000 &
+                     percent.mt < 10) %>%
+        process_seurat()
+    return(ob)
 })
 names(obj_list) <- sample_names
-
-#make qc plots
-qc_plts <- lapply(names(obj_list), function(ob_name) {
-    cuts <- tribble(    ~feature, ~min_val, ~max_val,
-                    "nCount_RNA",     1000,    10000,
-                    "percent.mt",        0,       10)
-    ob <- obj_list[[ob_name]]
-    feature_hist(ob,
-                 c("nCount_RNA", "percent.mt"),
-                 cutoff_table = cuts) +
-        ggtitle(ob_name)
-})
-
-grid.arrange(grobs = qc_plts)
-
-#subset objects
-obj_list <- lapply(obj_list, function(ob) {
-    subset(ob, subset = nCount_RNA > 1000 &
-                        nCount_RNA < 10000 &
-                        percent.mt < 10) %>%
-        process_seurat()
-})
-
-plts <- lapply(obj_list, r_feature_plot, features = "HRE-dUnaG", pt.size = 0.5)
-
-grid.arrange(grobs = plts)
 
 merged_gbm <- merge(obj_list[[1]], obj_list[-2]) %>%
     process_seurat()
 
-r_feature_plot(merged_gbm, features = "HRE-dUnaG")
+#binarize unag_exp
+merged_gbm$unag_present <- merged_gbm$unag_exp > 0
+
+r_feature_plot(merged_gbm, features = c("unag_present", "Sox2", "S100a4", "Cd4", "Cd8"), pt.size = 0.3, coord.fixed = TRUE)
 ```
