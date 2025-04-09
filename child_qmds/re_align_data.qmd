@@ -58,6 +58,14 @@ mv input/fastqs/GSE201615/SRR18932562_3.fastq \
 
 I need to add the fluorescent reporter sequence to our reference genome before aligning our fastqs. I'll be adding it to our 10x-mm10 reference genome.
 
+First I'm going to make a copy of the mm10 gtf and fastq.
+
+```{bash copy-fastq-gtf}
+cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa custom_ref/mm10_genome.fa
+cp /home/gdrobertslab/lab/GenRef/10x-mm10/genes/genes.gtf.gz custom_ref/mm10_genes.gtf.gz
+chmod 744 custom_ref/
+```
+
 ### eGFP
 
 I will first need to create a file named GFP.fa containing the nucleotide sequence for our GFP protein.
@@ -73,18 +81,16 @@ echo -e 'eGFP\tunknown\texon\t1\t720\t.\t+\t.\tgene_id "eGFP"; transcript_id "eG
 'eGFP\tunknown\tgene\t1\t720\t.\t+\t.\tgene_id "eGFP"; gene_name "eGFP"; gene_biotype "proetin_coding";' > custom_ref/eGFP/eGFP.gtf
 
 #copy mm10 reference FASTA over (so we can modify it and not screw up the og)
-cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa custom_ref/eGFP/genome.fa
-chmod 744 custom_ref/eGFP/*
 
 #append GFP.fa to end of mm10 genome
+cp custom_ref/mm10_genome.fa custom_ref/eGFP/genome.fa
 cat custom_ref/eGFP/eGFP.fa >> custom_ref/eGFP/genome.fa
 
 #check that GFP "chromosome" is present
 grep ">" custom_ref/eGFP/genome.fa
 
 #copy over original gtf and gunzip
-cp /home/gdrobertslab/lab/GenRef/10x-mm10/genes/genes.gtf.gz custom_ref/eGFP/.
-chmod 744 custom_ref/eGFP/*
+cp custom_ref/mm10_genes.gtf custom_ref/eGFP/genes.gtf.gz
 gunzip custom_ref/eGFP/genes.gtf.gz
 
 #append GFP gtf to mm10 gene file
@@ -114,12 +120,10 @@ echo -e 'HRE-dUnaG\tunknown\texon\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transc
 'HRE-dUnaG\tunknown\tgene\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; gene_name "HRE-dUnaG"; gene_biotype "proetin_coding";' > custom_ref/unag/hre_unag.gtf
 
 #Going to append the gtf and fasta to the mm10
-cp /home/gdrobertslab/lab/GenRef/10x-mm10/genes/genes.gtf.gz custom_ref/unag/genes.gtf.gz
+#append GFP.fa to end of mm10 genome
+cp custom_ref/mm10_genome.fa custom_ref/unag/genome.fa
 
-cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa custom_ref/unag/genome.fa
-
-chmod 744 custom_ref/unag
-
+cp custom_ref/mm10_genes.gtf.gz custom_ref/unag/genes.gtf.gz
 gunzip custom_ref/unag/genes.gtf.gz
 
 #cat gtf and fasta for hre-unag to mm10 reference files
@@ -145,19 +149,41 @@ I'm going to make a reference with just RFP and see if downsampled fastqs have a
 ```{bash make-rfp-ref}
 mkdir custom_ref/RFP
 grep -v "^>" custom_ref/RFP/RFP.fa | tr -d "\n" | wc
-#678 bases
+#672 bases
 
-echo -e 'RFP\tunknown\texon\t1\t678\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "proetin_coding";\n'\
-'RFP\tunknown\ttranscript\t1\t678\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "proetin_coding";\n'\
-'RFP\tunknown\tgene\t1\t678\t.\t+\t.\tgene_id "RFP"; gene_name "RFP"; gene_biotype "proetin_coding";' > custom_ref/RFP/RFP.gtf
+echo -e 'RFP\tunknown\texon\t1\t672\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "proetin_coding";\n'\
+'RFP\tunknown\ttranscript\t1\t672\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "proetin_coding";\n'\
+'RFP\tunknown\tgene\t1\t672\t.\t+\t.\tgene_id "RFP"; gene_name "RFP"; gene_biotype "proetin_coding";' > custom_ref/RFP/RFP.gtf
+
+#copy over fasta and gtf files, and gunzip gtf
+cp custom_ref/mm10_genome.fa custom_ref/RFP/genome.fa
+cp custom_ref/mm10_genes.gtf.gz custom_ref/RFP/genes.gtf.gz
+gunzip custom_ref/RFP/genes.gtf.gz
+
+#give self write permission
+chmod 774 custom_ref/RFP/*
+
+#cat RFP gtf and fasta to mm10 files
+cat custom_ref/RFP/RFP.fa >> custom_ref/RFP/genome.fa
+cat custom_ref/RFP/RFP.gtf >> custom_ref/RFP/genes.gtf
 
 #make just RFP reference
 ml cellranger
-cellranger mkref --output-dir custom_ref/RFP/just_RFP \
-    --genome just_RFP \
-    --fasta custom_ref/RFP/RFP.fa \
-    --genes custom_ref/RFP/RFP.gtf \
+cellranger mkref --output-dir custom_ref/RFP/full_RFP \
+    --genome full_RFP \
+    --fasta custom_ref/RFP/genome.fa \
+    --genes custom_ref/RFP/genes.gtf \
     --jobmode=local
+
+cellranger count \
+    --id SRR18932562 \
+    --output-dir GSE201615/SRR18932562 \
+    --fastqs input/fastqs/GSE201615 \
+    --localcores 20 \
+    --transcriptome custom_ref/RFP/just_RFP \
+    --nosecondary \
+    --disable-ui \
+    --create-bam true
 ```
 
 #### Downsample and Check for RFP Reads
@@ -165,7 +191,23 @@ cellranger mkref --output-dir custom_ref/RFP/just_RFP \
 I want to make sure I'm using the right version of RFP so I'm going to downsample the FASTQ input/fastqs/GSE201615/SRR18932562.fastq and see if it aligns.
 
 ```{bash downsample-GSE201615}
+mkdir small_fastqs
+seqtk sample -s100 input/fastqs/GSE201615/SRR18932562_S1_I1_001.fastq 100000 > small_fastqs/SRR18932562_S1_I1_001.fastq
 
+seqtk sample -s100 input/fastqs/GSE201615/SRR18932562_S1_R1_001.fastq 100000 > small_fastqs/SRR18932562_S1_R1_001.fastq
+
+seqtk sample -s100 input/fastqs/GSE201615/SRR18932562_S1_R2_001.fastq 100000 > small_fastqs/SRR18932562_S1_R2_001.fastq
+
+ml cellranger
+cellranger count \
+    --id SRR18932562 \
+    --output-dir small_fastq_alignment \
+    --fastqs small_fastqs \
+    --localcores 5 \
+    --transcriptome custom_ref/RFP/just_RFP \
+    --nosecondary \
+    --disable-ui \
+    --create-bam true
 ```
 
 ## Run cellranger count
