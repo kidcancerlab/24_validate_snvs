@@ -37,21 +37,32 @@ For this I'm thinking I make the new reference containing dsRED, cas9... and may
 
 
 ```{bash}
-mkdir input/fastqs/GSE201615
-fasterq-dump --outdir input/fastqs/GSE201615 --progress --split-spot SRR18932562
+#trying parallel-fastq-dump
+conda env create parallel_fastq_dump.yml
+conda activate parallel_fastq_dump
+parallel-fastq-dump --outdir input/fastqs/GSE201615/parallel -t 3 --split-files -s SRR18932563 SRR18932566 SRR18932567
 
-fastq-dump --outdir input/fastqs/GSE201615 --split-files SRR18932562
+
+fastq-dump --outdir input/fastqs/GSE201615/tmp --split-files SRR18932563 SRR18932566 SRR18932567
 
 #we have 3 fastqs for each; one is the Index and the other two are our Read files
 #_1 is I1
 #_2 is R1
 #_3 is R2
-mv input/fastqs/GSE201615/SRR18932562_1.fastq \
-    input/fastqs/GSE201615/SRR18932562_S1_I1_001.fastq
-mv input/fastqs/GSE201615/SRR18932562_2.fastq \
-    input/fastqs/GSE201615/SRR18932562_S1_R1_001.fastq
-mv input/fastqs/GSE201615/SRR18932562_3.fastq \
-    input/fastqs/GSE201615/SRR18932562_S1_R2_001.fastq
+
+
+cd input/fastqs/GSE201615
+for sra in SRR18932562 SRR18932563 SRR18932566 SRR18932567; do
+    mkdir $sra
+    mv ${sra}_1.fastq \
+        ${sra}/${sra}_S1_I1_001.fastq
+    mv ${sra}_2.fastq \
+        ${sra}/${sra}_S1_R1_001.fastq
+    mv ${sra}_3.fastq \
+        ${sra}/${sra}_S1_R2_001.fastq
+done
+
+cd ../../..
 ```
 
 ## Update Reference Genome
@@ -76,9 +87,9 @@ grep -v "^>" custom_ref/eGFP/eGFP.fa | tr -d "\n" | wc
 #720 bases
 
 #lets make a custom gtf for gfp; \t helps us make new columns that are needed in the gtf; we need both the exon and transcript lines 
-echo -e 'eGFP\tunknown\texon\t1\t720\t.\t+\t.\tgene_id "eGFP"; transcript_id "eGFP"; gene_biotype "proetin_coding";\n'\
-'eGFP\tunknown\ttranscript\t1\t720\t.\t+\t.\tgene_id "eGFP"; transcript_id "eGFP"; gene_biotype "proetin_coding";\n'\
-'eGFP\tunknown\tgene\t1\t720\t.\t+\t.\tgene_id "eGFP"; gene_name "eGFP"; gene_biotype "proetin_coding";' > custom_ref/eGFP/eGFP.gtf
+echo -e 'eGFP\tunknown\texon\t1\t720\t.\t+\t.\tgene_id "eGFP"; transcript_id "eGFP"; gene_biotype "protein_coding";\n'\
+'eGFP\tunknown\ttranscript\t1\t720\t.\t+\t.\tgene_id "eGFP"; transcript_id "eGFP"; gene_biotype "protein_coding";\n'\
+'eGFP\tunknown\tgene\t1\t720\t.\t+\t.\tgene_id "eGFP"; gene_name "eGFP"; gene_biotype "protein_coding";' > custom_ref/eGFP/eGFP.gtf
 
 #copy mm10 reference FASTA over (so we can modify it and not screw up the og)
 
@@ -115,9 +126,9 @@ grep -v "^>" custom_ref/unag/hre_unag.fa | tr -d "\n" | wc
 #8646 bases
 
 
-echo -e 'HRE-dUnaG\tunknown\texon\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transcript_id "HRE-dUnaG"; gene_biotype "proetin_coding";\n'\
-'HRE-dUnaG\tunknown\ttranscript\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transcript_id "HRE-dUnaG"; gene_biotype "proetin_coding";\n'\
-'HRE-dUnaG\tunknown\tgene\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; gene_name "HRE-dUnaG"; gene_biotype "proetin_coding";' > custom_ref/unag/hre_unag.gtf
+echo -e 'HRE-dUnaG\tunknown\texon\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transcript_id "HRE-dUnaG"; gene_biotype "protein_coding";\n'\
+'HRE-dUnaG\tunknown\ttranscript\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transcript_id "HRE-dUnaG"; gene_biotype "protein_coding";\n'\
+'HRE-dUnaG\tunknown\tgene\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; gene_name "HRE-dUnaG"; gene_biotype "protein_coding";' > custom_ref/unag/hre_unag.gtf
 
 #Going to append the gtf and fasta to the mm10
 #append GFP.fa to end of mm10 genome
@@ -151,9 +162,9 @@ mkdir custom_ref/RFP
 grep -v "^>" custom_ref/RFP/RFP.fa | tr -d "\n" | wc
 #672 bases
 
-echo -e 'RFP\tunknown\texon\t1\t672\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "proetin_coding";\n'\
-'RFP\tunknown\ttranscript\t1\t672\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "proetin_coding";\n'\
-'RFP\tunknown\tgene\t1\t672\t.\t+\t.\tgene_id "RFP"; gene_name "RFP"; gene_biotype "proetin_coding";' > custom_ref/RFP/RFP.gtf
+echo -e 'RFP\tunknown\texon\t1\t672\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "protein_coding";\n'\
+'RFP\tunknown\ttranscript\t1\t672\t.\t+\t.\tgene_id "RFP"; transcript_id "RFP"; gene_biotype "protein_coding";\n'\
+'RFP\tunknown\tgene\t1\t672\t.\t+\t.\tgene_id "RFP"; gene_name "RFP"; gene_biotype "protein_coding";' > custom_ref/RFP/RFP.gtf
 
 #copy over fasta and gtf files, and gunzip gtf
 cp custom_ref/mm10_genome.fa custom_ref/RFP/genome.fa
@@ -174,40 +185,6 @@ cellranger mkref --output-dir custom_ref/RFP/full_RFP \
     --fasta custom_ref/RFP/genome.fa \
     --genes custom_ref/RFP/genes.gtf \
     --jobmode=local
-
-cellranger count \
-    --id SRR18932562 \
-    --output-dir GSE201615/SRR18932562 \
-    --fastqs input/fastqs/GSE201615 \
-    --localcores 20 \
-    --transcriptome custom_ref/RFP/just_RFP \
-    --nosecondary \
-    --disable-ui \
-    --create-bam true
-```
-
-#### Downsample and Check for RFP Reads
-
-I want to make sure I'm using the right version of RFP so I'm going to downsample the FASTQ input/fastqs/GSE201615/SRR18932562.fastq and see if it aligns.
-
-```{bash downsample-GSE201615}
-mkdir small_fastqs
-seqtk sample -s100 input/fastqs/GSE201615/SRR18932562_S1_I1_001.fastq 100000 > small_fastqs/SRR18932562_S1_I1_001.fastq
-
-seqtk sample -s100 input/fastqs/GSE201615/SRR18932562_S1_R1_001.fastq 100000 > small_fastqs/SRR18932562_S1_R1_001.fastq
-
-seqtk sample -s100 input/fastqs/GSE201615/SRR18932562_S1_R2_001.fastq 100000 > small_fastqs/SRR18932562_S1_R2_001.fastq
-
-ml cellranger
-cellranger count \
-    --id SRR18932562 \
-    --output-dir small_fastq_alignment \
-    --fastqs small_fastqs \
-    --localcores 5 \
-    --transcriptome custom_ref/RFP/just_RFP \
-    --nosecondary \
-    --disable-ui \
-    --create-bam true
 ```
 
 ## Run cellranger count
@@ -245,6 +222,12 @@ done
 
 #run cellranger count
 sbatch cellranger_count_unag.sh
+```
+
+### On GSE201615
+
+```{bash GSE201615-cellranger-count}
+sbatch cellranger_count_rfp.sh
 ```
 
 ## Look at Counts for Our Reporter
