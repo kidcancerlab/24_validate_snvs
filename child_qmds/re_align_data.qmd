@@ -387,6 +387,7 @@ for (ob_name in ob_names) {
     #remove RFP from counts matrix and add as metadata column
     ob$rfp_exp <- GetAssayData(ob, layer = "counts")["RFP", ]
     ob <- subset(ob, features = rownames(ob)[rownames(ob) != "RFP"])
+    ob$sample_id <- ob_name
 
     obj_list[[ob_name]] <- subset(ob,
                                   nCount_RNA %in% c(1000:30000) &
@@ -396,4 +397,13 @@ for (ob_name in ob_names) {
 }
 #for each, 1000 < nCount_RNA < 30000, percent.mt < 10
 grid.arrange(grobs = qc_plots)
+
+grid.arrange(grobs = lapply(obj_list, r_feature_plot, "rfp_exp"))
+
+#binarize rfp expression
+for (ob in names(obj_list)) {
+    obj_list[[ob]]$binarized_rfp <- obj_list[[ob]]$rfp_exp > 0
+}
+
+grid.arrange(grobs = lapply(obj_list, r_feature_plot, "binarized_rfp"))
 ```
