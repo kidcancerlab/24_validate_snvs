@@ -371,14 +371,29 @@ ob_names <- list.files("counts/GSE201615") %>%
 obj_list <- list()
 qc_plots <- list()
 for (ob_name in ob_names) {
-    obj_list[[ob_name]] <- 
+    ob <- 
         tenx_load_qc(paste0("counts/GSE201615/",
                             ob_name,
                             "/outs/filtered_feature_bc_matrix"),
                      violin_plot = FALSE)
-    qc_plots[[ob_name]] <- feature_hist(obj_list[[ob_name]],
-                                        c("nCount_RNA", "percent.mt")) +
+    qc_plots[[ob_name]] <-
+        feature_hist(ob,
+                     c("nCount_RNA", "percent.mt"),
+                     cutoff_table = tribble(~feature, ~min_val, ~max_val,
+                                            "nCount_RNA", 1000,    30000,
+                                            "percent.mt",    0,       10)) +
         ggtitle(label = ob_name)
+
+    #remove RFP from counts matrix and add as metadata column
+    ob$rfp_exp <- GetAssayData(ob, layer = "counts")["RFP", ]
+    ob <- subset(ob, features = rownames(ob)[rownames(ob) != "RFP"])
+
+    obj_list[[ob_name]] <- subset(ob,
+                                  nCount_RNA %in% c(1000:30000) &
+                                  percent.mt < 10) %>%
+        process_seurat()
+    
 }
+#for each, 1000 < nCount_RNA < 30000, percent.mt < 10
 grid.arrange(grobs = qc_plots)
 ```
