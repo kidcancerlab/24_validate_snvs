@@ -362,3 +362,23 @@ merged_gbm$unag_present <- merged_gbm$unag_exp > 0
 
 r_feature_plot(merged_gbm, features = c("unag_present", "Sox2", "S100a4", "Cd4", "Cd8"), pt.size = 0.3, coord.fixed = TRUE)
 ```
+
+### GSE201615
+
+```{r gse201615}
+ob_names <- list.files("counts/GSE201615") %>%
+    grep(pattern = "output", invert = TRUE, value = TRUE)
+obj_list <- list()
+qc_plots <- list()
+for (ob_name in ob_names) {
+    obj_list[[ob_name]] <- 
+        tenx_load_qc(paste0("counts/GSE201615/",
+                            ob_name,
+                            "/outs/filtered_feature_bc_matrix"),
+                     violin_plot = FALSE)
+    qc_plots[[ob_name]] <- feature_hist(obj_list[[ob_name]],
+                                        c("nCount_RNA", "percent.mt")) +
+        ggtitle(label = ob_name)
+}
+grid.arrange(grobs = qc_plots)
+```
