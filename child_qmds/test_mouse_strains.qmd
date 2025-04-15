@@ -1,0 +1,83 @@
+##
+I want to look over the merged bcfs and quantify the proportion of positions covered by n reads has a variant call.
+
+Then I want to compare these values between the flex data, where any variant call is artifactual and the B6 data, where an unknown proportion of variant calls at any depth are artifactual. This will allow me to estimate the false positive rate for SNV calls in the pipeline.
+
+```{r}
+merged_sobj_mouse_ours <-
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+
+# Grab just data from our lab - excludes flex data
+merged_sobj_mouse_ours <-
+    merged_sobj_mouse_ours[, grepl("^S0", merged_sobj_mouse_ours$Sample_ID)]
+
+merged_sobj_mouse_ours$cell_group <-
+    paste0(
+        merged_sobj_mouse_ours$Sample_ID,
+        "_c",
+        merged_sobj_mouse_ours$individ_clusters
+    )
+```
+
+```{r mouse_scanbit}
+cell_barcode_group_table <-
+    merged_sobj_mouse_ours@meta.data %>%
+    select(cell_group, cell_barcode, bam_file) %>%
+    as_tibble()
+
+snp_tree <-
+    get_snp_tree(
+        cellid_bam_table = cell_barcode_group_table,
+        ploidy = "mm10",
+        output_dir = "output/snv/mouse/",
+        output_base_name = "mouse_ours",
+        ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+        min_depth = c(1, 5, 10, 20, 30),
+        sbatch_base = "our_mouse_sbatch",
+        min_snvs_per_cluster = 500,
+        max_prop_missing_at_site = 0.9,
+        cleanup = FALSE
+    )
+
+```
+
+```{bash mouse_split_bcf}
+conda activate scanBit_xkcd_1337
+# S0066, S0259, S0282 are B6 or B6 derived F420
+bcftools view \
+    -O b \
+    -o output/snv/mouse/mergedmouse_ours_c5_B6_group.bcf \
+    -s S0066_c0,S0066_c1,S0066_c2,S0066_c3,S0066_c4,S0066_c5,S0066_c6,S0066_c7,S0066_c8,S0259_c0,S0259_c1,S0282_c0,S0282_c1,S0282_c10,S0282_c11,S0282_c12,S0282_c13,S0282_c14,S0282_c2,S0282_c3,S0282_c4,S0282_c5,S0282_c6,S0282_c7,S0282_c8,S0282_c9 \
+    output/snv/mouse/mergedmouse_ours_c5.bcf
+
+bcftools index output/snv/mouse/mergedmouse_ours_c5_B6_group.bcf
+
+# S0074, S0105, S0122 are Balbc or Balbc derivef K7M2
+bcftools view \
+    -O b \
+    -o output/snv/mouse/mergedmouse_ours_c5_balbc_group.bcf \
+    -s S0074_c0,S0074_c1,S0074_c10,S0074_c11,S0074_c2,S0074_c3,S0074_c4,S0074_c5,S0074_c6,S0074_c7,S0074_c8,S0074_c9,S0105_c0,S0105_c1,S0105_c10,S0105_c11,S0105_c12,S0105_c2,S0105_c3,S0105_c4,S0105_c5,S0105_c6,S0105_c7,S0105_c8,S0105_c9,S0122_c0,S0122_c1,S0122_c2,S0122_c3,S0122_c4,S0122_c5,S0122_c6,S0122_c7,S0122_c8,S0122_c9 \
+    output/snv/mouse/mergedmouse_ours_c5.bcf
+
+bcftools index output/snv/mouse/mergedmouse_ours_c5_balbc_group.bcf
+```
+
+```{r mouse_subtree}
+scanBit::group_clusters_by_dist(
+    merged_bcf_file = "output/snv/mouse/mergedmouse_ours_c5_B6_group.bcf",
+    output_file = "output/snv/mouse/mergedmouse_ours_c5_B6_group.tsv",
+    min_snvs_per_cluster = 500,
+    max_prop_missing_at_site = 0.9,
+    tree_figure_file = "output/snv/mouse/mergedmouse_ours_c5_B6_group_tree.png",
+    temp_dir = "."
+)
+
+scanBit::group_clusters_by_dist(
+    merged_bcf_file = "output/snv/mouse/mergedmouse_ours_c5_balbc_group.bcf",
+    output_file = "output/snv/mouse/mergedmouse_ours_c5_balbc_group.tsv",
+    min_snvs_per_cluster = 500,
+    max_prop_missing_at_site = 0.9,
+    tree_figure_file = "output/snv/mouse/mergedmouse_ours_c5_balbc_group_tree.png",
+    temp_dir = "."
+)
+```
