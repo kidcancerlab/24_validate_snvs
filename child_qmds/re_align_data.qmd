@@ -35,6 +35,7 @@ Does it have dsRED?
 
 For this I'm thinking I make the new reference containing dsRED, cas9... and maybe Ccne-dsRED conjugate? I can't tell exactly what's going on with their experimental methods.
 
+For this data, SRR18932562 and 3 are the same sample but different runs, and the other two are also the same sample but different runs. After I run fastq dump, I will be adding them to the same folder and adding a lane parameter to the file name (L001 or L002).
 
 ```{bash}
 #trying parallel-fastq-dump
@@ -43,7 +44,7 @@ conda activate parallel_fastq_dump
 parallel-fastq-dump --outdir input/fastqs/GSE201615/parallel -t 3 --split-files -s SRR18932563 SRR18932566 SRR18932567
 
 
-fastq-dump --outdir input/fastqs/GSE201615/tmp --split-files SRR18932563 SRR18932566 SRR18932567
+fastq-dump --outdir input/fastqs/GSE201615/tmp --split-files SRR18932562 SRR18932563 SRR18932566 SRR18932567
 
 #we have 3 fastqs for each; one is the Index and the other two are our Read files
 #_1 is I1
@@ -51,16 +52,29 @@ fastq-dump --outdir input/fastqs/GSE201615/tmp --split-files SRR18932563 SRR1893
 #_3 is R2
 
 
+
+#I'll be naming the new fastqs by the sample name, GSM6068647 and GSM6068645
 cd input/fastqs/GSE201615
-for sra in SRR18932562 SRR18932563 SRR18932566 SRR18932567; do
-    mkdir $sra
-    mv ${sra}_1.fastq \
-        ${sra}/${sra}_S1_I1_001.fastq
-    mv ${sra}_2.fastq \
-        ${sra}/${sra}_S1_R1_001.fastq
-    mv ${sra}_3.fastq \
-        ${sra}/${sra}_S1_R2_001.fastq
-done
+mkdir GSM6068647
+
+#SRR18932562 is going to be lane 1 reads
+mv SRR18932562_1.fastq GSM6068647/GSM6068647_S1_L001_I1_001.fastq
+mv SRR18932562_2.fastq GSM6068647/GSM6068647_S1_L001_R1_001.fastq
+mv SRR18932562_3.fastq GSM6068647/GSM6068647_S1_L001_R2_001.fastq
+
+#SRR18932563 is going to be lane 2 reads
+mv SRR18932563_1.fastq GSM6068647/GSM6068647_S1_L002_I1_001.fastq
+mv SRR18932563_2.fastq GSM6068647/GSM6068647_S1_L002_R1_001.fastq
+mv SRR18932563_3.fastq GSM6068647/GSM6068647_S1_L002_R2_001.fastq
+
+#Now for GSM6068645
+mv SRR18932566_1.fastq GSM6068645/GSM6068645_S1_L001_I1_001.fastq
+mv SRR18932566_2.fastq GSM6068645/GSM6068645_S1_L001_R1_001.fastq
+mv SRR18932566_3.fastq GSM6068645/GSM6068645_S1_L001_R2_001.fastq
+
+mv SRR18932567_1.fastq GSM6068645/GSM6068645_S1_L002_I1_001.fastq
+mv SRR18932567_2.fastq GSM6068645/GSM6068645_S1_L002_R1_001.fastq
+mv SRR18932567_3.fastq GSM6068645/GSM6068645_S1_L002_R2_001.fastq
 
 cd ../../..
 ```
@@ -354,6 +368,11 @@ obj_list <- lapply(sample_names, function(x) {
 })
 names(obj_list) <- sample_names
 
+for (ob in names(obj_list)) {
+    obj_list[[ob]]$binarized_unag <- obj_list[[ob]]$unag_exp > 0
+}
+grid.arrange(grobs = lapply(obj_list, r_feature_plot, features = "binarized_unag", pt.size = 0.3))
+
 merged_gbm <- merge(obj_list[[1]], obj_list[-2]) %>%
     process_seurat()
 
@@ -406,4 +425,11 @@ for (ob in names(obj_list)) {
 }
 
 grid.arrange(grobs = lapply(obj_list, r_feature_plot, "binarized_rfp"))
+
+#last 2 look similar?
+obj_list[3:4]
+
+colnames(obj_list[[4]]) %in% colnames(obj_list[[3]]) %>% table()
+
+colnames(obj_list[[1]]) %in% colnames(obj_list[[4]]) %>% table()
 ```
