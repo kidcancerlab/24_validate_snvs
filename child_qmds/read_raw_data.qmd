@@ -11,14 +11,19 @@ mouse_count_list <-
         mc.preschedule = FALSE,
         mc.cores = parallelly::availableCores(),
         function(i) {
-    read_raw(
-        i,
-        samples_tsv,
-        species_pattern = "^mm10---",
-        organism = "mouse",
-        annotate_species = "mouse"
-    )
-}) %>%
+            read_raw(
+                i,
+                samples_tsv,
+                organism = "mouse",
+                annotate_species = "mouse",
+                bam_file =
+                    paste0(
+                        "/home/gdrobertslab/lab/Counts_2/",
+                        samples_tsv$Sample_ID[i],
+                        "/possorted_genome_bam.bam"
+                    )
+            )
+    }) %>%
     confirm_mclapply_worked() %>%
     bind_rows()
 
@@ -31,21 +36,53 @@ write_tsv(mouse_count_list, "output/counts/mouse_cell_counts.txt")
 DT::datatable(read_tsv("output/counts/mouse_cell_counts.txt"))
 ```
 
+## Mouse flex data from 10x
+```{bash download_mouse_flex}
+samples_flex_tsv <- read_tsv("misc/sample_metadata_flex.tsv", show_col_types = FALSE)
+
+mouse_count_list <-
+    parallel::mclapply(
+        seq_len(nrow(samples_flex_tsv)),
+        mc.preschedule = FALSE,
+        mc.cores = parallelly::availableCores(),
+        function(i) {
+            read_raw(
+                i,
+                samples_flex_tsv,
+                h5_folder = "input/10x_flex",
+                organism = "mouse",
+                annotate_species = "mouse",
+                bam_file =
+                    paste0(
+                        "input/10x_flex/",
+                        samples_flex_tsv$Sample_ID[i],
+                        "/count_sample_alignments.bam"
+                    )
+            )
+    }) %>%
+    confirm_mclapply_worked() %>%
+    bind_rows()
+
+write_tsv(mouse_count_list, "output/counts/mouse_cell_counts_flex.txt")
+```
+
 ```{r read_raw_human}
 #| dependson: helper_read_raw_fun
+samples_human_tsv <- read_tsv("misc/sample_metadata_human.tsv", show_col_types = FALSE)
+
 human_count_list <-
     parallel::mclapply(
         seq_len(nrow(samples_tsv)),
         mc.preschedule = FALSE,
         mc.cores = parallelly::availableCores(),
         function(i) {
-    read_raw(
-        i = i,
-        samples_tsv = samples_tsv,
-        species_pattern = "^GRCh38-",
-        organism = "human",
-        annotate_species = "human"
-    )
+            read_raw(
+                i = i,
+                samples_tsv = samples_tsv,
+                species_pattern = "^GRCh38-",
+                organism = "human",
+                annotate_species = "human"
+            )
 }) %>%
     confirm_mclapply_worked() %>%
     bind_rows()

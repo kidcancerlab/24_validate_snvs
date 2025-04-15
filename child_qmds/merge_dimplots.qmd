@@ -1,39 +1,66 @@
 ## Merge the mouse data by species and make DimPlots
 ```{r merge_dimplots_mouse}
 #| dependson: read_raw_mouse
-sobj_qs_dir <- "output/seurat_objects/individual"
+mouse_qs_files <-
+    list.files(
+        path = "output/seurat_objects/individual",
+        pattern = "*_mouse.qs",
+        full.names = TRUE
+    )
 
 sobj_list <-
-    lapply(
-        samples_tsv$Sample_ID,
+    parallel::mclapply(
+        mouse_qs_files,
+        mc.cores = 5,
+        mc.preschedule = FALSE,
         function(x) {
-            qs::qread(file.path(sobj_qs_dir, paste0(x, "_mouse.qs")))
+            qs::qread(x)
     })
 
 merged_sobj_mouse <-
     merge(sobj_list[[1]], sobj_list[-1]) %>%
-    process_seurat() %>%
-    JoinLayers()
+    JoinLayers() %>%
+    process_seurat()
+
+# I think we want the within_sample clusters since there is pretty severe batch effect
+# opt_res <-
+#     optimize_silhouette(merged_sobj_mouse, summary_plot = FALSE) %>%
+#     arrange(desc(sil_vals)) %>%
+#     pull(res_vals) %>%
+#     head(1)
+
+# merged_sobj_mouse <-
+#     Seurat::FindClusters(merged_sobj_mouse, resolution = opt_res)
 
 qs::qsave(merged_sobj_mouse, "output/seurat_objects/merged/merged_mouse.qs")
 
 plot_name <-
-    DimPlot(
+    (DimPlot(
         merged_sobj_mouse,
         group.by = "cell_type",
-        split.by = "Name",
         label = TRUE,
+        label.box = TRUE,
         repel = TRUE,
-        ncol = 2
+        ncol = 1
     ) +
-    theme(aspect.ratio = 1)
+    NoLegend() +
+    theme(aspect.ratio = 1)) +
+    (DimPlot(
+        merged_sobj_mouse,
+        group.by = "Sample_ID",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE,
+        ncol = 1
+    ) +
+    NoLegend() +
+    theme(aspect.ratio = 1))
 ggsave(
-    "output/figures/dimplot_mouse_cell_type_by_description.pdf",
+    "output/figures/dimplot_mouse_cell_type_by_sample.pdf",
     plot_name,
-    width = 10,
-    height = 10
+    width = 15,
+    height = 20
 )
-plot_name
 ```
 
 ## Table of cell types for mouse data

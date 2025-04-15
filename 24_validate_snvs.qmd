@@ -33,6 +33,7 @@ theme_set(theme_bw())
 theme_update(plot.title = element_text(hjust = 0.5))
 library(gridExtra)
 library(patchwork)
+library(scanBit)
 
 set.seed(1337)
 ```
@@ -44,7 +45,9 @@ set.seed(1337)
 # Set up directory structure
 ```{bash mkdirs}
 for directoryName in \
+    input/10x_flex \
     output \
+    slurmOut \
     output/counts \
     output/degs \
     output/gsea \
@@ -53,6 +56,8 @@ for directoryName in \
     output/figures/gsea \
     output/seurat_objects/individual \
     output/seurat_objects/merged \
+    output/snv/flex \
+    output/snv/mouse \
     input \
     input/fastqs \
     custom_ref
@@ -73,8 +78,10 @@ seurat_version_check()
 ```
 
 Control: do this on 10x flex single cell data
+Data from https://www.10xgenomics.com/datasets/40k-mixture-of-cells-dissociated-from-4-fixed-mouse-tissues-using-manual-dissociation-multiplexed-samples-4-probe-barcodes-1-standard
 
-potential datasets for validation
+
+### potential datasets for validation
 
 - GSE246498
     - ZsGreen in tumor cells
@@ -123,6 +130,19 @@ Make new reference with cat of mouse and tumor markers
 
 Align to new ref
 
+###  Our samples
+
+S0105 - K7M2-RFP tibia tumor
+S0122 - K7M2 sLPmCherry lung mets 10 days post injection. Flow sorted Cherry positive fraction 1:1:1 mix of CD45+, Epcam+ and double negative
+S0259 - F420, barcoded, preinjection t0 ctrl
+S0282 - F420 Control (from F420 FLUC + nintendanib study)
+S0066 - B6 lung
+S0074 - Balb/c lung
+
+
+S0105 S0122 S0259 S0282
+
+ -- Need RFP, FLUC, sLPmCherry integrated into reference
 
 # Read in raw data and process to Seurat objects
 The metadata for all samples is stored in misc/sample_metadata.tsv.

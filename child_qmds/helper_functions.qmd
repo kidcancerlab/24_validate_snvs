@@ -15,9 +15,11 @@ read_raw <- function(i,
                      min_n_cells = 50,
                      annotate_ref,
                      annotate_labels,
-                     annotate_species = "") {
+                     annotate_species = "",
+                     bam_file) {
     sample_name <- samples_tsv$Sample_ID[i]
 
+    # Not making this an lapply as defaults are different, may do it later
     ncount_min <-
         pick_cutoff(
             ncount_min,
@@ -54,6 +56,10 @@ read_raw <- function(i,
                 species_pattern = species_pattern,
                 violin_plot = FALSE
             )
+
+        sobj$bam_file <- bam_file
+
+        sobj$cell_barcode <- Seurat::Cells(sobj)
 
         pre_filt_hist <-
             rrrSingleCellUtils::feature_hist(
@@ -103,6 +109,16 @@ read_raw <- function(i,
                     percent.mt < mt_percent_max
                 ) %>%
                 rrrSingleCellUtils::process_seurat()
+
+            opt_res <-
+                rrrSingleCellUtils::optimize_silhouette(sobj, summary_plot = FALSE) %>%
+                dplyr::arrange(dplyr::desc(sil_vals)) %>%
+                dplyr::pull(res_vals) %>%
+                head(1)
+
+            sobj <- Seurat::FindClusters(sobj, resolution = opt_res)
+
+            sobj$individ_clusters <- sobj$seurat_clusters
 
             # Add metadata to Seurat object from samples_tsv
             for (colname in colnames(samples_tsv)) {
@@ -191,7 +207,8 @@ pull_species_cutoff <- function(from_sample_tsv,
         # If from_sample_tsv has letters in it, species pattern likely there
         # We need to specify scientific = F so that 100,000 != 1e+05 which
         # has an "e" :-| and so fails here
-        if (grepl("[a-zA-Z]", format(from_sample_tsv, scientific = FALSE))) {
+        if (grepl("[a-zA-Z]", format(from_sample_tsv, scientific = FALSE)) &&
+                !is.na(from_sample_tsv)) {
             stop(
                 "Sample cutoff value is not just a number but species_pattern ",
                 "not provided. Species_pattern: ",
