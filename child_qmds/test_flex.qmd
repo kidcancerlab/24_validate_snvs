@@ -1,0 +1,106 @@
+## Test snp calling on flex data
+
+### Download 10x flex data
+```{bash download_flex}
+#| eval: false
+
+sbatch sbatchCmds/get10x_flex.sh
+```
+
+### Read in 10x flex data
+```{r read_flex}
+#| cache.vars: sobj_list
+merged_sobj_mouse_flex <-
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+
+# Grab just data from our lab - excludes flex data
+merged_sobj_mouse_flex <-
+    merged_sobj_mouse_flex[, grepl("^flex_", merged_sobj_mouse_flex$Sample_ID)] %>%
+    process_seurat()
+
+merged_sobj_mouse_flex$cell_group <-
+    paste0(
+        merged_sobj_mouse_flex$Sample_ID,
+        "_c",
+        merged_sobj_mouse_flex$individ_clusters
+    )
+
+flex_dimplot <-
+    (DimPlot(
+        merged_sobj_mouse_flex,
+        group.by = "Name",
+        label = TRUE,
+        label.box = TRUE,
+        label.size = 2,
+        repel = TRUE,
+        ncol = 1
+    ) +
+        NoLegend()) +
+    (DimPlot(
+        merged_sobj_mouse_flex,
+        group.by = "cell_group",
+        label = TRUE,
+        label.box = TRUE,
+        label.size = 2,
+        repel = TRUE,
+        ncol = 1
+    ) +
+        NoLegend()) +
+    (DimPlot(
+        merged_sobj_mouse_flex,
+        group.by = "cell_type",
+        label = TRUE,
+        label.box = TRUE,
+        label.size = 2,
+        repel = TRUE,
+        ncol = 1
+    ) +
+        NoLegend())
+
+ggsave(
+    "output/figures/dimplot_flex_cell_type_group.pdf",
+    flex_dimplot,
+    width = 10,
+    height = 20
+)
+```
+
+
+```{r runSNVs}
+cell_barcode_group_table <-
+    merged_sobj_mouse_flex@meta.data %>%
+    select(cell_group, cell_barcode, bam_file) %>%
+    as_tibble()
+
+snp_tree <-
+    get_snp_tree(
+        cellid_bam_table = cell_barcode_group_table,
+        ploidy = "mm10",
+        output_dir = "output/snv/flex/",
+        output_base_name = "flex_snvs",
+        ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+        min_depth = c(1, 5, 10, 20, 30),
+        sbatch_base = "flex_sbatch",
+        slurm_base = "slurmOut/flex_snv",
+        min_snvs_per_cluster = 500,
+        n_bootstraps = 10000,
+        max_prop_missing_at_site = 0.9
+    )
+
+# This was erroring out because there aren't enough snvs
+# I lowered min_snvs_per_cluster to 50 to get it to work
+
+scanBit::group_clusters_by_dist(
+    merged_bcf_file = "output/snv/flex/mergedflex_snvs_c5.bcf",
+    output_file = "output/snv/flex/mergedflex_snvs_c5_min_5.tsv",
+    min_snvs_per_cluster = 5,
+    max_prop_missing_at_site = 0.99,
+    tree_figure_file = "output/snv/flex/mergedflex_snvs_c5_tree.png",
+    other_sbatch_options = "",
+    temp_dir = "."
+)
+```
+
+## Quantify the number of SNVs for each level of coverage
+
+Ultimately want a plot of SNVs vs read depth
