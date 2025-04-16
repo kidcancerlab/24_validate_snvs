@@ -3,6 +3,7 @@ import os
 import re
 import argparse
 
+################################################################################
 #going to pass arguments for the gbk path, new chromosome name
 parser = argparse.ArgumentParser(description = "create fasta and gtf from gbk file")
 parser.add_argument("--chrName",
@@ -11,8 +12,12 @@ parser.add_argument("--chrName",
 parser.add_argument("--gbk",
                     type = str,
                     help = "path to genbank file")
+parser.add_argument("--outdir",
+                    type = str,
+                    help = "path to folder to contain new chromosome file")
 
 args = parser.parse_args()
+################################################################################
 
 if not os.path.exists(args.gbk):
     print("ERROR: The specified gbk file: " +
@@ -20,6 +25,8 @@ if not os.path.exists(args.gbk):
           " path does not exist!")
     sys.exit(1)
 
+#remove any end slashes from outdir
+outdir = args.outdir.removesuffix("/")
 
 #store lines as list
 with open(args.gbk, 'r') as file:
@@ -77,7 +84,9 @@ for cur_line in cds_lines:
 
 with open(chr_name + ".gtf", "w") as gtf:
     for i in range(0, len(labels)):
-        gtf.write(chr_name +
+        gtf.write(outdir +
+                  "/" +
+                  chr_name +
                   "\tunknown\texon\t" +
                   str(bps[i][0]) +
                   "\t" +
@@ -86,7 +95,9 @@ with open(chr_name + ".gtf", "w") as gtf:
                   f'"{labels[i]}"' +
                   "; transcript_id " +
                   f'"{labels[i]}"; gene_biotype "protein_coding";\n')
-        gtf.write(chr_name +
+        gtf.write(outdir +
+                  "/" +
+                  chr_name +
                   "\tunknown\ttranscript\t" +
                   str(bps[i][0]) +
                   "\t" +
@@ -95,7 +106,9 @@ with open(chr_name + ".gtf", "w") as gtf:
                   f'"{labels[i]}"' +
                   "; transcript_id " +
                   f'"{labels[i]}"; gene_biotype "protein_coding";\n')
-        gtf.write(chr_name +
+        gtf.write(outdir +
+                  "/" +
+                  chr_name +
                   "\tunknown\tgene\t" +
                   str(bps[i][0]) +
                   "\t" +
