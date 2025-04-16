@@ -235,7 +235,13 @@ do
 done
 
 #run cellranger count
-sbatch cellranger_count_unag.sh
+bash helper_scripts/realign.sh \
+    -f input/fastqs/GSE179077 \
+    -s mm10 \
+    -o testing_dir
+
+
+
 ```
 
 ### On GSE201615
