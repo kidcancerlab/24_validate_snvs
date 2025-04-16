@@ -53,7 +53,7 @@ cds_seq = re.sub(r'[0-9]', '', cds_seq).upper()
 
 #write to fasta and add chromosome name
 chr_name=args.chrName
-with open(chr_name + ".fasta", "w") as file:
+with open(outdir + "/" + chr_name + ".fa", "w") as file:
     file.write(">" + chr_name + "\n")
     file.write(cds_seq)
 
@@ -82,11 +82,9 @@ for cur_line in cds_lines:
     bps.append(new_bps)
     labels.append(tmp_label)
 
-with open(chr_name + ".gtf", "w") as gtf:
+with open(outdir + "/" + chr_name + ".gtf", "w") as gtf:
     for i in range(0, len(labels)):
-        gtf.write(outdir +
-                  "/" +
-                  chr_name +
+        gtf.write(chr_name +
                   "\tunknown\texon\t" +
                   str(bps[i][0]) +
                   "\t" +
@@ -95,9 +93,7 @@ with open(chr_name + ".gtf", "w") as gtf:
                   f'"{labels[i]}"' +
                   "; transcript_id " +
                   f'"{labels[i]}"; gene_biotype "protein_coding";\n')
-        gtf.write(outdir +
-                  "/" +
-                  chr_name +
+        gtf.write(chr_name +
                   "\tunknown\ttranscript\t" +
                   str(bps[i][0]) +
                   "\t" +
@@ -106,9 +102,7 @@ with open(chr_name + ".gtf", "w") as gtf:
                   f'"{labels[i]}"' +
                   "; transcript_id " +
                   f'"{labels[i]}"; gene_biotype "protein_coding";\n')
-        gtf.write(outdir +
-                  "/" +
-                  chr_name +
+        gtf.write(chr_name +
                   "\tunknown\tgene\t" +
                   str(bps[i][0]) +
                   "\t" +
