@@ -44,7 +44,7 @@ else
     mkdir $ref_out
 
     #make fastq and fasta for new plasmid
-    python make_gene_files.py --chrName $plasmid --gbk $gbk --outdir $ref_out
+    python helper_scripts/make_gene_files.py --chrName $plasmid --gbk $gbk --outdir $ref_out
 
     #gtf and fasta are output to $ref_out/$chr_name.fa
 

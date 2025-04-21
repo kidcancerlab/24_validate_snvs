@@ -1,0 +1,92 @@
+## Get FASTQ Files
+
+I'll be using SRA-Toolkit/2.10.8 for this. Specifically, the `fasterq-dump` function.
+
+For the SRA downloads, I'll also have to rename the fastqs so they match the format required by cellranger count.
+
+### GSE247228
+
+```{bash get-computing-power}
+srun_l -c 12 -p himem --x11 --pty bash
+```
+
+```{bash get-fastqs}
+ml SRA-Toolkit/2.10.8
+fasterq-dump --outdir input/fastqs/GSE247228 --progress SRR26705626 SRR26705627 SRR26705629 SRR26705628 SRR26705630 SRR26705631
+
+# We need to convert our fastq names to a cellranger compatible format
+
+for sra in SRR26705626 SRR26705627 SRR26705628 SRR26705629 SRR26705630 SRR26705631
+do
+    mkdir input/fastqs/GSE247228/${sra}
+    mv input/fastqs/GSE247228/${sra}_1.fastq \
+        input/fastqs/GSE247228/${sra}/${sra}_S1_R1_001.fastq
+    mv input/fastqs/GSE247228/${sra}_2.fastq \
+        input/fastqs/GSE247228/${sra}/${sra}_S1_R2_001.fastq
+done
+```
+
+### GSE179077
+
+Fluorescent UnaG in hypoxic glioblastoma cells
+
+```{bash get-unag-fastqs}
+mkdir input/fastqs/GSE179077
+fasterq-dump --outdir input/fastqs/GSE179077 --progress SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
+
+
+#rename to cellranger compatible format
+for sra in SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
+do
+    mkdir input/fastqs/GSE179077/${sra}
+    mv input/fastqs/GSE179077/${sra}_1.fastq \
+        input/fastqs/GSE179077/${sra}/${sra}_S1_R1_001.fastq
+    mv input/fastqs/GSE179077/${sra}_2.fastq \
+        input/fastqs/GSE179077/${sra}/${sra}_S1_R2_001.fastq
+done
+```
+
+### GSE201615
+
+Does it have dsRED?
+
+For this I'm thinking I make the new reference containing dsRED, cas9... and maybe Ccne-dsRED conjugate? I can't tell exactly what's going on with their experimental methods.
+
+For this data, SRR18932562 and 3 are the same sample but different runs, and the other two are also the same sample but different runs. After I run fastq dump, I will be adding them to the same folder and adding a lane parameter to the file name (L001 or L002).
+
+```{bash}
+#trying parallel-fastq-dump
+conda env create parallel_fastq_dump.yml
+conda activate parallel_fastq_dump
+parallel-fastq-dump --outdir input/fastqs/GSE201615/parallel -t 3 --split-files -s SRR18932563 SRR18932566 SRR18932567
+
+
+fastq-dump --outdir input/fastqs/GSE201615/tmp --split-files SRR18932562 SRR18932563 SRR18932566 SRR18932567
+
+#we have 3 fastqs for each; one is the Index and the other two are our Read files
+#_1 is I1
+#_2 is R1
+#_3 is R2
+```
+
+## Robert's Lab Samples
+
+### S0105
+
+K7M2 RFP tibia tumor
+
+https://www.snapgene.com/plasmids/fluorescent_protein_genes_and_plasmids/TurboRFP
+
+### S0122 + S0123
+
+K7M2 sLPmCherry lung mets
+
+### S0259
+
+Barcoded F420's (in culture?); S0260 - 61 are injected barcoded F420's post injection
+
+### S0282
+
+F420 FLUC
+
+https://www.addgene.org/17477/sequences/#addgene-full

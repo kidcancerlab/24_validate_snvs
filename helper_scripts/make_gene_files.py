@@ -112,4 +112,3 @@ with open(outdir + "/" + chr_name + ".gtf", "w") as gtf:
                   "; transcript_id " +
                   f'"{labels[i]}"; gene_biotype "protein_coding";\n')
 
-# https://media.addgene.org/snapgene-media/v2.0.0/sequences/243367/aa7561a4-cb9c-461c-b805-c2df377ec5d1/addgene-plasmid-124372-sequence-243367.gbk
