@@ -3,7 +3,6 @@
 #SBATCH --job-name=mk_counts_%j
 #SBATCH --output=counts/GSE247228/output/%j.txt
 #SBATCH --error=counts/GSE247228/output/%j.txt
-#SBATCH --array=0-2
 #SBATCH --cpus-per-task=20
 #SBATCH --partition=himem,general
 #SBATCH --time=2-00:00:00
