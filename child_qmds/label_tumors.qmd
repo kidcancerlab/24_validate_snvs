@@ -84,7 +84,7 @@ dimplot_better(merged_obs, group  = "seurat_clusters")| r_feature_plot(merged_ob
 It seems like clusters 6, 9, and 11 are our eGFP expressing cells. I'm going to save this off as a seurat object as well as just a metadata file.
 
 ```{r write-off-GSE247228}
-merged_obs$is_tumor <- merged_obs$seurat_clusters %in% c(6, 9, 11)
+merged_ob$is_tumor <- merged_obs$seurat_clusters %in% c(6, 9, 11)
 
 qs::qsave(merged_obs, "output/seurat_objects/merged_GSE247288.qs")
 rownames_to_column(merged_obs@meta.data, "bc") %>%
@@ -92,51 +92,12 @@ rownames_to_column(merged_obs@meta.data, "bc") %>%
                 sep = "\t",
                 row.names = FALSE,
                 quote = FALSE)
+
+merged_ob <- qs::qread("output/seurat_objects/merged_GSE247288.qs")
+
+r_dim_plot(merged_ob, group = "seurat_clusters") | r_feature_plot(merged_ob, features = "binarized_eGFP", order = FALSE)
 ```
 
-### GSE179077
-
-```{r unag-exp}
-sample_names <- grep("SRR", list.files("counts/GSE179077"), value = TRUE)
-obj_list <- lapply(sample_names, function(x) {
-    ob <- tenx_load_qc(paste0("counts/GSE179077/",
-                        x,
-                        "/outs/filtered_feature_bc_matrix"),
-                 violin_plot = FALSE)
-    ob$unag_exp <- GetAssayData(ob, layer = "counts")["HRE-dUnaG", ]
-    
-    png(paste0("output/figures/GSE179077/qc_", x, ".png"),
-        height = 600,
-        width = 800)
-    feature_hist(ob,
-                 features = c("nCount_RNA", "percent.mt"),
-                 cutoff_table = tribble(    ~feature, ~min_val, ~max_val,
-                                        "nCount_RNA",     1000,    10000,
-                                        "percent.mt",        0,       10))
-    dev.off()
-    
-    ob <- subset(ob, features = rownames(ob)[rownames(ob) != "HRE-dUnaG"],
-                     subset = nCount_RNA >= 1000 &
-                     nCount_RNA <= 10000 &
-                     percent.mt < 10) %>%
-        process_seurat()
-    return(ob)
-})
-names(obj_list) <- sample_names
-
-for (ob in names(obj_list)) {
-    obj_list[[ob]]$binarized_unag <- obj_list[[ob]]$unag_exp > 0
-}
-grid.arrange(grobs = lapply(obj_list, r_feature_plot, features = "binarized_unag", pt.size = 0.3))
-
-merged_gbm <- merge(obj_list[[1]], obj_list[-2]) %>%
-    process_seurat()
-
-#binarize unag_exp
-merged_gbm$unag_present <- merged_gbm$unag_exp > 0
-
-r_feature_plot(merged_gbm, features = c("unag_present", "Sox2", "S100a4", "Cd4", "Cd8"), pt.size = 0.3, coord.fixed = TRUE)
-```
 
 ### GSE201615
 
@@ -180,12 +141,48 @@ for (ob in names(obj_list)) {
     obj_list[[ob]]$binarized_rfp <- obj_list[[ob]]$rfp_exp > 0
 }
 
-grid.arrange(grobs = lapply(obj_list, r_feature_plot, "binarized_rfp"))
+grid.arrange(grobs = lapply(obj_list, r_feature_plot, "binarized_rfp"), order = FALSE)
 
-#last 2 look similar?
-obj_list[3:4]
+merged_obs <- merge(obj_list[[1]], obj_list[-1]) %>%
+    process_seurat()
 
-colnames(obj_list[[4]]) %in% colnames(obj_list[[3]]) %>% table()
+r_dim_plot(merged_obs) | r_feature_plot(merged_obs, c("binarized_rfp", "Col1a1"), order = FALSE)
 
-colnames(obj_list[[1]]) %in% colnames(obj_list[[4]]) %>% table()
+prop.table(table(merged_obs$binarized_rfp, merged_obs$seurat_clusters), margin = 2) %>%
+    round(3)
+```
+
+I'm convinced that cluster 6 here are our cancer cells
+
+```{r}
+merged_obs$is_tumor <- merged_obs$seurat_clusters == 6
+
+qs::qsave(merged_obs, "output/seurat_objects/merged_GSE201615.qs")
+```
+
+### S0282
+
+```{r}
+fluc_gtf <- read.table("custom_ref/fluc/fluc.gtf", sep = "\t")
+gene_ids <- sapply(strsplit(fluc_gtf$V9, ";"), `[`, 1) %>%
+    str_remove("gene_id ") %>%
+    unique()
+gene_ids <- gene_ids[gene_ids %in% rownames(ob)]
+
+
+ob <- tenx_load_qc("counts/S0282/S0282/outs/filtered_feature_bc_matrix",
+                   violin_plot = FALSE)
+
+feature_hist(ob, features = c("nCount_RNA", "percent.mt"))
+
+
+ob <- subset(ob,
+             nCount_RNA > 1000 &
+             nCount_RNA < 12000 &
+             percent.mt < 10) %>%
+    process_seurat()
+
+r_dim_plot(ob)
+
+
 ```

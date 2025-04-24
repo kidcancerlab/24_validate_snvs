@@ -47,43 +47,6 @@ cellranger mkref --output-dir custom_ref/eGFP/demo_eGFP \
     --genes custom_ref/eGFP/genes.gtf
 ```
 
-### HRE-UnaG
-
-Now I'm going to make a genome containing the hypoxic reporter element plus unag.
-
-```{bash make-unag-ref}
-#making a folder within custom ref for this, otherwise it'll get too cluttered
-mkdir custom_ref/unag/
-
-grep -v "^>" custom_ref/unag/hre_unag.fa | tr -d "\n" | wc
-#8646 bases
-
-
-echo -e 'HRE-dUnaG\tunknown\texon\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transcript_id "HRE-dUnaG"; gene_biotype "protein_coding";\n'\
-'HRE-dUnaG\tunknown\ttranscript\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; transcript_id "HRE-dUnaG"; gene_biotype "protein_coding";\n'\
-'HRE-dUnaG\tunknown\tgene\t1\t8646\t.\t+\t.\tgene_id "HRE-dUnaG"; gene_name "HRE-dUnaG"; gene_biotype "protein_coding";' > custom_ref/unag/hre_unag.gtf
-
-#Going to append the gtf and fasta to the mm10
-#append GFP.fa to end of mm10 genome
-cp custom_ref/mm10_genome.fa custom_ref/unag/genome.fa
-
-cp custom_ref/mm10_genes.gtf.gz custom_ref/unag/genes.gtf.gz
-gunzip custom_ref/unag/genes.gtf.gz
-
-#cat gtf and fasta for hre-unag to mm10 reference files
-cat custom_ref/unag/hre_unag.fa >> custom_ref/unag/genome.fa
-cat custom_ref/unag/hre_unag.gtf >> custom_ref/unag/genes.gtf
-
-#make reference
-ml cellranger
-cellranger mkref --output-dir custom_ref/unag/unag_ref \
-    --genome unag_ref \
-    --fasta custom_ref/unag/genome.fa \
-    --genes custom_ref/unag/genes.gtf \
-    --jobmode=local \
-    --localcores=8
-```
-
 ### RFP
 
 also known as dsRed
@@ -127,21 +90,13 @@ cellranger mkref --output-dir custom_ref/RFP/full_RFP \
 ```{bash mk-bams}
 #run cellranger count!
 sbatch cellranger_count_egfp.sh
+
+
 ```
 
 ### On unag data from GSE179077
 
 ```{bash mk-bams-GSE179077}
-#rename to cellranger compatible format
-for sra in SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
-do
-    mkdir input/fastqs/GSE179077/${sra}
-    mv input/fastqs/GSE179077/${sra}_1.fastq \
-        input/fastqs/GSE179077/${sra}/${sra}_S1_R1_001.fastq
-    mv input/fastqs/GSE179077/${sra}_2.fastq \
-        input/fastqs/GSE179077/${sra}/${sra}_S1_R2_001.fastq
-done
-
 #run cellranger count
 bash helper_scripts/realign.sh \
     -f input/fastqs/GSE179077 \
