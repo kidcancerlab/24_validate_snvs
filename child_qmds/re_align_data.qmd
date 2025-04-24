@@ -145,8 +145,10 @@ done
 #run cellranger count
 bash helper_scripts/realign.sh \
     -f input/fastqs/GSE179077 \
+    -g input/plasmid_files/unag_plasmid_124372.gbk \
     -s mm10 \
-    -o testing_dir
+    -p unag \
+    -o custom_ref/unag
 ```
 
 ### On GSE201615
