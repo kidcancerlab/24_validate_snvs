@@ -69,6 +69,18 @@ fastq-dump --outdir input/fastqs/GSE201615/tmp --split-files SRR18932562 SRR1893
 #_3 is R2
 ```
 
+### GSE215239
+
+```{bash}
+conda activate parallel_fastq_dump
+
+parallel-fastq-dump \
+    --outdir input/fastqs/GSE215239/ \
+    -t 4 \
+    --split-files \
+    -s SRR21863133 SRR21863134 SRR21863135 SRR21863136
+```
+
 ## Robert's Lab Samples
 
 ### S0105
