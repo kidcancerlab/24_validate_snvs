@@ -79,15 +79,11 @@ potential datasets for validation
 - GSE246498
     - ZsGreen in tumor cells
     - I think this has no tumor cells
-- GSE247228 -- this one will work
+**- GSE247228 -- this one will work**
     - lentiviral green fluorescent protein (GFP) in tumor cells
     - data looks like it will work
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC10830842/
-- GSE179077 -- is reporter only for hypoxic cancer cells? Expression is kinda everywhere, I don't know if there'es normal cells in here
-    - fluorescent UnaG reporter in tumor cells
-    - https://pmc.ncbi.nlm.nih.gov/articles/PMC10527169/
-    - data looks good
-- GSE201615
+*- GSE201615*
     - Cas9 in tumor cells, also dsRED
     - To generate sarcoma cells, mesenchymal cells were transduced for the stable expression of Ccne1 and red fluorescent protein
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC9249098/
@@ -96,7 +92,7 @@ potential datasets for validation
     - Cas9 and EGFP
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC8168823/
     - this may be a bit tough as the tumors were induced by KO
-- GSE215239
+*- GSE215239*
     - GFP and luciferase in tumor cells
     - no paper yet
     - has no tumor controls
