@@ -38,7 +38,7 @@ ml cellranger
 
 
 #make new reference directory
-if [ -d $ref_out ]; then
+if [ -d $ref_out/ref_out ]; then
     echo Specified output directory already exists. Skipping mkref and jumping to cellranger count
 else
     mkdir $ref_out
@@ -61,6 +61,9 @@ else
     cat $ref_out/$plasmid.gtf >> $ref_out/genes.gtf
 
     #make new reference
+    echo Genome will be called $plasmid
+    echo Making ref from $ref_out/genome.fa and $ref_out/genes.gtf
+
     cellranger mkref --output-dir $ref_out/ref_out \
         --genome $plasmid \
         --fasta $ref_out/genome.fa \
@@ -87,7 +90,23 @@ array_max=$(($(wc -w <<< "$fastqs") - 1))
 #get name of project for counts folder
 proj_name=$(basename $fastq_path)
 
+source ~/.bashrc
+
+#get time to maintenance
+maint_time=$(get_maint_time)
+#convert to seconds
+maint_time_sec=$(date -d "1970-01-01 $maint_time Z" +%s)
+
+#take min of time to maintenance OR 48 hours 
+if ((maint_time_sec < 172800))
+then
+    array_time=$maint_time
+else
+    array_time="48-00-00"
+fi
+
 sbatch --array 0-$(($array_max)) \
+    --time $array_time \
     helper_scripts/cellranger_count_template.sh \
     "$fastqs" \
     $fastq_path \
