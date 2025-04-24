@@ -81,6 +81,15 @@ parallel-fastq-dump \
     -s SRR21863133 SRR21863134 SRR21863135 SRR21863136
 ```
 
+### GSE215394
+
+```{bash}
+fastq-dump \
+    --outdir input/fastqs/GSE215394/ \
+    --split-3 \
+    SRR21874821
+```
+
 ## Robert's Lab Samples
 
 ### S0105
