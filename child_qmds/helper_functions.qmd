@@ -391,3 +391,11 @@ dimplot_better <- function(object,
         coord_fixed()
 }
 ```
+
+## Random Utilities
+
+The opposite of %in%
+
+```{r}
+`%notin%` <- Negate(`%in%`)
+```
