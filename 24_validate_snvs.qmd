@@ -101,7 +101,7 @@ potential datasets for validation
     - pEGFP in some tumor cells, I think?
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC10468402/#Sec11
     - not sure if it's good
-- GSE215394
+- *GSE215394*
     - GFP in tumor cells
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC10951347/
     - meh? All cells seem bunched, only tumor and macs?

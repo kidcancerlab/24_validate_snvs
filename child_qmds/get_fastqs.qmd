@@ -71,6 +71,8 @@ fastq-dump --outdir input/fastqs/GSE201615/tmp --split-files SRR18932562 SRR1893
 
 ### GSE215239
 
+34 and 36 are the samples containing tumor cells. We'll include the controls, though, as a confirmation of tumor cells since we expect our tumor cells to be trancriptionally distinct from the stromal cells.
+
 ```{bash}
 conda activate parallel_fastq_dump
 
@@ -79,6 +81,25 @@ parallel-fastq-dump \
     -t 4 \
     --split-files \
     -s SRR21863133 SRR21863134 SRR21863135 SRR21863136
+
+#Now I need to rename these
+# _1 is I1
+# _2 is I2
+# _3 is R1
+# _4 is R2
+
+for sra in SRR21863133 SRR21863134 SRR21863135 SRR21863136
+do
+    mkdir input/fastqs/GSE215239/${sra}
+    mv input/fastqs/GSE215239/${sra}_1.fastq \
+        input/fastqs/GSE215239/${sra}/${sra}_S1_I1_001.fastq
+    mv input/fastqs/GSE215239/${sra}_2.fastq \
+        input/fastqs/GSE215239/${sra}/${sra}_S1_I2_001.fastq
+    mv input/fastqs/GSE215239/${sra}_3.fastq \
+        input/fastqs/GSE215239/${sra}/${sra}_S1_R1_001.fastq
+    mv input/fastqs/GSE215239/${sra}_4.fastq \
+        input/fastqs/GSE215239/${sra}/${sra}_S1_R2_001.fastq
+done
 ```
 
 ### GSE215394
