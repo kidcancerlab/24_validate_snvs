@@ -135,6 +135,10 @@ cellranger mkref \
     --fasta $ref_out/genome.fa \
     --genes $ref_out/genes.gtf \
     --jobmode=local
+
+bash helper_scripts/realign.sh \
+    -f input/fastqs/GSE215239 \
+    -o custom_ref/gfp_fluc
 ```
 
 ### On S0105
