@@ -112,6 +112,31 @@ bash helper_scripts/realign.sh \
 sbatch cellranger_count_rfp.sh
 ```
 
+### GSE215239
+
+CT2A Gbm cells
+
+```{bash GSE215239}
+#manually made gtf and fasta containing fluc and gfp sequences, gonna make ref manually
+species=mm10
+ref_out=custom_ref/gfp_luc
+plasmid=gfp_luc
+
+cp custom_ref/${species}_genes.gtf.gz $ref_out/genes.gtf.gz
+gunzip $ref_out/genes.gtf.gz
+
+cp custom_ref/${species}_genome.fa $ref_out/genome.fa
+chmod 774 $ref_out/*
+
+ml cellranger
+cellranger mkref \
+    --output-dir $ref_out/ref_out \
+    --genome $plasmid \
+    --fasta $ref_out/genome.fa \
+    --genes $ref_out/genes.gtf \
+    --jobmode=local
+```
+
 ### On S0105
 
 TurboRFP
