@@ -79,32 +79,43 @@ potential datasets for validation
 - GSE246498
     - ZsGreen in tumor cells
     - I think this has no tumor cells
+
 **- GSE247228 -- this one will work**
     - lentiviral green fluorescent protein (GFP) in tumor cells
     - data looks like it will work
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC10830842/
-*- GSE201615*
+    - realigned to reference, identified tumor cells, and saved as qs object
+
+**- GSE201615**
     - Cas9 in tumor cells, also dsRED
     - To generate sarcoma cells, mesenchymal cells were transduced for the stable expression of Ccne1 and red fluorescent protein
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC9249098/
     - data looks good, wonder if low UMI counts
+    - Realigned and made objects, think I know which are tumor cells and saved as qs object
+
 - GSE158700
     - Cas9 and EGFP
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC8168823/
     - this may be a bit tough as the tumors were induced by KO
+
 *- GSE215239*
     - GFP and luciferase in tumor cells
     - no paper yet
     - has no tumor controls
     - likely would work, needs testing
+    - Currently making reference for this with GFP and luciferase
+
 - GSE189856
     - pEGFP in some tumor cells, I think?
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC10468402/#Sec11
     - not sure if it's good
+
 - *GSE215394*
     - GFP in tumor cells
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC10951347/
     - meh? All cells seem bunched, only tumor and macs?
+    - downloading fastqs right now
+
 - GSE232335 <- gfp normal cells
     - I don't think there are tumor cells in the data
 
