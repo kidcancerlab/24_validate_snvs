@@ -24,6 +24,12 @@ do
     mv input/fastqs/GSE247228/${sra}_2.fastq \
         input/fastqs/GSE247228/${sra}/${sra}_S1_R2_001.fastq
 done
+
+for sra in SRR26705626 SRR26705627 SRR26705628 SRR26705629 SRR26705630 SRR26705631
+do
+    pigz -J 5 input/fastqs/GSE247228/${sra}/${sra}_S1_R1_001
+    pigz -J 5 input/fastqs/GSE247228/${sra}/${sra}_S1_R2_001
+done
 ```
 
 ### GSE179077
@@ -100,6 +106,15 @@ do
     mv input/fastqs/GSE215239/${sra}_4.fastq \
         input/fastqs/GSE215239/${sra}/${sra}_S1_R2_001.fastq
 done
+
+
+for sra in SRR21863133 SRR21863134 SRR21863135 SRR21863136
+do
+    pigz -J 5 input/fastqs/GSE215239/${sra}/${sra}_S1_I1_001.fastq
+    pigz -J 5 input/fastqs/GSE215239/${sra}/${sra}_S1_I2_001.fastq
+    pigz -J 5 input/fastqs/GSE215239/${sra}/${sra}_S1_R1_001.fastq
+    pigz -J 5 input/fastqs/GSE215239/${sra}/${sra}_S1_R2_001.fastq
+done
 ```
 
 ### GSE215394
@@ -109,7 +124,25 @@ fastq-dump \
     --outdir input/fastqs/GSE215394/ \
     --split-3 \
     SRR21874821
+
+pigz -j 5 input/fastqs/GSE215394/*.fastq
 ```
+
+### GSE189856
+
+From this one, we're interested in just the samples containing GFP, GSM5708624-29.
+
+The SRR numbers associated with these samples are SRR17073332-37
+
+```{bash}
+fasterq-dump \
+    --outdir input/fastqs/GSE189856/ \
+    --progress \
+    SRR17073332 SRR17073333 SRR17073334 SRR17073335 SRR17073336 SRR17073337
+
+pigz -j 5 input/fastqs/GSE189856/*.fastq
+```
+
 
 ## Robert's Lab Samples
 
