@@ -4,6 +4,8 @@
 
 ### GSE247228
 
+lentiviral green fluorescent protein (GFP) in tumor cells
+
 ```{r}
 #cutoffs for feature hists
 cutoff_tbl <- tribble(      ~sample,     ~feature, ~min_val, ~max_val,
@@ -101,6 +103,8 @@ r_dim_plot(merged_ob, group = "seurat_clusters") | r_feature_plot(merged_ob, fea
 
 ### GSE201615
 
+Cas9 in tumor cells, also dsRED
+
 ```{r gse201615}
 ob_names <- list.files("counts/GSE201615") %>%
     grep(pattern = "output", invert = TRUE, value = TRUE)
@@ -159,6 +163,68 @@ merged_obs$is_tumor <- merged_obs$seurat_clusters == 6
 
 qs::qsave(merged_obs, "output/seurat_objects/merged_GSE201615.qs")
 ```
+
+### GSE215239
+
+```{r}
+samp_ids <- list.files("counts/GSE215239") %>%
+    grep(pattern = "output", x = ., invert = TRUE, value = TRUE)
+sample_list <- list()
+for (ob in samp_ids) {
+    tmp <-
+        tenx_load_qc(
+            paste0("counts/GSE215239/", ob, "/outs/filtered_feature_bc_matrix/"),
+            violin_plot = FALSE
+        )
+    tmp$sample_id <- ob
+    if ("FLUC" %in% rownames(tmp)) {
+        tmp$fluc_present <- GetAssayData(tmp)["FLUC", ] > 0
+        tmp <- subset(tmp, features = rownames(tmp[rownames(tmp) != "FLUC"]))
+    } else {
+        tmp$fluc_present <- 0
+    }
+    sample_list[[ob]] <- tmp
+}
+
+cuts <- tribble(~feature, ~min_val, ~max_val,
+                "nCount_RNA", 1000, 25000,
+                "percent.mt", 0, 15)
+nCount <- lapply(sample_list, function(x) {
+    feature_hist(
+        x,
+        features = c("nCount_RNA", "percent.mt"),
+        cutoff_table = cuts
+        ) +
+        ggtitle(label = unique(x$sample_id))
+})
+
+grid.arrange(grobs = nCount)
+
+sample_list <- lapply(sample_list, function(x) {
+    subset(
+        x,
+        nCount_RNA > 1000 &
+        nCount_RNA < 25000 &
+        percent.mt < 15
+    ) %>%
+    process_seurat()
+})
+
+r_dim_plot(sample_list[[4]]) | r_feature_plot(sample_list[[4]], features = "FLUC")
+```
+
+I'm gonna merge this guy now
+
+```{r}
+merged_samps <- merge(sample_list[[1]], sample_list[-1]) %>%
+    process_seurat() %>%
+    JoinLayers()
+
+r_feature_plot(merged_samps, features = "fluc_present") | r_dim_plot(merged_samps, group = "seurat_clusters")
+r_dim_plot(merged_samps, group = c("sample_id", "seurat_clusters"), pt.size = 0.3, order = FALSE) + NoLegend()
+table(merged_samps$fluc_present, merged_samps$sample_id)
+```
+
 
 ### S0282
 
