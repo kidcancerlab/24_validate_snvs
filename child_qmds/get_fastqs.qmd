@@ -140,7 +140,16 @@ fasterq-dump \
     --progress \
     SRR17073332 SRR17073333 SRR17073334 SRR17073335 SRR17073336 SRR17073337
 
-pigz -j 5 input/fastqs/GSE189856/*.fastq
+for sra in SRR17073332 SRR17073333 SRR17073334 SRR17073335 SRR17073336 SRR17073337
+do
+    mkdir input/fastqs/GSE189856/${sra}
+    mv input/fastqs/GSE189856/${sra}_1.fastq \
+        input/fastqs/GSE189856/${sra}/${sra}_S1_R1_001.fastq
+    mv input/fastqs/GSE189856/${sra}_2.fastq \
+        input/fastqs/GSE189856/${sra}/${sra}_S1_R2_001.fastq
+    pigz -J 5 input/fastqs/GSE189856/${sra}/${sra}_S1_R1_001.fastq
+    pigz -J 5 input/fastqs/GSE189856/${sra}/${sra}_S1_R2_001.fastq
+done
 ```
 
 

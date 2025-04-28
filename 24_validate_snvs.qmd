@@ -103,7 +103,7 @@ potential datasets for validation
     - no paper yet
     - has no tumor controls
     - likely would work, needs testing
-    - Currently making reference for this with GFP and luciferase
+    - Currently aligning to new reference
 
 - GSE189856
     - pEGFP in some tumor cells, I think?
@@ -114,7 +114,7 @@ potential datasets for validation
     - GFP in tumor cells
     - https://pmc.ncbi.nlm.nih.gov/articles/PMC10951347/
     - meh? All cells seem bunched, only tumor and macs?
-    - downloading fastqs right now
+    - downloading fastqs right now; can't figure out why index file doesn't get downloaded
 
 - GSE232335 <- gfp normal cells
     - I don't think there are tumor cells in the data

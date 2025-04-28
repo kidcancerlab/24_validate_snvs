@@ -128,6 +128,9 @@ gunzip $ref_out/genes.gtf.gz
 cp custom_ref/${species}_genome.fa $ref_out/genome.fa
 chmod 774 $ref_out/*
 
+cat $ref_out/$plasmid.fa >> $ref_out/genome.fa
+cat $ref_out/$plasmid.gtf >> $ref_out/genes.gtf
+
 ml cellranger
 cellranger mkref \
     --output-dir $ref_out/ref_out \
@@ -138,7 +141,18 @@ cellranger mkref \
 
 bash helper_scripts/realign.sh \
     -f input/fastqs/GSE215239 \
-    -o custom_ref/gfp_fluc
+    -o custom_ref/gfp_luc
+```
+
+### GSE189856
+
+```{bash}
+bash helper_scripts/realign.sh \
+    -f input/fastqs/GSE189856 \
+    -g input/plasmid_files/pSpCas9-2A-GFP.gbk \
+    -s mm10 \
+    -p Cas9-GFP \
+    -o custom_ref/Cas9_GFP
 ```
 
 ### On S0105
