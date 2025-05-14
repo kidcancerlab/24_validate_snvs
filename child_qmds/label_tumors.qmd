@@ -210,6 +210,10 @@ sample_list <- lapply(sample_list, function(x) {
     process_seurat()
 })
 
+fluc_plts <- lapply(sample_list, function(x) {
+    colnames(x@meta.data)
+})
+
 r_dim_plot(sample_list[[4]]) | r_feature_plot(sample_list[[4]], features = "FLUC")
 ```
 
@@ -223,6 +227,28 @@ merged_samps <- merge(sample_list[[1]], sample_list[-1]) %>%
 r_feature_plot(merged_samps, features = "fluc_present") | r_dim_plot(merged_samps, group = "seurat_clusters")
 r_dim_plot(merged_samps, group = c("sample_id", "seurat_clusters"), pt.size = 0.3, order = FALSE) + NoLegend()
 table(merged_samps$fluc_present, merged_samps$sample_id)
+```
+
+I'm not sure there's any tumor cells in here.
+
+### GSE189856
+
+```{r}
+samp_ids <- list.files("counts/GSE189856") %>%
+    grep(pattern = "output", x = ., invert = TRUE, value = TRUE)
+
+samp_list <- list()
+for (ob in samp_ids) {
+    samp_list[[ob]] <-
+        tenx_load_qc(
+            paste0("counts/GSE189856/", ob, "/outs/filtered_feature_bc_matrix/"),
+            violin_plot = FALSE,
+            min_features = 0
+        )
+}
+
+c("nucleoplasminNLS", "T2A", "EGFP", "AmpR", "3xFLAG", "SV40NLS") %in%
+rownames(samp_list[[2]])
 ```
 
 

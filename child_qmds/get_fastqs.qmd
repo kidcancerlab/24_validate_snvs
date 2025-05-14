@@ -152,6 +152,17 @@ do
 done
 ```
 
+### GSE158700
+
+For this one, we're getting samples that (hopefully) contain GFP.
+
+```{bash}
+fasterq-dump \
+    --outdir input/fastqs/GSE158700 \
+    --progress \
+    SRR12735655
+
+```
 
 ## Robert's Lab Samples
 

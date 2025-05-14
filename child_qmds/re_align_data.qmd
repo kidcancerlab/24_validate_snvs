@@ -155,6 +155,12 @@ bash helper_scripts/realign.sh \
     -o custom_ref/Cas9_GFP
 ```
 
+### GSE158700
+
+```{bash}
+# have to construct reference first, since it's human and mouse cells
+```
+
 ### On S0105
 
 TurboRFP
