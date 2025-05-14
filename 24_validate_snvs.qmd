@@ -104,6 +104,9 @@ potential datasets for validation
     - has no tumor controls
     - likely would work, needs testing
     - Currently aligning to new reference
+    - GFP and LUC reference didn't have any genes align to it
+    - realized tumors are harvested from other hemisphere of the brain that tumors were injected into, so may be the case that there's no tumor cells present
+        - they're also focused on the IME
 
 - GSE189856
     - pEGFP in some tumor cells, I think?

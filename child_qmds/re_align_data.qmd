@@ -158,6 +158,18 @@ cellranger mkref --output-dir ref_out \
     --fasta genome.fa \
     --genes genes.gtf \
     --jobmode=local
+
+cd ../..
+
+fastqs=$(ls input/fastqs/GSE189856)
+ml cellranger
+sbatch --array 0-5 \
+    --time 48:00:00 \
+    helper_scripts/cellranger_count_template.sh \
+    "$fastqs" \
+    input/fastqs/GSE189856/ \
+    counts/GSE189856 \
+    custom_ref/gfp_rfp_luc/ref_out
 ```
 
 ### GSE158700
@@ -182,10 +194,22 @@ fLuc sample. have to copy over fastqs from gdrobertslab
 mkdir -p input/fastqs/S0282/S0282/
 cp /home/gdrobertslab/lab/FASTQs_2/R0066/R0066/S0282* input/fastqs/S0282/S0282/.
 
-bash helper_scripts/realign.sh \
-    -f input/fastqs/S0282 \
-    -g input/plasmid_files/fluc.gbk \
-    -s mm10 \
-    -p fluc \
-    -o custom_ref/fluc
+# bash helper_scripts/realign.sh \
+#     -f input/fastqs/S0282 \
+#     -g input/plasmid_files/fluc.gbk \
+#     -s mm10 \
+#     -p fluc \
+#     -o custom_ref/fluc
+fastqs
+ml cellranger
+sbatch --array 0-0 \
+    --time 48:00:00 \
+    helper_scripts/cellranger_count_template.sh \
+    "S0282" \
+    input/fastqs/S0282/ \
+    counts/S0282 \
+    custom_ref/fluc/ref_out
+
+
+    
 ```
