@@ -166,24 +166,30 @@ ml cellranger
 sbatch --array 0-5 \
     --time 48:00:00 \
     helper_scripts/cellranger_count_template.sh \
-    "$fastqs" \
+    $fastqs \
     input/fastqs/GSE189856/ \
     counts/GSE189856 \
     custom_ref/gfp_rfp_luc/ref_out
 ```
 
-### GSE158700
+### S0105
+
+K7M2 RFP tibia tumor
+
+NO FASTQS FOR SOME REASON??? Gotta figure this out first...
 
 ```{bash}
-# have to construct reference first, since it's human and mouse cells
-```
+mkdir -p input/fastqs/S0105/S0105
+cp /home/gdrobertslab/lab/FASTQs_2/R0038/R0038/S0105* input/fastqs/S0105/S0105
 
-### On S0105
-
-TurboRFP
-
-```{bash}
-
+ml cellranger
+sbatch -array 0-0 \
+    --time 48:00:00 \
+    helper_scripts/cellranger_count_template.sh \
+    "S0105" \
+    input/fastqs/S0105 \
+    counts/S0105 \
+    custom_ref/RFP/full_RFP
 ```
 
 ### On S0282

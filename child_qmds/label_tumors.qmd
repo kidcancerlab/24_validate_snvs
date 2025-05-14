@@ -259,11 +259,11 @@ fluc_gtf <- read.table("custom_ref/fluc/fluc.gtf", sep = "\t")
 gene_ids <- sapply(strsplit(fluc_gtf$V9, ";"), `[`, 1) %>%
     str_remove("gene_id ") %>%
     unique()
-gene_ids <- gene_ids[gene_ids %in% rownames(ob)]
 
 
 ob <- tenx_load_qc("counts/S0282/S0282/outs/filtered_feature_bc_matrix",
                    violin_plot = FALSE)
+gene_ids <- gene_ids[gene_ids %in% rownames(ob)]
 
 feature_hist(ob, features = c("nCount_RNA", "percent.mt"))
 
