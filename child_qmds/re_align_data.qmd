@@ -134,13 +134,30 @@ bash helper_scripts/realign.sh \
 
 ### GSE189856
 
+The plasmid provided in the paper didn't work, so I created a new one that contains the entire Cas9-GFP sequence as one gene, RFP, and Luc as well. These are located in gfp_rfp_luc
+
 ```{bash}
-bash helper_scripts/realign.sh \
-    -f input/fastqs/GSE189856 \
-    -g input/plasmid_files/pSpCas9-2A-GFP.gbk \
-    -s mm10 \
-    -p Cas9-GFP \
-    -o custom_ref/Cas9_GFP
+# bash helper_scripts/realign.sh \
+#     -f input/fastqs/GSE189856 \
+#     -g input/plasmid_files/pSpCas9-2A-GFP.gbk \
+#     -s mm10 \
+#     -p Cas9-GFP \
+#     -o custom_ref/Cas9_GFP
+cd custom_ref/gfp_rfp_luc
+cp /home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa .
+cp /home/gdrobertslab/lab/GenRef/10x-mm10/genes/genes.gtf.gz .
+gunzip genes.gtf.gz
+chmod 774
+
+# cat new genes to appropriate files
+cat gfp_rfp_luc.fa >> genome.fa
+cat gfp_rfp_luc.gtf >> genes.gtf
+
+cellranger mkref --output-dir ref_out \
+    --genome gfp_rfp_luc \
+    --fasta genome.fa \
+    --genes genes.gtf \
+    --jobmode=local
 ```
 
 ### GSE158700
