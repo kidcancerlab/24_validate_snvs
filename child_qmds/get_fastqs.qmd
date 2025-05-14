@@ -32,26 +32,6 @@ do
 done
 ```
 
-### GSE179077
-
-Fluorescent UnaG in hypoxic glioblastoma cells
-
-```{bash get-unag-fastqs}
-mkdir input/fastqs/GSE179077
-fasterq-dump --outdir input/fastqs/GSE179077 --progress SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
-
-
-#rename to cellranger compatible format
-for sra in SRR29428580 SRR29428581 SRR29428582 SRR29428583 SRR29428584 SRR29428585 SRR29428586 SRR29428587
-do
-    mkdir input/fastqs/GSE179077/${sra}
-    mv input/fastqs/GSE179077/${sra}_1.fastq \
-        input/fastqs/GSE179077/${sra}/${sra}_S1_R1_001.fastq
-    mv input/fastqs/GSE179077/${sra}_2.fastq \
-        input/fastqs/GSE179077/${sra}/${sra}_S1_R2_001.fastq
-done
-```
-
 ### GSE201615
 
 Does it have dsRED?

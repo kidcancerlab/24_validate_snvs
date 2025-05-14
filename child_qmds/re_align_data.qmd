@@ -94,18 +94,6 @@ sbatch cellranger_count_egfp.sh
 
 ```
 
-### On unag data from GSE179077
-
-```{bash mk-bams-GSE179077}
-#run cellranger count
-bash helper_scripts/realign.sh \
-    -f input/fastqs/GSE179077 \
-    -g input/plasmid_files/unag_plasmid_124372.gbk \
-    -s mm10 \
-    -p unag \
-    -o custom_ref/unag
-```
-
 ### On GSE201615
 
 ```{bash GSE201615-cellranger-count}
