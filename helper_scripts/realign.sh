@@ -102,7 +102,7 @@ if ((maint_time_sec < 172800))
 then
     array_time=$maint_time
 else
-    array_time="48-00-00"
+    array_time="48:00:00"
 fi
 
 sbatch --array 0-$(($array_max)) \

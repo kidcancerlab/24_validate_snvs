@@ -166,7 +166,7 @@ ml cellranger
 sbatch --array 0-5 \
     --time 48:00:00 \
     helper_scripts/cellranger_count_template.sh \
-    $fastqs \
+    "$fastqs" \
     input/fastqs/GSE189856/ \
     counts/GSE189856 \
     custom_ref/gfp_rfp_luc/ref_out
