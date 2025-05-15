@@ -162,6 +162,12 @@ I'm convinced that cluster 6 here are our cancer cells
 merged_obs$is_tumor <- merged_obs$seurat_clusters == 6
 
 qs::qsave(merged_obs, "output/seurat_objects/merged_GSE201615.qs")
+
+rownames_to_column(merged_obs@meta.data, "bc") %>%
+    write.table(
+        "output/metadata/metadata_GSE201615.tsv",
+        quote = FALSE,
+        row.names = FALSE)
 ```
 
 ### GSE215239
