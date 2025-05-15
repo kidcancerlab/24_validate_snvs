@@ -9,7 +9,8 @@
 #SBATCH --wait
 
 #store arguments as more descriptive variables
-read -ra sra_array <<< "$1"
+sra_string=$1
+read -ra sra_array <<< ${sra_string[@]}
 #get current sra
 sra=${sra_array[$SLURM_ARRAY_TASK_ID]}
 fastq_path=$2
