@@ -245,36 +245,53 @@ for (ob in samp_ids) {
             violin_plot = FALSE,
             min_features = 0
         )
+    samp_list[[ob]]$sample_name <- ob
 }
 
-c("nucleoplasminNLS", "T2A", "EGFP", "AmpR", "3xFLAG", "SV40NLS") %in%
-rownames(samp_list[[2]])
-```
+cuts <- tribble(~feature, ~min_val, ~max_val,
+                "nCount_RNA", 1000, 30000,
+                "percent.mt", 0, 15)
+
+qc_plots <- lapply(samp_list, function(x) {
+    feature_hist(
+        x,
+        features = c("nCount_RNA", "percent.mt"),
+        cutoff_table = cuts
+    ) +
+        ggtitle(label = unique(x$sample_name))
+})
 
 
-### S0282
+# going to subset and merge them all; after I add Cas9 expression as metadata column
+samp_list <- lapply(samp_list, function(x) {
+    if ("Cas9-GFP" %in% rownames(x)) {
+        x$Cas9_GFP <- GetAssayData(x)["Cas9-GFP", ] > 0
+        x <- subset(x, features = rownames(x[rownames(x) != "Cas9-GFP"]))
+    } else {
+        x$Cas9_GFP <- 0
+    }
+    subset(x, subset = nCount_RNA %in% c(1000:30000) & percent.mt < 15)
+})
 
-```{r}
-fluc_gtf <- read.table("custom_ref/fluc/fluc.gtf", sep = "\t")
-gene_ids <- sapply(strsplit(fluc_gtf$V9, ";"), `[`, 1) %>%
-    str_remove("gene_id ") %>%
-    unique()
-
-
-ob <- tenx_load_qc("counts/S0282/S0282/outs/filtered_feature_bc_matrix",
-                   violin_plot = FALSE)
-gene_ids <- gene_ids[gene_ids %in% rownames(ob)]
-
-feature_hist(ob, features = c("nCount_RNA", "percent.mt"))
-
-
-ob <- subset(ob,
-             nCount_RNA > 1000 &
-             nCount_RNA < 12000 &
-             percent.mt < 10) %>%
+merged_samps <- merge(samp_list[[1]], samp_list[-1]) %>%
     process_seurat()
 
-r_dim_plot(ob)
+r_feature_plot(merged_samps, features = "Cas9_GFP") |
+r_dim_plot(merged_samps)
+```
 
+Although not all cells are expressing our Cas9-GFP plasmid, I feel confident enough to say that cluster 5 is our tumor cells, since all but 1 GFP-expressing cells are in cluster 5.
 
+```{r}
+merged_samps$is_tumor <- merged_samps$seurat_clusters == 5
+qs::qsave(merged_samps$is_tumor, "output/seurat_objects/merged_GSE189856.qs")
+
+#also going to write off metadata
+
+rownames_to_column(merged_samps@meta.data, "bc") %>%
+    write.table(
+        "output/metadata/metadata_GSE189856.tsv",
+        quote = FALSE,
+        row.names = FALSE
+    )
 ```
