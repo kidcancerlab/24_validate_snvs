@@ -4,7 +4,7 @@
 
 ### GSE247228
 
-lentiviral green fluorescent protein (GFP) in tumor cells
+lentiviral green fluorescent protein (GFP) in melanoma cells
 
 ```{r}
 #cutoffs for feature hists
@@ -85,6 +85,20 @@ dimplot_better(merged_obs, group  = "seurat_clusters")| r_feature_plot(merged_ob
 
 It seems like clusters 6, 9, and 11 are our eGFP expressing cells. I'm going to save this off as a seurat object as well as just a metadata file.
 
+#### Annotate Merged Object
+
+Before I write off my results I need to input cell types into my object
+
+```{r}
+# Annotate merged_object
+merged_obs <- annotate_celltypes(
+    merged_obs,
+    species = "mouse"
+)
+```
+
+#### Write off GSE247228
+
 ```{r write-off-GSE247228}
 merged_ob$is_tumor <- merged_obs$seurat_clusters %in% c(6, 9, 11)
 
@@ -103,7 +117,7 @@ r_dim_plot(merged_ob, group = "seurat_clusters") | r_feature_plot(merged_ob, fea
 
 ### GSE201615
 
-Cas9 in tumor cells, also dsRED
+Cas9 in soft-tissue sarcoma cells, also dsRED. Macrophages are present, use those as normal population
 
 ```{r gse201615}
 ob_names <- list.files("counts/GSE201615") %>%
@@ -158,6 +172,16 @@ prop.table(table(merged_obs$binarized_rfp, merged_obs$seurat_clusters), margin =
 
 I'm convinced that cluster 6 here are our cancer cells
 
+#### Annotate GSE201615
+```{r}
+merged_obs <- annotate_celltypes(
+    merged_obs,
+    species = "mouse"
+)
+```
+
+#### Write off GSE201615
+
 ```{r}
 merged_obs$is_tumor <- merged_obs$seurat_clusters == 6
 
@@ -170,85 +194,9 @@ rownames_to_column(merged_obs@meta.data, "bc") %>%
         row.names = FALSE)
 ```
 
-### GSE215239
-
-```{r}
-samp_ids <- list.files("counts/GSE215239") %>%
-    grep(pattern = "output", x = ., invert = TRUE, value = TRUE)
-sample_list <- list()
-for (ob in samp_ids) {
-    tmp <-
-        tenx_load_qc(
-            paste0("counts/GSE215239/", ob, "/outs/filtered_feature_bc_matrix/"),
-            violin_plot = FALSE
-        )
-    tmp$sample_id <- ob
-    if ("FLUC" %in% rownames(tmp)) {
-        tmp$fluc_present <- GetAssayData(tmp)["FLUC", ] > 0
-        tmp <- subset(tmp, features = rownames(tmp[rownames(tmp) != "FLUC"]))
-    } else {
-        tmp$fluc_present <- 0
-    }
-    sample_list[[ob]] <- tmp
-}
-
-cuts <- tribble(~feature, ~min_val, ~max_val,
-                "nCount_RNA", 1000, 25000,
-                "percent.mt", 0, 15)
-nCount <- lapply(sample_list, function(x) {
-    feature_hist(
-        x,
-        features = c("nCount_RNA", "percent.mt"),
-        cutoff_table = cuts
-        ) +
-        ggtitle(label = unique(x$sample_id))
-})
-
-grid.arrange(grobs = nCount)
-
-sample_list <- lapply(sample_list, function(x) {
-    subset(
-        x,
-        nCount_RNA > 1000 &
-        nCount_RNA < 25000 &
-        percent.mt < 15
-    ) %>%
-    process_seurat()
-})
-
-fluc_plts <- lapply(sample_list, function(x) {
-    colnames(x@meta.data)
-})
-
-r_dim_plot(sample_list[[4]]) | r_feature_plot(sample_list[[4]], features = "fluc_present")
-```
-
-I'm gonna merge this guy now
-
-```{r}
-merged_samps <- merge(sample_list[[1]], sample_list[-1]) %>%
-    process_seurat() %>%
-    JoinLayers()
-
-r_feature_plot(merged_samps, features = "fluc_present") | r_dim_plot(merged_samps, group = "seurat_clusters")
-r_dim_plot(merged_samps, group = c("sample_id", "seurat_clusters"), pt.size = 0.3, order = FALSE) + NoLegend()
-table(merged_samps$fluc_present, merged_samps$sample_id)
-```
-
-Only SRR21863136 has our reporter in it. I'm going to look at expression of GBM markers before I decide to save this object or not
-
-```{r}
-ob <- sample_list[[4]]
-ob$is_tumor <- ob$seurat_clusters == 10
-
-gbm_markers <- c("Cd44", "Cd70", "S100a4", "Aldh1a3", "Ezh2", "Gfap", "Sall4", "Nanog", "Postn", "A2b5", "Cd171", "Pdgfra", "Megf11", "Lhfpl3", "Pcdh15")
-
-r_feature_plot(ob, gbm_markers, coord.fixed = TRUE)
-```
-
-There's not much overlap between our GBM markers and cluster 10, which is the cluster containing the FLUC-expressing cells. Therefore I'm not going to do anything with this dataset.
-
 ### GSE189856
+
+Triple negative breast cancer.
 
 ```{r}
 samp_ids <- list.files("counts/GSE189856") %>%
@@ -299,9 +247,20 @@ r_dim_plot(merged_samps)
 
 Although not all cells are expressing our Cas9-GFP plasmid, I feel confident enough to say that cluster 5 is our tumor cells, since all but 1 GFP-expressing cells are in cluster 5.
 
+#### Annotate GSE189856
+
+```{r}
+merged_samps <- annotate_celltypes(
+    merged_samps,
+    species = "mouse"
+)
+```
+
+#### Write off GSE189856
+
 ```{r}
 merged_samps$is_tumor <- merged_samps$seurat_clusters == 5
-qs::qsave(merged_samps$is_tumor, "output/seurat_objects/merged_GSE189856.qs")
+qs::qsave(merged_samps, "output/seurat_objects/merged_GSE189856.qs")
 
 #also going to write off metadata
 
@@ -312,50 +271,6 @@ rownames_to_column(merged_samps@meta.data, "bc") %>%
         row.names = FALSE
     )
 ```
-
-### S0282
-
-Not seeing any reporter in our cells.
-
-```{r}
-ob <- tenx_load_qc(
-    "counts/S0282/S0282/outs/filtered_feature_bc_matrix",
-    violin_plot = FALSE,
-    min_cells = 0,
-    min_features = 0
-)
-
-#qc
-feature_hist(ob, features = c("nCount_RNA", "percent.mt"))
-ob <- subset(
-    ob,
-    nCount_RNA < 12000 &
-    nCount_RNA > 1000 &
-    percent.mt < 1) %>%
-    process_seurat()
-
-r_feature_plot(ob, features = c("luciferase", "AmpR", "PuroR", "gp41peptide"))
-```
-
-### S0105
-
-```{r}
-ob <- tenx_load_qc(
-    "counts/S0105/S0105/outs/filtered_feature_bc_matrix",
-    violin_plot = FALSE,
-    min_cells = 0,
-    min_features = 0
-)
-
-feature_hist(ob, features = c("nCount_RNA","percent.mt"))
-
-ob <- subset(ob, nCount_RNA %in% c(1000:40000) & percent.mt < 15) %>%
-    process_seurat()
-
-r_feature_plot(ob, features = c("RFP", "Col1a1"), coord.fixed = TRUE)
-```
-
-There's not enough cells expressing RFP, so we're not going to use this sample.
 
 ### R0039
 
@@ -394,22 +309,123 @@ mcherry_plts <- lapply(ob_list, r_feature_plot, features = "mCherry", slot = "co
 grid.arrange(grobs = mcherry_plts)
 ```
 
-### S0224 and S0225
+### S0260 and S0261
 
-These cells were injected with barcoded OS17 cells. I'll be getting the barcode information from the bams and writing it off as a metadata table.
+These samples were injected with barcoded F420 cells. I'll be getting the barcode information from the bams and writing it off as a metadata table.
+
+Barcoded samples that aren't PDXs:
+    S0260
+    S0261
 
 ```{r}
 bc_calling <- list()
-for (ob in c("S0224", "S0225")) {
-    bc_caling[[ob]] <- gen_cellecta_bc_data(
-        file = paste0(
+for (ob in c("S0260", "S0261")) {
+    if (file.exists(paste0("output/metadata/barcode_", ob, ".tsv"))) {
+        bc_calling[[ob]] <- read.table(
+            paste0("output/metadata/barcode_", ob, ".tsv"),
+            header = TRUE
+        )
+    } else {
+        bc_calling[[ob]] <- gen_cellecta_bc_data(
+            file = paste0(
+                "/home/gdrobertslab/lab/Counts_2/",
+                ob,
+                "/possorted_genome_bam.bam"
+                    ),
+            verbose = TRUE,
+            output = paste0("output/metadata/barcode_", ob, ".tsv"),
+            samtools_module = "GCC/9.3.0 SAMtools/1.15"
+        )
+    }
+}
+
+ob_list <- list()
+for (ob in c("S0260", "S0261")) {
+    ob_list[[ob]] <- tenx_load_qc(
+        paste0(
             "/home/gdrobertslab/lab/Counts_2/",
             ob,
-            "/possorted_genome_bam.bam"
-                ),
-        verbose = TRUE,
-        output = paste0("output/metadata/barcode_", ob, ".tsv"),
-        samtools_module = "GCC/9.3.0 SAMtools/1.15"
+            "/filtered_feature_bc_matrix"
+        ),
+        violin_plot = FALSE
     )
 }
+
+qc_plts <- lapply(ob_list, feature_hist, features = c("nCount_RNA", "percent.mt"))
+grid.arrange(grobs = qc_plts)
+
+ob_list <- lapply(ob_list, function(x) {
+    subset(
+        x,
+        nCount_RNA %in% c(1000:60000) &
+        percent.mt < 10
+    ) %>%
+    process_seurat()
+})
+
+# add barcode info to objects and 
+for (ob in names(ob_list)) {
+    ob_list[[ob]]$barcoded <-
+        colnames(ob_list[[ob]]) %in% paste0(bc_calling[[ob]]$cid, "-1")
+}
+
+dimplot_better(
+    ob_list[["S0260"]],
+    group = c("seurat_clusters", "barcoded"),
+    order = FALSE) |
+dimplot_better(
+    ob_list[["S0261"]],
+    group = c("seurat_clusters", "barcoded"),
+    order = FALSE)
+
+# merge
+merged_obs <- merge(ob_list[[1]], ob_list[[2]]) %>%
+    process_seurat()
+dimplot_better(merged_obs, group = c("seurat_clusters", "barcoded"))
+```
+
+It seems that cluster 1 is our tumor cells.
+
+#### Annotate Barcoded F420s
+
+```{r}
+merged_obs <- annotate_celltypes(
+    merged_obs,
+    species = "mouse"
+)
+```
+
+#### Write off Barcoded F420s
+
+```{r}
+merged_obs$is_tumor <- merged_obs$seurat_clusters == 1
+qs::qsave(merged_obs, "output/seurat_objects/merged_S0260_61.qs")
+
+#write off metadata
+write.table(
+    merged_obs@meta.data,
+    file = "output/metadata/metadata_S0260_61.tsv",
+    sep = "\t",
+    row.names = FALSE,
+    quote = FALSE)
+
+```
+
+## Annotate Cells
+
+I realized that in order to call SNVs, I have to have cell types annotated. I'm going to do that now for the samples in which I've labelled tumor cells.
+
+```{r}
+obs <- list.files("output/seurat_objects") %>%
+    str_remove(".qs")
+
+ob_list <- list()
+for (ob in obs) {
+    ob_list[[ob]] <- qs::qread(
+        paste0("output/seurat_objects/", ob, ".qs")
+    )
+}
+
+# annotate and save list of annotated objects for me to do stuff with tmr morning
+ob_list <- lapply(ob_list, annotate_celltypes, species = "mouse")
 ```
