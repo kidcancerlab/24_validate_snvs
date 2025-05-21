@@ -220,7 +220,7 @@ fluc_plts <- lapply(sample_list, function(x) {
     colnames(x@meta.data)
 })
 
-r_dim_plot(sample_list[[4]]) | r_feature_plot(sample_list[[4]], features = "FLUC")
+r_dim_plot(sample_list[[4]]) | r_feature_plot(sample_list[[4]], features = "fluc_present")
 ```
 
 I'm gonna merge this guy now
@@ -235,7 +235,18 @@ r_dim_plot(merged_samps, group = c("sample_id", "seurat_clusters"), pt.size = 0.
 table(merged_samps$fluc_present, merged_samps$sample_id)
 ```
 
-I'm not sure there's any tumor cells in here.
+Only SRR21863136 has our reporter in it. I'm going to look at expression of GBM markers before I decide to save this object or not
+
+```{r}
+ob <- sample_list[[4]]
+ob$is_tumor <- ob$seurat_clusters == 10
+
+gbm_markers <- c("Cd44", "Cd70", "S100a4", "Aldh1a3", "Ezh2", "Gfap", "Sall4", "Nanog", "Postn", "A2b5", "Cd171", "Pdgfra", "Megf11", "Lhfpl3", "Pcdh15")
+
+r_feature_plot(ob, gbm_markers, coord.fixed = TRUE)
+```
+
+There's not much overlap between our GBM markers and cluster 10, which is the cluster containing the FLUC-expressing cells. Therefore I'm not going to do anything with this dataset.
 
 ### GSE189856
 
@@ -301,3 +312,85 @@ rownames_to_column(merged_samps@meta.data, "bc") %>%
         row.names = FALSE
     )
 ```
+
+### S0282
+
+Not seeing any reporter in our cells.
+
+```{r}
+ob <- tenx_load_qc(
+    "counts/S0282/S0282/outs/filtered_feature_bc_matrix",
+    violin_plot = FALSE,
+    min_cells = 0,
+    min_features = 0
+)
+
+#qc
+feature_hist(ob, features = c("nCount_RNA", "percent.mt"))
+ob <- subset(
+    ob,
+    nCount_RNA < 12000 &
+    nCount_RNA > 1000 &
+    percent.mt < 1) %>%
+    process_seurat()
+
+r_feature_plot(ob, features = c("luciferase", "AmpR", "PuroR", "gp41peptide"))
+```
+
+### S0105
+
+```{r}
+ob <- tenx_load_qc(
+    "counts/S0105/S0105/outs/filtered_feature_bc_matrix",
+    violin_plot = FALSE,
+    min_cells = 0,
+    min_features = 0
+)
+
+feature_hist(ob, features = c("nCount_RNA","percent.mt"))
+
+ob <- subset(ob, nCount_RNA %in% c(1000:40000) & percent.mt < 15) %>%
+    process_seurat()
+
+r_feature_plot(ob, features = c("RFP", "Col1a1"), coord.fixed = TRUE)
+```
+
+There's not enough cells expressing RFP, so we're not going to use this sample.
+
+### R0039
+
+```{r}
+obs <- c("S0122", "S0123")
+
+ob_list <- list()
+for (ob in obs) {
+    ob_list[[ob]] <- tenx_load_qc(
+        paste0("counts/R0039/", ob, "/outs/filtered_feature_bc_matrix"),
+        violin_plot = FALSE,
+        min_cells = 0,
+        min_features = 0
+    )
+}
+
+qc_plts <- lapply(obs, function(x) {
+    feature_hist(ob_list[[x]], features = c("nCount_RNA", "percent.mt")) +
+    ggtitle(label = x)
+})
+grid.arrange(grobs = qc_plts)
+
+ob_list[["S0122"]] <- subset(
+    ob_list[["S0122"]],
+    nCount_RNA %in% c(1000:40000) &
+    percent.mt < 20) %>%
+    process_seurat()
+
+ob_list[["S0123"]] <- subset(
+    ob_list[["S0123"]],
+    nCount_RNA %in% c(1000:20000) &
+    percent.mt < 20) %>%
+    process_seurat()
+
+mcherry_plts <- lapply(ob_list, r_feature_plot, features = "mCherry", slot = "counts")
+grid.arrange(grobs = mcherry_plts)
+```
+
