@@ -394,3 +394,22 @@ mcherry_plts <- lapply(ob_list, r_feature_plot, features = "mCherry", slot = "co
 grid.arrange(grobs = mcherry_plts)
 ```
 
+### S0224 and S0225
+
+These cells were injected with barcoded OS17 cells. I'll be getting the barcode information from the bams and writing it off as a metadata table.
+
+```{r}
+bc_calling <- list()
+for (ob in c("S0224", "S0225")) {
+    bc_caling[[ob]] <- gen_cellecta_bc_data(
+        file = paste0(
+            "/home/gdrobertslab/lab/Counts_2/",
+            ob,
+            "/possorted_genome_bam.bam"
+                ),
+        verbose = TRUE,
+        output = paste0("output/metadata/barcode_", ob, ".tsv"),
+        samtools_module = "GCC/9.3.0 SAMtools/1.15"
+    )
+}
+```
