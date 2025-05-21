@@ -33,6 +33,7 @@ theme_set(theme_bw())
 theme_update(plot.title = element_text(hjust = 0.5))
 library(gridExtra)
 library(patchwork)
+library(scanBit)
 
 set.seed(1337)
 ```

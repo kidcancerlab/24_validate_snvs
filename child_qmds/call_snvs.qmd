@@ -1,0 +1,7 @@
+## Call SNVs
+
+This is going to be following along with the vignette from kidcancerlab/scanBit repo.
+
+```{r install-scanBit}
+devtools::install_github("kidcancerlab/scanBit")
+```
