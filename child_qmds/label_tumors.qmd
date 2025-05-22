@@ -1,7 +1,5 @@
 ## Look at Counts for Our Reporter
 
-
-
 ### GSE247228
 
 lentiviral green fluorescent protein (GFP) in melanoma cells
@@ -85,19 +83,6 @@ dimplot_better(merged_obs, group  = "seurat_clusters")| r_feature_plot(merged_ob
 
 It seems like clusters 6, 9, and 11 are our eGFP expressing cells. I'm going to save this off as a seurat object as well as just a metadata file.
 
-#### Annotate Merged Object
-
-Before I write off my results I need to input cell types into my object
-
-```{r}
-# Annotate merged_object
-merged_obs <- annotate_celltypes(
-    merged_obs,
-    species = "mouse"
-)
-```
-
-#### Write off GSE247228
 
 ```{r write-off-GSE247228}
 merged_ob$is_tumor <- merged_obs$seurat_clusters %in% c(6, 9, 11)
@@ -172,16 +157,6 @@ prop.table(table(merged_obs$binarized_rfp, merged_obs$seurat_clusters), margin =
 
 I'm convinced that cluster 6 here are our cancer cells
 
-#### Annotate GSE201615
-```{r}
-merged_obs <- annotate_celltypes(
-    merged_obs,
-    species = "mouse"
-)
-```
-
-#### Write off GSE201615
-
 ```{r}
 merged_obs$is_tumor <- merged_obs$seurat_clusters == 6
 
@@ -210,7 +185,7 @@ for (ob in samp_ids) {
             violin_plot = FALSE,
             min_features = 0
         )
-    samp_list[[ob]]$sample_name <- ob
+    samp_list[[ob]]$sample_id <- ob
 }
 
 cuts <- tribble(~feature, ~min_val, ~max_val,
@@ -223,7 +198,7 @@ qc_plots <- lapply(samp_list, function(x) {
         features = c("nCount_RNA", "percent.mt"),
         cutoff_table = cuts
     ) +
-        ggtitle(label = unique(x$sample_name))
+        ggtitle(label = unique(x$sample_id))
 })
 
 
@@ -246,17 +221,6 @@ r_dim_plot(merged_samps)
 ```
 
 Although not all cells are expressing our Cas9-GFP plasmid, I feel confident enough to say that cluster 5 is our tumor cells, since all but 1 GFP-expressing cells are in cluster 5.
-
-#### Annotate GSE189856
-
-```{r}
-merged_samps <- annotate_celltypes(
-    merged_samps,
-    species = "mouse"
-)
-```
-
-#### Write off GSE189856
 
 ```{r}
 merged_samps$is_tumor <- merged_samps$seurat_clusters == 5
@@ -349,6 +313,7 @@ for (ob in c("S0260", "S0261")) {
         ),
         violin_plot = FALSE
     )
+    ob_list[[ob]]$sample_id <- ob
 }
 
 qc_plts <- lapply(ob_list, feature_hist, features = c("nCount_RNA", "percent.mt"))
@@ -386,17 +351,6 @@ dimplot_better(merged_obs, group = c("seurat_clusters", "barcoded"))
 
 It seems that cluster 1 is our tumor cells.
 
-#### Annotate Barcoded F420s
-
-```{r}
-merged_obs <- annotate_celltypes(
-    merged_obs,
-    species = "mouse"
-)
-```
-
-#### Write off Barcoded F420s
-
 ```{r}
 merged_obs$is_tumor <- merged_obs$seurat_clusters == 1
 qs::qsave(merged_obs, "output/seurat_objects/merged_S0260_61.qs")
@@ -409,23 +363,4 @@ write.table(
     row.names = FALSE,
     quote = FALSE)
 
-```
-
-## Annotate Cells
-
-I realized that in order to call SNVs, I have to have cell types annotated. I'm going to do that now for the samples in which I've labelled tumor cells.
-
-```{r}
-obs <- list.files("output/seurat_objects") %>%
-    str_remove(".qs")
-
-ob_list <- list()
-for (ob in obs) {
-    ob_list[[ob]] <- qs::qread(
-        paste0("output/seurat_objects/", ob, ".qs")
-    )
-}
-
-# annotate and save list of annotated objects for me to do stuff with tmr morning
-ob_list <- lapply(ob_list, annotate_celltypes, species = "mouse")
 ```

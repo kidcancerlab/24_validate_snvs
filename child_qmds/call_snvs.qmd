@@ -1,7 +1,124 @@
+## Annotate Cells
+
+I realized that in order to call SNVs, I have to have cell types annotated. I'm going to do that now for the samples in which I've labelled tumor cells.
+
+```{r}
+if (!file.exists("output/seurat_objects/annotated_obs.qs")) {
+    obs <- list.files("output/seurat_objects") %>%
+        str_remove(".qs") %>%
+        grep(pattern = "annotated", invert = TRUE, value = TRUE)
+
+    ob_list <- list()
+    for (ob in obs) {
+        ob_list[[ob]] <- qs::qread(
+            paste0("output/seurat_objects/", ob, ".qs")
+        )
+    }
+    ob_list <- lapply(ob_list, JoinLayers)
+
+    # annotate and save list of annotated objects for me to do stuff with tmr morning
+    ob_list <- lapply(ob_list, annotate_celltypes, species = "mouse")
+    qs::qsave(ob_list, "output/seurat_objects/annotated_obs.qs")
+} else {
+    ob_list <- qs::qread("output/seurat_objects/annotated_obs.qs")
+}
+```
+
+### Visualize Annotations
+
+```{r}
+annot_plots <- list()
+for (ob in names(ob_list)) {
+    annot_plots[[ob]] <-
+        dimplot_better(
+            ob_list[[ob]],
+            group = "cell_type"
+        ) +
+        NoLegend() |
+            dimplot_better(
+            ob_list[[ob]],
+            group = "is_tumor"
+        ) +
+    ggtitle(label = ob)
+}
+
+wrap_plots(annot_plots)
+
+# look at macrophage markers
+# these markers are from panglao db
+mac_markers <- c("Cd68", "Fcgr1", "Naaa", "March1")
+
+mac_plots <- list()
+for (ob in names(ob_list)) {
+    mac_plots[[ob]] <- 
+        r_feature_plot(
+            ob_list[[ob]],
+            features = mac_markers,
+            coord.fixed = TRUE
+        )
+}
+
+wrap_plots(mac_plots)
+```
+
+I feel confident that our tumor cells are actually tumor cells, since the cell type annotation labelled them as fibroblasts, which we commonly see happen in our single cell data. This cell type label matching the manual annotation based on the presence of our reporter plasmid confirms that these are our tumor cells and we can use these datasets as ground truth.
+
+Additionally, the macrophage and monocyte populations are likely macrophages and monocytes, evidenced by the expression of canonical macrophage markers from panglaodb. These genes were also expressed in the cell types labelled monocytes and neutrophils, so our normal control cell types will be macrophages, monocytes, and neutrophils.
+
 ## Call SNVs
 
 This is going to be following along with the vignette from kidcancerlab/scanBit repo.
 
 ```{r install-scanBit}
 # devtools::install_github("kidcancerlab/scanBit")
+bam_prefix <- list(
+    "merged_GSE189856" = "counts/GSE189856/",
+    "merged_GSE201615" = "counts/GSE201615/",
+    "merged_GSE247288" = "counts/GSE247288/",
+    "merged_S0260_61" = "/home/gdrobertslab/lab/Counts_2/"
+)
+
+bam_suffix <- list(
+    "merged_GSE189856" = "/outs/possorted_genome_bam.bam",
+    "merged_GSE201615" = "/outs/possorted_genome_bam.bam",
+    "merged_GSE247288" = "/outs/possorted_genome_bam.bam",
+    "merged_S0260_61" =  "/possorted_genome_bam.bam"
+)
+
+start <- Sys.time()
+snp_tree <- list()
+for (ob in names(ob_list)) {
+    # make table with columns cell_barcode, cell_group, and bam_file
+    bc_bam_tbl <- 
+        ob_list[[ob]]@meta.data %>%
+        mutate(
+            cell_group = paste(sample_id, seurat_clusters, sep = "_"),
+            bam_file = paste0(bam_prefix[[ob]], ob_list[[ob]]$sample_id, bam_suffix[[ob]])
+        ) %>%
+        rownames_to_column("cell_barcode") %>%
+        mutate(cell_barcode = str_remove(cell_barcode, "_[1-9]")) %>%
+        select(cell_group, bam_file, cell_barcode) %>%
+        as_tibble()
+    
+    # get snp tree
+    snp_tree[[ob]] <-
+        get_snp_tree(
+            cellid_bam_table = bc_bam_tbl,
+            temp_dir = "output/temp",
+            ploidy = "mm10",
+            output_dir = "output",
+            output_base_name = ob,
+            ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa",
+            sbatch_base = "snv_call",
+            other_sbatch_options = c(
+                "--time=8:00:00",
+                "--mail-type=ALL",
+                "--mail-user=matthew.gust@nationwide.childrens.org"
+            )
+        )
+}
+end <- Sys.time()
+end - start
+
 ```
+
