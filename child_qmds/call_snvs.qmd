@@ -88,6 +88,7 @@ bam_suffix <- list(
 start <- Sys.time()
 snp_tree <- list()
 for (ob in names(ob_list)) {
+    if (!dir.exists(paste0("output/", ob))) dir.create(paste0("output/", ob))
     # make table with columns cell_barcode, cell_group, and bam_file
     bc_bam_tbl <- 
         ob_list[[ob]]@meta.data %>%
@@ -104,9 +105,10 @@ for (ob in names(ob_list)) {
     snp_tree[[ob]] <-
         get_snp_tree(
             cellid_bam_table = bc_bam_tbl,
-            temp_dir = "output/temp",
+            temp_dir = paste0("output/", ob, "/temp"),
             ploidy = "mm10",
-            output_dir = "output",
+            output_dir = paste0("output/", ob),
+            min_depth = c(5, 10, 20),
             output_base_name = ob,
             ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa",
             sbatch_base = "snv_call",
