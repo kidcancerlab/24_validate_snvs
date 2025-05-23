@@ -74,14 +74,14 @@ This is going to be following along with the vignette from kidcancerlab/scanBit 
 bam_prefix <- list(
     "merged_GSE189856" = "counts/GSE189856/",
     "merged_GSE201615" = "counts/GSE201615/",
-    "merged_GSE247288" = "counts/GSE247288/",
+    "merged_GSE247228" = "counts/GSE247228/",
     "merged_S0260_61" = "/home/gdrobertslab/lab/Counts_2/"
 )
 
 bam_suffix <- list(
     "merged_GSE189856" = "/outs/possorted_genome_bam.bam",
     "merged_GSE201615" = "/outs/possorted_genome_bam.bam",
-    "merged_GSE247288" = "/outs/possorted_genome_bam.bam",
+    "merged_GSE247228" = "/outs/possorted_genome_bam.bam",
     "merged_S0260_61" =  "/possorted_genome_bam.bam"
 )
 
@@ -113,9 +113,7 @@ for (ob in names(ob_list)) {
             ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa",
             sbatch_base = "snv_call",
             other_sbatch_options = c(
-                "--time=8:00:00",
-                "--mail-type=ALL",
-                "--mail-user=matthew.gust@nationwide.childrens.org"
+                "--time=8:00:00"
             )
         )
 }
