@@ -1,0 +1,5 @@
+Sample_ID	Protocol	Name	Species	Description	subset_nCount_RNA_min	subset_nCount_RNA_max	subset_percent.mt_max
+flex_eye	3GEX_flex	Eye mouse flex data	mouse		0	75000	20
+flex_intestine	3GEX_flex	Intestine mouse flex data	mouse		0	100000	20
+flex_ovary	3GEX_flex	Ovary mouse flex data	mouse		0	150000	20
+flex_stomach	3GEX_flex	Stomach mouse flex data	mouse		0	150000	20

@@ -1,0 +1,203 @@
+## Validate with B6 and Balbc
+
+```{r mouse_b6_balb}
+merged_sobj_mouse <-
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+
+merged_sobj_mouse <-
+    merged_sobj_mouse[, merged_sobj_mouse$Sample_ID %in% c("S0066", "S0075")]
+
+merged_sobj_mouse$cell_group <-
+    paste0(
+        merged_sobj_mouse$Sample_ID,
+        "_c",
+        merged_sobj_mouse$individ_clusters
+    )
+
+norm_mouse_dimplot <-
+    DimPlot(
+        merged_sobj_mouse,
+        group.by = "cell_group",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE
+    ) +
+    NoLegend()
+
+ggsave(
+    "output/figures/norm_mouse_dimplot_clusters.png",
+    width = 10,
+    height = 10
+)
+
+cell_barcode_group_table <-
+    merged_sobj_mouse@meta.data %>%
+    select(cell_group, cell_barcode, bam_file) %>%
+    as_tibble()
+
+snp_tree <-
+    scanBit::get_snp_tree(
+        cellid_bam_table = cell_barcode_group_table,
+        ploidy = "mm10",
+        output_dir = "output/snv/norm_mouse/",
+        temp_dir = "output/snv/norm_mouse/tempdir",
+        output_base_name = "norm_mouse",
+        ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+        min_depth = c(1, 5, 10, 20, 30),
+        sbatch_base = "norm_mouse_sbatch",
+        min_snvs_per_cluster = 500,
+        n_bootstraps = 10000,
+        max_prop_missing_at_site = 0.9,
+        cleanup = FALSE,
+        other_sbatch_options = "--time=24:00:00"
+    )
+```
+##
+I want to look over the merged bcfs and quantify the proportion of positions covered by n reads has a variant call.
+
+Then I want to compare these values between the flex data, where any variant call is artifactual and the B6 data, where an unknown proportion of variant calls at any depth are artifactual. This will allow me to estimate the false positive rate for SNV calls in the pipeline.
+
+```{r}
+merged_sobj_mouse_ours <-
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+
+# Grab just data from our lab - excludes flex data
+merged_sobj_mouse_ours <-
+    merged_sobj_mouse_ours[, grepl("^S0", merged_sobj_mouse_ours$Sample_ID)]
+
+merged_sobj_mouse_ours$cell_group <-
+    paste0(
+        merged_sobj_mouse_ours$Sample_ID,
+        "_c",
+        merged_sobj_mouse_ours$individ_clusters
+    )
+```
+
+```{r mouse_scanbit}
+cell_barcode_group_table <-
+    merged_sobj_mouse_ours@meta.data %>%
+    select(cell_group, cell_barcode, bam_file) %>%
+    as_tibble()
+
+snp_tree <-
+    scanBit::get_snp_tree(
+        cellid_bam_table = cell_barcode_group_table,
+        ploidy = "mm10",
+        output_dir = "output/snv/mouse/",
+        temp_dir = "output/snv/mouse/tempdir",
+        output_base_name = "mouse_ours",
+        ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+        min_depth = c(1, 5, 10, 20, 30),
+        sbatch_base = "our_mouse_sbatch",
+        min_snvs_per_cluster = 500,
+        n_bootstraps = 10000,
+        max_prop_missing_at_site = 0.9,
+        cleanup = TRUE,
+        other_sbatch_options = "--time=24:00:00"
+    )
+```
+
+## Get merged bcf with all sites
+To estimate the proportion of variant calls, I set temp_dir to a folder in output and specified cleanup = FALSE. This makes the shell scripts to generate the data write to an accessible folder so I can tweak the shell script manually. I got rid of the `-i 'GT[*]="alt"' ` filter and wrote to a new bcf file.
+
+I then manually deleted the large intermediate files
+
+```{bash mouse_split_bcf}
+conda activate scanBit_xkcd_1337
+# S0066, S0259, S0282 are B6 or B6 derived F420
+bcftools view -h output/snv/mouse/mergedmouse_ours_c5.bcf \
+    | grep "^#CHROM" \
+    | perl -pe 's/\t/\n/g' \
+    | grep "S0066\|S0067\|S0068\|S0200\|S0259\|S0269\|S0282\|S0291" \
+    > output/snv/mouse/b6_group_clusters.txt
+
+bcftools view \
+    -O b \
+    -o output/snv/mouse/mergedmouse_ours_c5_B6_group.bcf \
+    -S output/snv/mouse/b6_group_clusters.txt \
+    output/snv/mouse/mergedmouse_ours_c5.bcf
+
+bcftools index output/snv/mouse/mergedmouse_ours_c5_B6_group.bcf
+
+# S0074, S0105, S0122 are Balbc or Balbc derived K7M2
+for cutoff in 1 5 10 20 30
+do
+    bcftools view -h output/snv/mouse/mergedmouse_ours_c${cutoff}.bcf \
+        | grep "^#CHROM" \
+        | perl -pe 's/\t/\n/g' \
+        | grep "S0074\|S0075\|S0105\|S0122\|S0190\|S0201\|S0238" \
+        > output/snv/mouse/balb_group_clusters${cutoff}.txt
+
+    bcftools view \
+        -O b \
+        -o output/snv/mouse/mergedmouse_ours_c${cutoff}_balbc_group.bcf \
+        -S output/snv/mouse/balb_group_clusters${cutoff}.txt \
+        output/snv/mouse/mergedmouse_ours_c${cutoff}.bcf
+
+    bcftools index output/snv/mouse/mergedmouse_ours_c${cutoff}_balbc_group.bcf
+
+done
+```
+
+```{r mouse_subtree}
+just_b6 <-
+    merged_sobj_mouse_ours %>%
+    subset(Sample_ID %in% c(
+        "S0066", "S0067", "S0068", "S0200", "S0259", "S0269", "S0282", "S0291"
+    )) %>%
+    process_seurat()
+
+other_group <- c("S0200_c1", "S0291_c2", "S0259_c0", "S0200_c0", "S0067_c6", "S0068_c5", "S0269_c10", "S0269_c1")
+
+just_b6$f420_group <-
+    just_b6$cell_group %in% other_group
+
+png(
+    "output/figures/b6_groups_dimplot.png",
+    width = 4000,
+    height = 8000,
+    res = 300
+)
+(DimPlot(
+    just_b6,
+    group.by = c("f420_group", "cell_group"),
+    label = TRUE,
+    label.box = TRUE,
+    repel = TRUE,
+    ncol = 1
+) +
+    NoLegend()) +
+    (DimPlot(
+        just_b6,
+        group.by = "cell_type",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE,
+        ncol = 1
+    ) +
+        NoLegend())
+
+dev.off()
+
+scanBit::group_clusters_by_dist(
+    merged_bcf_file = "output/snv/mouse/mergedmouse_ours_c5_B6_group.bcf",
+    output_file = "output/snv/mouse/mergedmouse_ours_c5_B6_group.tsv",
+    min_snvs_per_cluster = 500,
+    max_prop_missing_at_site = 0.9,
+    tree_figure_file = "output/snv/mouse/mergedmouse_ours_c5_B6_group_tree.png",
+    temp_dir = ".",
+    n_bootstraps = 10000,
+    other_sbatch_options = "--time=24:00:00"
+)
+
+scanBit::group_clusters_by_dist(
+    merged_bcf_file = "output/snv/mouse/mergedmouse_ours_c10_balbc_group.bcf",
+    output_file = "output/snv/mouse/mergedmouse_ours_c10_balbc_group.tsv",
+    min_snvs_per_cluster = 500,
+    max_prop_missing_at_site = 0.9,
+    tree_figure_file = "output/snv/mouse/mergedmouse_ours_c10_balbc_group_tree.png",
+    temp_dir = ".",
+    n_bootstraps = 10000,
+    other_sbatch_options = "--time=24:00:00"
+)
+```

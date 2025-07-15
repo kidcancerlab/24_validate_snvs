@@ -15,9 +15,13 @@ read_raw <- function(i,
                      min_n_cells = 50,
                      annotate_ref,
                      annotate_labels,
-                     annotate_species = "") {
+                     annotate_species = "",
+                     annotate_additional_ref,
+                     annotate_additional_labels,
+                     bam_file) {
     sample_name <- samples_tsv$Sample_ID[i]
 
+    # Not making this an lapply as defaults are different, may do it later
     ncount_min <-
         pick_cutoff(
             ncount_min,
@@ -55,6 +59,10 @@ read_raw <- function(i,
                 violin_plot = FALSE
             )
 
+        sobj$bam_file <- bam_file
+
+        sobj$cell_barcode <- Seurat::Cells(sobj)
+
         pre_filt_hist <-
             rrrSingleCellUtils::feature_hist(
                 sobj,
@@ -65,21 +73,6 @@ read_raw <- function(i,
                     max_val = c(ncount_max, NA)
                 )
             )
-        ggplot2::ggsave(
-            paste0(
-                "output/figures/pre_filter_hist_",
-                sample_name,
-                dplyr::if_else(
-                    organism == "",
-                    "",
-                    paste0("_", organism)
-                ),
-                ".pdf"
-            ),
-            pre_filt_hist,
-            width = 10,
-            height = 5
-        )
 
         counts$n_cells_pre_filter <- ncol(sobj)
 
@@ -88,8 +81,8 @@ read_raw <- function(i,
             as.data.frame() %>%
             filter(
                 nCount_RNA > ncount_min &
-                nCount_RNA < ncount_max &
-                percent.mt < mt_percent_max
+                    nCount_RNA < ncount_max &
+                    percent.mt < mt_percent_max
             ) %>%
             nrow()
 
@@ -99,10 +92,20 @@ read_raw <- function(i,
                 subset(
                     sobj,
                     nCount_RNA > ncount_min &
-                    nCount_RNA < ncount_max &
-                    percent.mt < mt_percent_max
+                        nCount_RNA < ncount_max &
+                        percent.mt < mt_percent_max
                 ) %>%
                 rrrSingleCellUtils::process_seurat()
+
+            opt_res <-
+                rrrSingleCellUtils::optimize_silhouette(sobj, summary_plot = FALSE) %>%
+                dplyr::arrange(dplyr::desc(sil_vals)) %>%
+                dplyr::pull(res_vals) %>%
+                head(1)
+
+            sobj <- Seurat::FindClusters(sobj, resolution = opt_res)
+
+            sobj$individ_clusters <- sobj$seurat_clusters
 
             # Add metadata to Seurat object from samples_tsv
             for (colname in colnames(samples_tsv)) {
@@ -115,8 +118,42 @@ read_raw <- function(i,
                     sobj,
                     species = annotate_species,
                     ref = annotate_ref,
-                    labels = annotate_labels
+                    labels = annotate_labels,
+                    add_ref = annotate_additional_ref,
+                    add_labels = annotate_additional_labels
                 )
+
+            dimplot_fig <-
+                Seurat::DimPlot(
+                    sobj,
+                    group.by = c("individ_clusters", "cell_type"),
+                    label = TRUE,
+                    label.box = TRUE,
+                    repel = TRUE,
+                    ncol = 1
+                ) +
+                NoLegend()
+
+            ggplot2::ggsave(
+                paste0(
+                    "output/figures/qc_cutoffs/pre_filter_hist_",
+                    sample_name,
+                    dplyr::if_else(
+                        organism == "",
+                        "",
+                        paste0("_", organism)
+                    ),
+                    ".pdf"
+                ),
+                patchwork::wrap_plots(
+                    pre_filt_hist,
+                    dimplot_fig,
+                    ncol = 1,
+                    heights = c(1, 4)
+                ),
+                width = 10,
+                height = 15
+            )
 
             qs::qsave(
                 sobj,
@@ -128,7 +165,6 @@ read_raw <- function(i,
             )
 
             message(sample_name, " sobject made and saved")
-
         } else {
             counts$kept <- FALSE
             message(
@@ -169,10 +205,10 @@ pull_species_cutoff <- function(from_sample_tsv,
                                 species_pattern) {
     if (species_pattern != "") {
         if (!grepl(
-                # we don't want the caret in the pattern for this
-                stringr::str_remove(species_pattern, "^\\^"),
-                from_sample_tsv
-            )) {
+            # we don't want the caret in the pattern for this
+            stringr::str_remove(species_pattern, "^\\^"),
+            from_sample_tsv
+        )) {
             stop(
                 "Species pattern provided but not found in from_sample_tsv. ",
                 "Species_pattern: ",
@@ -191,7 +227,8 @@ pull_species_cutoff <- function(from_sample_tsv,
         # If from_sample_tsv has letters in it, species pattern likely there
         # We need to specify scientific = F so that 100,000 != 1e+05 which
         # has an "e" :-| and so fails here
-        if (grepl("[a-zA-Z]", format(from_sample_tsv, scientific = FALSE))) {
+        if (grepl("[a-zA-Z]", format(from_sample_tsv, scientific = FALSE)) &&
+            !is.na(from_sample_tsv)) {
             stop(
                 "Sample cutoff value is not just a number but species_pattern ",
                 "not provided. Species_pattern: ",
@@ -199,7 +236,7 @@ pull_species_cutoff <- function(from_sample_tsv,
                 ". Cutoff from sample sheet: ",
                 from_sample_tsv
             )
-        # Otherwise it's either a number or NA
+            # Otherwise it's either a number or NA
         } else {
             return(from_sample_tsv)
         }
@@ -232,18 +269,18 @@ gsea_dotplot <- function(data, x_col = "z_score") {
         ) +
         ggplot2::coord_flip() +
         ggplot2::geom_text(
-            data = data,                #text for pathways names
+            data = data, # text for pathways names
             aes(
                 x = -1 * order,
                 y = get(x_col) + (y_pos * 5),
                 hjust = justify_y,
                 label = pathway
             ),
-                size = 2,
-                fontface = "bold"
+            size = 2,
+            fontface = "bold"
         ) +
         geom_text(
-            data = lab4plot,    #text for upregulated/downregulated
+            data = lab4plot, # text for upregulated/downregulated
             aes(
                 x = x,
                 y = y,
@@ -306,7 +343,7 @@ hdf5_check <- function() {
                 )
             )
         ) |>
-        length() > 0
+            length() > 0
     if (!h5_return) {
         stop(
             "\nYou need to have h5pfc installed to read in h5_files. ",
@@ -353,7 +390,7 @@ confirm_mclapply_worked <- function(input_list) {
     has_error <- FALSE
     for (item in input_list) {
         if (inherits(item, "try-error")) {
-                warning("mclapply failed with error: ", item[[1]])
+            warning("mclapply failed with error: ", item[[1]])
             has_error <- TRUE
         }
     }
@@ -373,23 +410,178 @@ dimplot_better <- function(object,
                            group_by = NULL,
                            cols,
                            ncol = 1,
-                           label.size = 2.5,
+                           label_size = 2.5,
                            split_by = NULL,
                            ...) {
-    DimPlot(object,
-            group.by = group_by,
-            split.by = split_by,
-            ncol = ncol,
-            label.size = label.size,
-            label = T,
-            repel = T,
-            shuffle = T,
-            label.box = T,
-            #raster.dpi = c(500, 500),
-            cols = c(plot_cols, sample(rainbow(1000))),
-            ...) +
-        coord_fixed()
+    Seurat::DimPlot(
+        object,
+        group.by = group_by,
+        split.by = split_by,
+        ncol = ncol,
+        label.size = label_size,
+        label = TRUE,
+        repel = TRUE,
+        shuffle = TRUE,
+        label.box = TRUE,
+        cols = c(rrrSingleCellUtils::plot_cols, sample(rainbow(1000))),
+        ...
+    ) +
+        ggplot2::coord_fixed()
 }
+```
+
+## Samples for downsample analysis
+```{r funs}
+filter_cells_umi_cutoff <- function(sobj, max_umi) {
+    keep_cells <-
+        sobj |>
+        SeuratObject::FetchData(vars = c(
+            "cell_group",
+            "cell_barcode",
+            "bam_file",
+            "nCount_RNA"
+        )) |>
+        tibble::as_tibble() |>
+        dplyr::group_by(cell_group) |>
+        dplyr::arrange(cell_group, cell_barcode) |>
+        dplyr::mutate(cumsum = cumsum(nCount_RNA)) |>
+        dplyr::filter(cumsum < max_umi) |>
+        dplyr::pull(cell_barcode)
+
+    sobj_sub <- subset(sobj, cells = keep_cells)
+    return(sobj_sub)
+}
+
+filter_cells_n_cell_cutoff <- function(sobj, n_cells) {
+    set.seed(1337)
+    sobj <- subset(sobj, downsample = n_cells)
+
+    return(sobj)
+}
+
+make_cbt <- function(sobj, cutoff, downsample_type) {
+    if (downsample_type == "max_umi") {
+        sub_sobj <- filter_cells_umi_cutoff(sobj, cutoff)
+    } else if (downsample_type == "n_cells") {
+        sub_sobj <- filter_cells_n_cell_cutoff(sobj, cutoff)
+    } else {
+        stop("Must provide either max_umi or n_cells as downsample type")
+    }
+
+    cell_barcode_group_table <-
+        sub_sobj |>
+        SeuratObject::FetchData(vars = c(
+            "cell_group",
+            "cell_barcode",
+            "bam_file",
+            "nCount_RNA"
+        )) |>
+        tibble::as_tibble() |>
+        dplyr::arrange(cell_group)
+
+    return(cell_barcode_group_table)
+}
+
+scanbit_downsample_loop <- function(sobj,
+                                    cutoff_vector,
+                                    out_dir_base,
+                                    sample_label,
+                                    min_read_depth = 5,
+                                    min_snvs_per_cluster = 10,
+                                    downsample_type = "n_cells",
+                                    keep_temp_dir = FALSE) {
+    parallel::mclapply(
+        cutoff_vector,
+        mc.cores = 10,
+        mc.preschedule = FALSE,
+        function(cutoff) {
+            out_dir <-
+                file.path(
+                    out_dir_base,
+                    paste0(
+                        "downsample_",
+                        sprintf("%.0f", cutoff),
+                        "_cells"
+                    )
+                )
+
+            dir.create(
+                out_dir,
+                recursive = TRUE,
+                showWarnings = FALSE
+            )
+
+            if (keep_temp_dir) {
+                temp_dir <- file.path(out_dir_base, "tempdir")
+                cleanup <- FALSE
+            } else {
+                temp_dir <- tempfile(
+                    pattern = paste0(
+                        "tempdir_",
+                        cutoff,
+                        sample_label
+                    )
+                )
+                cleanup <- TRUE
+            }
+
+            # Get the cell barcodes for the current cutoff
+            cell_barcode_group_table <-
+                make_cbt(
+                    sobj,
+                    cutoff = cutoff,
+                    downsample_type = downsample_type
+                )
+
+            readr::write_tsv(
+                cell_barcode_group_table,
+                file.path(
+                    out_dir,
+                    paste0(
+                        "cell_barcode_table_",
+                        sample_label,
+                        "_",
+                        sprintf("%.0f", cutoff),
+                        "_cells.txt"
+                    )
+                )
+            )
+
+            cell_barcode_group_table <-
+                dplyr::select(cell_barcode_group_table, -nCount_RNA)
+
+            scanBit::get_snp_tree(
+                cellid_bam_table = cell_barcode_group_table,
+                ploidy = "GRCh38",
+                temp_dir = temp_dir,
+                output_dir = out_dir,
+                output_base_name = paste0(
+                    "downsample_",
+                    sample_label,
+                    "_",
+                    sprintf("%.0f", cutoff)
+                ),
+                ref_fasta =
+                    "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+                min_depth = min_read_depth,
+                sbatch_base = "downsample_cells",
+                min_snvs_per_cluster = min_snvs_per_cluster,
+                n_bootstraps = 10000,
+                max_prop_missing_at_site = 0.9,
+                cleanup = cleanup,
+                other_sbatch_options = "--time=12:00:00\nml miniforge3"
+            )
+        }
+    )
+}
+```
+
+## Random Utilities
+
+The opposite of %in%
+
+```{r}
+`%notin%` <- Negate(`%in%`)
 ```
 
 ## Random Utilities

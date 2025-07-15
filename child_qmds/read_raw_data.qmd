@@ -1,0 +1,188 @@
+## Read metadata, read data and make prepreocessed seurat objects
+Load in Seurat objects and save individual qs objects off to disk
+```{r read_raw_mouse}
+#| cache.vars: samples_tsv
+#| dependson: helper_read_raw_fun
+samples_tsv_mouse <-
+    read_tsv("misc/sample_metadata.tsv", show_col_types = FALSE) %>%
+    filter(Species == "mouse" & Tissue != "cell culture")
+
+mouse_count_list <-
+    parallel::mclapply(
+        seq_len(nrow(samples_tsv_mouse)),
+        mc.preschedule = FALSE,
+        mc.cores = parallelly::availableCores(),
+        function(i) {
+            read_raw(
+                i,
+                samples_tsv_mouse,
+                organism = "mouse",
+                annotate_species = "mouse",
+                bam_file =
+                    paste0(
+                        "/home/gdrobertslab/lab/Counts_2/",
+                        samples_tsv_mouse$Sample_ID[i],
+                        "/possorted_genome_bam.bam"
+                    ),
+                annotate_additional_ref = ,
+                annotate_additional_labels =
+            )
+        }
+    ) %>%
+    confirm_mclapply_worked() %>%
+    bind_rows()
+
+write_tsv(mouse_count_list, "output/counts/mouse_cell_counts.txt")
+```
+
+## Table of mouse cell counts per sample
+```{r read_raw_mouse_cell_count_table}
+#| dependson: read_raw_mouse
+DT::datatable(read_tsv("output/counts/mouse_cell_counts.txt"))
+```
+
+## Mouse flex data from 10x
+```{bash download_mouse_flex}
+samples_flex_tsv <-
+    read_tsv("misc/sample_metadata_flex.tsv", show_col_types = FALSE)
+
+mouse_count_list <-
+    parallel::mclapply(
+        seq_len(nrow(samples_flex_tsv)),
+        mc.preschedule = FALSE,
+        mc.cores = parallelly::availableCores(),
+        function(i) {
+            read_raw(
+                i,
+                samples_flex_tsv,
+                h5_folder = "input/10x_flex",
+                organism = "mouse",
+                annotate_species = "mouse",
+                bam_file =
+                    paste0(
+                        "input/10x_flex/",
+                        samples_flex_tsv$Sample_ID[i],
+                        "/count_sample_alignments.bam"
+                    )
+            )
+    }) %>%
+    confirm_mclapply_worked() %>%
+    bind_rows()
+
+write_tsv(mouse_count_list, "output/counts/mouse_cell_counts_flex.txt")
+```
+
+```{r read_raw_human}
+#| dependson: helper_read_raw_fun
+samples_tsv_human <-
+    read_tsv("misc/sample_metadata.tsv", show_col_types = FALSE) %>%
+    filter(Species == "human")
+
+human_count_list <-
+    parallel::mclapply(
+        seq_len(nrow(samples_tsv_human)),
+        mc.preschedule = FALSE,
+        mc.cores = parallelly::availableCores(),
+        function(i) {
+            read_raw(
+                i = i,
+                samples_tsv_human,
+                organism = "human",
+                annotate_species = "human",
+                bam_file =
+                    paste0(
+                        "/home/gdrobertslab/lab/Counts_2/",
+                        samples_tsv_human$Sample_ID[i],
+                        "/possorted_genome_bam.bam"
+                    ),
+                annotate_additional_ref = ,
+                annotate_additional_labels =
+            )
+        }
+    ) %>%
+    confirm_mclapply_worked() %>%
+    bind_rows()
+
+write_tsv(human_count_list, "output/counts/human_cell_counts.txt")
+```
+
+## Table of human cell counts per sample
+```{r read_raw_human_cell_count_table}
+#| dependson: read_raw_human
+DT::datatable(read_tsv("output/counts/human_cell_counts.txt"))
+```
+
+
+```{r read_raw_xeno}
+#| dependson: helper_read_raw_fun
+samples_tsv_xeno <-
+    read_tsv("misc/sample_metadata.tsv", show_col_types = FALSE) %>%
+    filter(Species == "human+mouse")
+
+xeno_count_list <-
+    parallel::mclapply(
+        seq_len(nrow(samples_tsv_xeno)),
+        mc.preschedule = FALSE,
+        mc.cores = parallelly::availableCores(),
+        function(i) {
+            read_raw(
+                i = i,
+                samples_tsv_xeno,
+                organism = "human",
+                annotate_species = "human",
+                species_pattern = "^GRCh38-",
+                bam_file =
+                    paste0(
+                        "/home/gdrobertslab/lab/Counts_2/",
+                        samples_tsv_xeno$Sample_ID[i],
+                        "/possorted_genome_bam.bam"
+                    ),
+                annotate_additional_ref = ,
+                annotate_additional_labels =
+            )
+        }
+    ) %>%
+    confirm_mclapply_worked() %>%
+    bind_rows()
+
+write_tsv(xeno_count_list, "output/counts/xeno_cell_counts.txt")
+```
+
+## Table of xenograft cell counts per sample
+```{r read_raw_xeno_cell_count_table}
+#| dependson: read_raw_xeno
+DT::datatable(read_tsv("output/counts/xeno_cell_counts.txt"))
+```
+
+## Get human data from GEO
+```{r read_raw_human}
+#| dependson: helper_read_raw_fun
+samples_tsv_human <-
+    read_tsv("misc/sample_metadata_geo.tsv", show_col_types = FALSE)
+
+human_count_list <-
+    parallel::mclapply(
+        seq_len(nrow(samples_tsv_human)),
+        mc.preschedule = FALSE,
+        mc.cores = parallelly::availableCores(),
+        function(i) {
+            read_raw(
+                i = i,
+                h5_folder = "output/cellranger_out",
+                samples_tsv_human,
+                organism = "human",
+                annotate_species = "human",
+                bam_file =
+                    paste0(
+                        "output/cellranger_out/",
+                        samples_tsv_human$Sample_ID[i],
+                        "/possorted_genome_bam.bam"
+                    )
+            )
+        }
+    ) %>%
+    confirm_mclapply_worked() %>%
+    bind_rows()
+
+write_tsv(human_count_list, "output/counts/human_cell_counts_geo.txt")
+```
