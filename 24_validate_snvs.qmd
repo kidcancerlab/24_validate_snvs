@@ -30,10 +30,14 @@ library(rrrSingleCellUtils)
 library(Seurat)
 library(tidyverse)
 theme_set(theme_bw())
-theme_update(plot.title = element_text(hjust = 0.5))
+theme_update(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+)
 library(gridExtra)
 library(patchwork)
 library(scanBit)
+library(qs2)
 
 set.seed(1337)
 ```
@@ -52,10 +56,18 @@ for directoryName in \
     output/degs \
     output/gsea \
     output/figures \
+    output/figures/qc_cutoffs \
     output/figures/volcano_plots \
     output/figures/gsea \
     output/seurat_objects/individual \
     output/seurat_objects/merged \
+    output/snv/norm_mouse \
+    output/read_depth/depths/bcf_depth \
+    output/read_depth/depths/call_count \
+    output/downsample/scanbit_out/x_samples/ \
+    output/read_depth/scanbit_out/x_samples \
+    output/read_depth/depths \
+    output/snv/tumor/x3 \
     output/snv/flex \
     output/snv/mouse \
     input \
@@ -80,6 +92,8 @@ seurat_version_check()
 Control: do this on 10x flex single cell data
 Data from https://www.10xgenomics.com/datasets/40k-mixture-of-cells-dissociated-from-4-fixed-mouse-tissues-using-manual-dissociation-multiplexed-samples-4-probe-barcodes-1-standard
 
+Maybe https://pmc.ncbi.nlm.nih.gov/articles/PMC10543734/ - human patient data
+maybe https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE266519 - covid pbmcs
 
 ### potential datasets for validation
 
@@ -119,6 +133,11 @@ Data from https://www.10xgenomics.com/datasets/40k-mixture-of-cells-dissociated-
 - GSE232335 <- gfp normal cells
     - I don't think there are tumor cells in the data
 
+maybe look at lineage tracing data
+https://data.mendeley.com/datasets/t98pjcd7t6/1
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE173958
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8782207/
+
 maybe human data to use:
 tumor[title] AND "homo sapiens"[orgn] AND ("single cell" OR "singlecell" OR "single-cell") AND "10x" NOT "sorted"
 - GSE253013
@@ -144,6 +163,10 @@ S0105 S0122 S0259 S0282
 
  -- Need RFP, FLUC, sLPmCherry integrated into reference
 
+# Make a tumor reference from xenograft human cells
+
+{{< include child_qmds/prep_tumor_ref.qmd >}}
+
 # Read in raw data and process to Seurat objects
 The metadata for all samples is stored in misc/sample_metadata.tsv.
 
@@ -155,9 +178,11 @@ Note that in the sample_metadata, for samples with multiple references, the cuto
 
 {{< include child_qmds/merge_dimplots.qmd >}}
 
-# Run differential expression and GSEA
+# Test scanBit on prostate cancer
+This is a tumor type with low mutational burden
 
-{{< include child_qmds/degs_gseaplots.qmd >}}
+{{< include child_qmds/prostate_cancer.qmd >}}
+
 
 
 # Session info

@@ -1,0 +1,195 @@
+## Test with prostate cancer samples
+Using data from GSE210358
+
+There are two samples from a single patient. Normal cells should cluster all together and the tumor cells may cluster independently if genetic distance is great enough. The tumor cells per sample may also cluster independently if they are genetically distinct.
+GSM6428955 HMP11_1
+GSM6428956 HMP11_2
+
+## Download and process the raw prostate data
+```{bash prostate_get}
+sbatch sbatchCmds/get_two_prostate.sh
+
+sbatch sbatchCmds/count_two_prostate.sh
+```
+
+## Analyze the prostate data using Seurat
+```{r prostate}
+merged_sobj_prost <-
+    merge(
+        qs::qread("output/seurat_objects/individual/HMP11_A_human.qs"),
+        qs::qread("output/seurat_objects/individual/HMP11_B_human.qs")
+    ) %>%
+    process_seurat()
+
+merged_sobj_prost$cell_group <-
+    paste0(
+        merged_sobj_prost$Sample_ID,
+        "_c",
+        merged_sobj_prost$individ_clusters
+    )
+
+prostate_dimplot <-
+    DimPlot(
+        merged_sobj_prost,
+        group.by = c("cell_group", "cell_type"),
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE
+    ) +
+    NoLegend()
+
+ggsave(
+    "output/figures/prostate_dimplot_clusters.png",
+    prostate_dimplot,
+    width = 20,
+    height = 10
+)
+
+# Select tumor markers taken from GitHub from original paper
+# https://github.com/zaidisamir/PNAS_scPRAD_2024/blob/6fd4d26d8153485687ce25b934fa4caa1c843db2/code/Human_single_cell.R#L384C11-L384C152
+prostate_featureplot <-
+    FeaturePlot(
+        merged_sobj_prost,
+        features = c(
+            "EPCAM", "AR", "NKX3-1", "KLK2", "KLK3",
+            "FOLH1", "STEAP1", "STEAP2", "TACSTD2", "ETV1"
+        ),
+        order = TRUE,
+        coord.fixed = TRUE
+    )
+
+ggsave(
+    "output/figures/prostate_featureplot.png",
+    prostate_featureplot,
+    width = 30,
+    height = 30
+)
+
+qs_save(
+    merged_sobj_prost,
+    "output/seurat_objects/merged_sobj_prost.qs2"
+)
+```
+
+## Run scanBit on prostate data
+```{r prostate_scanbit}
+merged_sobj_prost <- qs_read("output/seurat_objects/merged_sobj_prost.qs2")
+
+cell_barcode_group_table <-
+    merged_sobj_prost@meta.data %>%
+    select(cell_group, cell_barcode, bam_file) %>%
+    as_tibble()
+
+snp_tree <-
+    scanBit::get_snp_tree(
+        cellid_bam_table = cell_barcode_group_table,
+        ploidy = "GRCh38",
+        output_dir = "output/snv/prostate/",
+        temp_dir = "output/snv/prostate/tempdir",
+        output_base_name = "prostate",
+        ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+        min_depth = c(5, 10, 20, 30),
+        job_base = "prostate_sbatch",
+        min_snvs_per_cluster = 250,
+        n_bootstraps = 10000,
+        max_prop_missing_at_site = 0.9,
+        cleanup = FALSE,
+        other_batch_options = c("ml purge", "ml miniforge3")
+    )
+```
+
+## Merge scanBit output back into prostate data and make plots
+```{r prostate_add}
+merged_sobj_prost <- qs_read("output/seurat_objects/merged_sobj_prost.qs2")
+
+merged_sobj_prost <-
+    add_snv_group_to_sobj(
+        merged_sobj_prost,
+        "output/snv/prostate/prostate_5_groups.txt",
+        new_columns = c("snv_groups_5", "snv_top_lvl_groups_5"),
+        cell_group = "cell_group"
+    ) %>%
+    add_snv_group_to_sobj(
+        "output/snv/prostate/prostate_10_groups.txt",
+        new_columns = c("snv_groups_10", "snv_top_lvl_groups_10"),
+        cell_group = "cell_group"
+    ) %>%
+    add_snv_group_to_sobj(
+        "output/snv/prostate/prostate_20_groups.txt",
+        new_columns = c("snv_groups_20", "snv_top_lvl_groups_20"),
+        cell_group = "cell_group"
+    ) %>%
+    add_snv_group_to_sobj(
+        "output/snv/prostate/prostate_30_groups.txt",
+        new_columns = c("snv_groups_30", "snv_top_lvl_groups_30"),
+        cell_group = "cell_group"
+    )
+
+normal_clusters <-
+    match_celltype_clusters(
+        merged_sobj_prost,
+        c("Macrophages", "Monocytes"),
+        "cell_group",
+        "cell_type"
+    )
+
+merged_sobj_prost <-
+    label_tumor_cells(
+        merged_sobj_prost,
+        cell_group = "cell_group",
+        snv_group_col = "snv_groups_5",
+        normal_clusters = normal_clusters,
+        tumor_call_column = "snv_tumor_call_5"
+    ) %>%
+    label_tumor_cells(
+        cell_group = "cell_group",
+        snv_group_col = "snv_groups_10",
+        normal_clusters = normal_clusters,
+        tumor_call_column = "snv_tumor_call_10"
+    ) %>%
+    label_tumor_cells(
+        cell_group = "cell_group",
+        snv_group_col = "snv_groups_20",
+        normal_clusters = normal_clusters,
+        tumor_call_column = "snv_tumor_call_20"
+    ) %>%
+    label_tumor_cells(
+        cell_group = "cell_group",
+        snv_group_col = "snv_groups_30",
+        normal_clusters = normal_clusters,
+        tumor_call_column = "snv_tumor_call_30"
+    )
+
+prostate_tumor_calls <-
+    lapply(
+        c(
+            "snv_tumor_call_5",
+            "cell_group",
+            "cell_type"
+        ),
+        function(x) {
+            DimPlot(
+                merged_sobj_prost,
+                group.by = x,
+                label = TRUE,
+                label.box = TRUE,
+                repel = TRUE,
+                cols = c(plot_cols, sample(rainbow(n = 50)))
+            ) +
+                NoLegend()
+        }
+    )
+
+merged_plots <-
+    patchwork::wrap_plots(
+        prostate_tumor_calls,
+        ncol = 2
+    )
+
+ggsave(
+    "output/figures/prostate_tumor_calls.pdf",
+    merged_plots,
+    width = 15,
+    height = 15
+)
+```

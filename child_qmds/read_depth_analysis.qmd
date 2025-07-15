@@ -1,0 +1,250 @@
+## Run scanBit on individual cells with min_read_depth of 1 to use for read depth and accuracy Analysis
+
+```{r readdepth_scanbit}
+samples_tsv_x <-
+    read_tsv("misc/sample_metadata.tsv", show_col_types = FALSE) %>%
+    filter(grepl("X00", Sample_ID))
+
+n_cell_cutoffs <- 1
+
+output <-
+    parallel::mclapply(
+        samples_tsv_x$Sample_ID,
+        mc.cores = 10,
+        mc.preschedule = FALSE,
+        function(this_sample) {
+            sobj <-
+                qs::qread(paste0(
+                    "output/seurat_objects/individual/",
+                    this_sample,
+                    "_human.qs"
+                ))
+
+            sobj$cell_group <-
+                paste0(
+                    "clust_",
+                    sobj$individ_clusters,
+                    "_",
+                    sobj$cell_barcode
+                )
+
+            Idents(sobj) <- sobj$individ_clusters
+            sobj <- subset(sobj, downsample = 10)
+
+            Idents(sobj) <-
+                sobj$cell_group
+
+            scanbit_downsample_loop(
+                sobj,
+                cutoff_vector = n_cell_cutoffs,
+                min_read_depth = 1,
+                out_dir_base = file.path(
+                    "output/read_depth/scanbit_out/x_samples/",
+                    this_sample
+                ),
+                keep_temp_dir = TRUE,
+                sample_label = this_sample
+            )
+        }
+    )
+```
+
+```{bash readdepth_count_depth}
+sbatch x_bcf_depths.sh
+```
+
+
+## Compile all single-cell variant call depths
+```{r readdepth_compile_depths}
+all_depth_files <-
+    list.files(
+        path = "output/read_depth/depths/bcf_depth",
+        pattern = "bcf_depth_X",
+        full.names = TRUE
+    )
+all_depths <-
+    read_tsv(
+        all_depth_files,
+        id = "cell_sample",
+        show_col_types = FALSE,
+        col_names = c("depth", "count")
+    ) %>%
+    mutate(
+        cell_sample = basename(cell_sample) %>%
+            str_remove("bcf_depth_") %>%
+            str_remove(".txt")
+    )
+
+ave_depths <-
+    all_depths %>%
+    group_by(depth) %>%
+    summarize(mean_count = mean(count))
+
+site_covered_plot <-
+    head(ave_depths, n = 50) %>%
+    ggplot(
+        aes(x = depth, y = mean_count)
+    ) +
+    geom_point() +
+    scale_y_log10(labels = scales::label_comma()) +
+    labs(
+        title = "Mean Sites Covered to a Given Depth",
+        subtitle = "In Variant Call Data on Single Cells",
+        x = "Depth",
+        y = "Average number of positions covered"
+    )
+
+ggsave(
+    "output/figures/mean_coverage_1_cell.png",
+    site_covered_plot,
+    width = 6,
+    height = 4
+)
+```
+
+## Calculate expected number of mistakes for each depth
+Based on flex accuracy calculations
+```{r readdepth_accuracy_calc}
+# Make a named vector or accuracy - name is depth, value is % accurate
+flex_accuracy_prop <-
+    read_tsv("output/flex/flex_accuracy.txt", show_col_types = FALSE) %>%
+    pull(mean_perc_wrong, name = depth) / 100
+
+expected_mis_calls <-
+    ave_depths %>%
+    mutate(exp_bad_variants = mean_count * flex_accuracy_prop[depth])
+
+expected_errors_plot <-
+    expected_mis_calls %>%
+    head(n = 100) %>%
+    ggplot() +
+    geom_point(aes(x = depth, y = mean_count), color = "black") +
+    geom_point(aes(x = depth, y = exp_bad_variants), color = "red", size = 2) +
+    scale_y_log10(labels = scales::label_comma())
+
+ggsave(
+    "output/figures/expected_errors_1_cell.png",
+    expected_errors_plot,
+    width = 6,
+    height = 4
+)
+```
+
+```{bash readdepth_actual_n_vars}
+sbatch count_single_cell_variant_calls.sh
+```
+
+
+# Calculate the average number of variants actually called by depth
+```{r readdepth_compile_depths}
+all_call_files <-
+    list.files(
+        path = "output/read_depth/depths/call_count",
+        pattern = "bcf_calls_depth_X0",
+        full.names = TRUE
+    )
+all_call_depths <-
+    read_tsv(
+        all_call_files,
+        id = "cell_sample",
+        show_col_types = FALSE,
+        col_names = c("chr", "alt", "depth")
+    ) %>%
+    mutate(
+        cell_sample = basename(cell_sample) %>%
+            str_remove("bcf_calls_depth_") %>%
+            str_remove(".txt")
+    )
+
+average_num_calls <-
+    all_call_depths %>%
+    group_by(depth, cell_sample) %>%
+    summarize(n_vars = n(), .groups = "drop") %>%
+    group_by(depth) %>%
+    summarize(mean_n_vars = mean(n_vars))
+
+n_vars_plot <-
+    average_num_calls %>%
+    head(n = 50) %>%
+    ggplot() +
+    geom_point(aes(x = depth, y = mean_n_vars), color = "black") +
+    labs(
+        title = "Average Number of Variants Called by Depth",
+        subtitle = "In Variant Call Data on Single Cells",
+        x = "Depth",
+        y = "Mean number of variants called per cell"
+    )
+
+ggsave(
+    "output/figures/average_vars_1_cell.png",
+    n_vars_plot,
+    width = 6,
+    height = 4
+)
+
+calls_table <-
+    full_join(expected_mis_calls, average_num_calls, by = "depth")
+
+
+calls_summary_plot <-
+    calls_table %>%
+    rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
+    pivot_longer(
+        cols = c(wrong_variants, called_variants),
+        names_to = "var_type",
+        values_to = "count"
+    ) %>%
+    mutate(
+        var_type = str_replace(var_type, "_", " ") %>%
+            str_to_title()
+    ) %>%
+    filter(depth <= 50) %>%
+    ggplot(aes(x = depth, y = count, group = depth)) +
+    geom_line() +
+    geom_point(aes(color = var_type, shape = var_type), size = 2) +
+    scale_color_manual(values = c("black", "red"), name = NULL) +
+    scale_shape_manual(values = c(19, 4), name = NULL) +
+    labs(
+        title = "Total and Inaccurate Variant Calls",
+        x = "Depth",
+        y = "Number of variant calls"
+    ) +
+    theme(
+        legend.position = c(0.85, 0.9),
+        legend.background = element_blank()
+    )
+
+ggsave(
+    "output/figures/wrong_vs_called_nvars_1_cell.png",
+    calls_summary_plot,
+    width = 6,
+    height = 4
+)
+
+percent_wrong_plot <-
+    calls_table %>%
+    filter(depth <= 50) %>%
+    rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
+    mutate(perc_wrong = wrong_variants / called_variants) %>%
+    ggplot(
+        aes(
+            x = depth,
+            y = perc_wrong
+        )
+    ) +
+    #geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs")) +
+    geom_point() +
+    scale_y_continuous(labels = scales::label_percent()) +
+    labs(
+        title = "Percent of Inaccurate Variant Calls by Depth",
+        x = "Depth",
+        y = "Percent inaccurate variant calls"
+    )
+
+ggsave(
+    "output/figures/percent_wrong_1_cell.png",
+    percent_wrong_plot,
+    width = 6,
+    height = 4
+)
+```

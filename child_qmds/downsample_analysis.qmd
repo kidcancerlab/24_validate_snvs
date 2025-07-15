@@ -1,0 +1,457 @@
+
+```{r}
+merged_sobj_mouse_ctrls <-
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+
+# Grab just data from our control mice
+merged_sobj_mouse_ctrls <-
+    merged_sobj_mouse_ctrls[
+        ,
+        merged_sobj_mouse_ctrls$Sample_ID %in% c("S0066", "S0074")
+    ]
+
+merged_sobj_mouse_ctrls$cell_group <-
+    paste0(
+        merged_sobj_mouse_ctrls$Sample_ID,
+        "_c",
+        merged_sobj_mouse_ctrls$individ_clusters
+    )
+
+min_n_cells <- 500
+
+keep_clusters <-
+    merged_sobj_mouse_ctrls$cell_group %>%
+    table() %>%
+    as.data.frame() %>%
+    filter(Freq > min_n_cells) %>%
+    pull(".")
+
+# Keep only clusters with > 900 cells
+merged_sobj_mouse_ctrls <-
+    merged_sobj_mouse_ctrls %>%
+    subset(cell_group %in% keep_clusters)
+```
+
+
+## Loop through downsample cutoffs and run scanBit
+```{r mouse_scanbit}
+ncell_cutoffs <- c(1, 2, 3, 4, 5, 10, 20, 30, 50, 100, 200, 500)
+
+Idents(merged_sobj_mouse_ctrls) <-
+    merged_sobj_mouse_ctrls$cell_group
+
+output <-
+    parallel::mclapply(
+        rev(ncell_cutoffs),
+        mc.cores = 10,
+        mc.preschedule = FALSE,
+        function(cutoff) {
+            set.seed(1337)
+            # Get the cell barcodes for the current cutoff
+            cell_barcode_group_table <-
+                merged_sobj_mouse_ctrls %>%
+                subset(downsample = cutoff) %>%
+                FetchData(vars = c(
+                    "cell_group",
+                    "cell_barcode",
+                    "bam_file",
+                    "nCount_RNA"
+                )) %>%
+                as_tibble()
+
+            write_tsv(
+                cell_barcode_group_table,
+                file.path(
+                    "output/downsample/cell_tables",
+                    paste0("cell_barcode_table_", cutoff, ".txt")
+                )
+            )
+
+            cell_barcode_group_table <-
+                select(cell_barcode_group_table, -nCount_RNA)
+
+            dir.create(
+                paste0(
+                    "output/downsample/scanbit_out/",
+                    "downsample_",
+                    cutoff,
+                    "/tempdir"
+                ),
+                recursive = TRUE,
+                showWarnings = FALSE
+            )
+
+            snp_tree <-
+                scanBit::get_snp_tree(
+                    cellid_bam_table = cell_barcode_group_table,
+                    ploidy = "mm10",
+                    temp_dir = paste0(
+                        "output/downsample/scanbit_out/",
+                        "downsample_",
+                        cutoff,
+                        "/tempdir"
+                    ),
+                    output_dir = paste0(
+                        "output/downsample/scanbit_out/",
+                        "downsample_",
+                        cutoff
+                    ),
+                    output_base_name = paste0("downsample_", cutoff),
+                    ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+                    min_depth = 5,
+                    sbatch_base = "downsample",
+                    min_snvs_per_cluster = 1,
+                    n_bootstraps = 10000,
+                    max_prop_missing_at_site = 0.9,
+                    cleanup = TRUE,
+                    other_sbatch_options = "--time=24:00:00"
+                )
+        }
+    )
+```
+
+
+## Try with human Sample_ID
+```{r downsample_human1}
+x_14 <-
+    tenx_load_qc(
+        "/home/gdrobertslab/lab/Counts_2/X00014/filtered_feature_bc_matrix",
+        violin_plot = FALSE
+    ) %>%
+    subset(nCount_RNA <= 30000 & percent.mt < 20) %>%
+    process_seurat()
+
+x_14$bam_file <-
+    "/home/gdrobertslab/lab/Counts_2/X00014/possorted_genome_bam.bam"
+
+x_14$cell_barcode <- Cells(x_14)
+opt_res <-
+    rrrSingleCellUtils::optimize_silhouette(x_14, summary_plot = FALSE) %>%
+    dplyr::arrange(dplyr::desc(sil_vals)) %>%
+    dplyr::pull(res_vals) %>%
+    head(1)
+
+x_14 <- Seurat::FindClusters(x_14, resolution = opt_res)
+
+# source("/home/gdrobertslab/lab/Analysis/Matt/dev/rrrSingleCellUtils/R/recurl.R")
+
+# x_14 <-
+#     recurluster(
+#         x_14,
+#         max_recursions = 3,
+#         parallel = TRUE,
+#         verbose = FALSE,
+#         do_plots = FALSE
+#     )
+
+DimPlot(
+    x_14,
+    group.by = c("RNA_snn_res.0.25"),
+    label = TRUE,
+    label.box = TRUE,
+    label.size = 2,
+    repel = TRUE
+) +
+    NoLegend() +
+    FeaturePlot(
+        x_14,
+        features = "COL1A1"
+    )
+
+x_14$cell_group <- paste0("clust_", x_14$RNA_snn_res.0.25)
+
+min_n_cells <- 200
+
+keep_clusters <-
+    x_14$cell_group %>%
+    table() %>%
+    as.data.frame() %>%
+    filter(Freq > min_n_cells) %>%
+    pull(".")
+
+# Keep only clusters with > 900 cells
+x_14 <-
+    x_14 %>%
+    subset(cell_group %in% keep_clusters)
+
+Idents(x_14) <-
+    x_14$cell_group
+```
+
+
+```{r downsample_x14_umi}
+n_umi_cutoffs <- c(1, 2.5, 5, 25, 50, 100, 200, 400) * 10000
+
+
+output <-
+    parallel::mclapply(
+        rev(n_umi_cutoffs),
+        mc.cores = 10,
+        mc.preschedule = FALSE,
+        function(cutoff) {
+            out_dir <-
+                paste0(
+                    "output/downsample/scanbit_out/x14/downsample_",
+                    sprintf("%.0f", cutoff),
+                    "_umi"
+                )
+
+            dir.create(
+                file.path(out_dir, "tempdir"),
+                recursive = TRUE,
+                showWarnings = FALSE
+            )
+
+            # Get the cell barcodes for the current cutoff
+            cell_barcode_group_table <- make_cbt(x_14, max_umi = cutoff)
+
+            write_tsv(
+                cell_barcode_group_table,
+                file.path(
+                    out_dir,
+                    paste0(
+                        "cell_barcode_table_x14_",
+                        sprintf("%.0f", cutoff),
+                        "_umi.txt"
+                    )
+                )
+            )
+
+            cell_barcode_group_table <-
+                select(cell_barcode_group_table, -nCount_RNA)
+
+            snp_tree <-
+                scanBit::get_snp_tree(
+                    cellid_bam_table = cell_barcode_group_table,
+                    ploidy = "GRCh38",
+                    temp_dir = file.path(out_dir, "tempdir"),
+                    output_dir = out_dir,
+                    output_base_name = paste0(
+                        "downsample_x14_",
+                        sprintf("%.0f", cutoff)
+                    ),
+                    ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+                    min_depth = 5,
+                    sbatch_base = "downsample_x14",
+                    min_snvs_per_cluster = 10,
+                    n_bootstraps = 10000,
+                    max_prop_missing_at_site = 0.9,
+                    cleanup = TRUE,
+                    other_sbatch_options = "--time=24:00:00"
+                )
+        }
+    )
+```
+
+## Downsample by cell number instead of umi
+```{downsample_x14_cells}
+n_cell_cutoffs <- c(1, 2, 3, 4, 5, 10, 20, 50, 100, 250, 500)
+
+output <-
+    parallel::mclapply(
+        n_cell_cutoffs,
+        mc.cores = 10,
+        mc.preschedule = FALSE,
+        function(cutoff) {
+            out_dir <-
+                paste0(
+                    "output/downsample/scanbit_out/x14/",
+                    "downsample_",
+                    sprintf("%.0f", cutoff),
+                    "_cells"
+                )
+
+            dir.create(
+                file.path(out_dir, "tempdir"),
+                recursive = TRUE,
+                showWarnings = FALSE
+            )
+
+            # Get the cell barcodes for the current cutoff
+            cell_barcode_group_table <- make_cbt(x_14, n_cells = cutoff)
+
+            write_tsv(
+                cell_barcode_group_table,
+                file.path(
+                    out_dir,
+                    paste0(
+                        "cell_barcode_table_x14_",
+                        sprintf("%.0f", cutoff),
+                        "_cells.txt"
+                    )
+                )
+            )
+
+            cell_barcode_group_table <-
+                select(cell_barcode_group_table, -nCount_RNA)
+
+            snp_tree <-
+                scanBit::get_snp_tree(
+                    cellid_bam_table = cell_barcode_group_table,
+                    ploidy = "GRCh38",
+                    temp_dir = file.path(out_dir, "tempdir"),
+                    output_dir = out_dir,
+                    output_base_name = paste0(
+                        "downsample_x14_",
+                        sprintf("%.0f", cutoff)
+                    ),
+                    ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+                    min_depth = 5,
+                    sbatch_base = "downsample_x14_cells",
+                    min_snvs_per_cluster = 10,
+                    n_bootstraps = 10000,
+                    max_prop_missing_at_site = 0.9,
+                    cleanup = TRUE,
+                    other_sbatch_options = "--time=24:00:00"
+                )
+        }
+    )
+```
+
+
+
+## Loop over all the osteo datasets and run scanBit
+```{r downsample_loop_x}
+samples_tsv_x <-
+    read_tsv("misc/sample_metadata.tsv", show_col_types = FALSE) %>%
+    filter(grepl("X00", Sample_ID))
+
+min_n_cells <- 200
+min_n_cells <- 1
+
+n_cell_cutoffs <- c(1, 2, 3, 4, 5, 10, 20, 50, 100, 100000, 500000)
+
+output <-
+    parallel::mclapply(
+        samples_tsv_x$Sample_ID,
+        mc.cores = 5,
+        mc.preschedule = FALSE,
+        function(this_sample) {
+            sobj <-
+                qs::qread(paste0(
+                    "output/seurat_objects/individual/",
+                    this_sample,
+                    "_human.qs"
+                ))
+
+            sobj$cell_group <- paste0("clust_", sobj$individ_clusters)
+
+            keep_clusters <-
+                sobj$cell_group %>%
+                table() %>%
+                as.data.frame() %>%
+                filter(Freq > min_n_cells) %>%
+                pull(".")
+
+            # Keep only clusters with > min_n_cells cells
+            sobj <-
+                sobj %>%
+                subset(cell_group %in% keep_clusters)
+
+            Idents(sobj) <-
+                sobj$cell_group
+
+            scanbit_downsample_loop(
+                sobj,
+                cutoff_vector = n_cell_cutoffs,
+                out_dir_base = file.path(
+                    "output/downsample/scanbit_out/x_samples/",
+                    this_sample
+                ),
+                sample_label = this_sample
+            )
+        }
+    )
+```
+
+
+stuff  <- qs::qread("output/seurat_objects/individual/X00021_human.qs")
+
+stuff_cnv <-
+    SCEVAN::pipelineCNA(
+        GetAssayData(stuff, layer = "counts"),
+        par_cores = 5,
+        norm_cell = WhichCells(stuff, idents = 4),
+        ClonalCN = TRUE
+    )
+
+    plotCNA_withAnnotCells
+
+
+
+```{r testplot}
+genotype_code <-
+    c(
+        #"./." = 10,
+        "0/0" = 1,
+        "0/1" = 2,
+        "1/1" = 3
+    )
+#stuff <-
+    read_tsv("test.vcf") %>%
+    rename(chr = "#CHROM") %>%
+    select(-ID, -QUAL, -FILTER, -INFO, -FORMAT) %>%
+    pivot_longer(
+        cols = starts_with("clust_"),
+        names_to = "cluster",
+        values_to = "call"
+    ) %>%
+    separate_wider_delim(
+        call,
+        delim = ":",
+        names = c("GT", "PL", "DP", "AD", "GQ")
+    ) %>%
+    select(-PL, -AD, -GQ) %>%
+    filter(GT %in% c("0/0", "0/1", "1/1")) %>%
+    mutate(genotype_num = genotype_code[GT]) %>%
+    mutate(chr_pos = paste(chr, POS)) %>%
+    select(chr_pos, cluster, genotype_num) %>%
+    pivot_wider(
+        id_cols = chr_pos,
+        names_from = "cluster",
+        values_from = genotype_num
+    ) %>%
+    column_to_rownames("chr_pos") %>%
+    arrange(clust_0, clust_1, clust_2, clust_3) %>%
+    as.matrix() %>%
+    pheatmap::pheatmap(cluster_cols = FALSE, cluster_rows = FALSE)
+
+
+    #mutate(depth = str_split(DP, ",") %>% as.vector() %>% sum())
+    ggplot(aes(x = cluster, y = chr_pos, fill = GT)) +
+    geom_tile()
+
+```
+
+```{r}
+bootstrap_downsample_plot <-
+    readxl::read_xlsx("downsample_bootstrap_values.xlsx") %>%
+    mutate(
+        cells_char = as.factor(cells_char) %>% fct_reorder(cells),
+    ) %>%
+    ggplot(
+        aes(
+            x = cells_char,
+            y = bootstrap_val,
+            group = sample,
+            color = sample
+        )
+    ) +
+    geom_boxplot(aes(group = cells), color = "black", fill = "lightgray") +
+    #geom_point(size = 2, alpha = 0.5) +
+    #geom_line() +
+    scale_color_brewer(palette = "Set2") +
+    labs(
+        title = "Top Level Bootstrap Values for Downsampled Data",
+        subtitle = "Confidence When Using Only 'X' Cells",
+        x = "Cells per cluster",
+        y = "Bootstrap value of top tree division"
+    )
+
+ggsave(
+    "output/figures/downsample_bootstrap_plot.png",
+    width = 8,
+    height = 6
+)
+```
+

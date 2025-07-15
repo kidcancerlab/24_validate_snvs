@@ -15,22 +15,13 @@ sobj_list <-
         mc.preschedule = FALSE,
         function(x) {
             qs::qread(x)
-    })
+        }
+    )
 
 merged_sobj_mouse <-
     merge(sobj_list[[1]], sobj_list[-1]) %>%
     JoinLayers() %>%
     process_seurat()
-
-# I think we want the within_sample clusters since there is pretty severe batch effect
-# opt_res <-
-#     optimize_silhouette(merged_sobj_mouse, summary_plot = FALSE) %>%
-#     arrange(desc(sil_vals)) %>%
-#     pull(res_vals) %>%
-#     head(1)
-
-# merged_sobj_mouse <-
-#     Seurat::FindClusters(merged_sobj_mouse, resolution = opt_res)
 
 qs::qsave(merged_sobj_mouse, "output/seurat_objects/merged/merged_mouse.qs")
 
@@ -43,8 +34,8 @@ plot_name <-
         repel = TRUE,
         ncol = 1
     ) +
-    NoLegend() +
-    theme(aspect.ratio = 1)) +
+        NoLegend() +
+        theme(aspect.ratio = 1)) +
     (DimPlot(
         merged_sobj_mouse,
         group.by = "Sample_ID",
@@ -53,8 +44,8 @@ plot_name <-
         repel = TRUE,
         ncol = 1
     ) +
-    NoLegend() +
-    theme(aspect.ratio = 1))
+        NoLegend() +
+        theme(aspect.ratio = 1))
 ggsave(
     "output/figures/dimplot_mouse_cell_type_by_sample.pdf",
     plot_name,
@@ -84,7 +75,8 @@ sobj_list <-
         samples_tsv$Sample_ID,
         function(x) {
             qs::qread(file.path(sobj_qs_dir, paste0(x, "_human.qs")))
-    })
+        }
+    )
 
 merged_sobj_human <-
     merge(sobj_list[[1]], sobj_list[-1]) %>%
