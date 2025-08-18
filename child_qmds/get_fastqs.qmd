@@ -1,155 +1,23 @@
-## Get FASTQ Files
-
-I'll be using SRA-Toolkit/2.10.8 for this. Specifically, the `fasterq-dump` function.
-
-For the SRA downloads, I'll also have to rename the fastqs so they match the format required by cellranger count.
-
-### GSE247228
-
-```{bash get-computing-power}
-srun_l -c 12 -p himem --x11 --pty bash
-```
-
-```{bash get-fastqs}
-ml SRA-Toolkit/2.10.8
-fasterq-dump --outdir input/fastqs/GSE247228 --progress SRR26705626 SRR26705627 SRR26705629 SRR26705628 SRR26705630 SRR26705631
-
-# We need to convert our fastq names to a cellranger compatible format
-
-for sra in SRR26705626 SRR26705627 SRR26705628 SRR26705629 SRR26705630 SRR26705631
-do
-    mkdir input/fastqs/GSE247228/${sra}
-    mv input/fastqs/GSE247228/${sra}_1.fastq \
-        input/fastqs/GSE247228/${sra}/${sra}_S1_R1_001.fastq
-    mv input/fastqs/GSE247228/${sra}_2.fastq \
-        input/fastqs/GSE247228/${sra}/${sra}_S1_R2_001.fastq
-done
-
-for sra in SRR26705626 SRR26705627 SRR26705628 SRR26705629 SRR26705630 SRR26705631
-do
-    pigz -J 5 input/fastqs/GSE247228/${sra}/${sra}_S1_R1_001
-    pigz -J 5 input/fastqs/GSE247228/${sra}/${sra}_S1_R2_001
-done
-```
-
-### GSE201615
-
-Does it have dsRED?
-
-For this I'm thinking I make the new reference containing dsRED, cas9... and maybe Ccne-dsRED conjugate? I can't tell exactly what's going on with their experimental methods.
-
-For this data, SRR18932562 and 3 are the same sample but different runs, and the other two are also the same sample but different runs. After I run fastq dump, I will be adding them to the same folder and adding a lane parameter to the file name (L001 or L002).
+## Get FASTQ Files for GEO samples
 
 ```{bash}
-#trying parallel-fastq-dump
-conda env create parallel_fastq_dump.yml
-conda activate parallel_fastq_dump
-parallel-fastq-dump --outdir input/fastqs/GSE201615/parallel -t 3 --split-files -s SRR18932563 SRR18932566 SRR18932567
+n_geo_samples=$(grep -v geo_id misc/validation_geo_metadata.txt | wc -l)
 
+n_geo_samples=$((n_geo_samples - 1))
 
-fastq-dump --outdir input/fastqs/GSE201615/tmp --split-files SRR18932562 SRR18932563 SRR18932566 SRR18932567
-
-#we have 3 fastqs for each; one is the Index and the other two are our Read files
-#_1 is I1
-#_2 is R1
-#_3 is R2
+sbatch --array=0-${n_geo_samples}%10 sbatchCmds/get_geo_fastqs.sh
 ```
 
-### GSE215239
+```{bash get_data_count_geo}
+n_samples=($( \
+    cut -f 3,8 misc/validation_geo_metadata.txt \
+    | uniq \
+    | grep -v sample_id \
+    | wc -l \
+))
 
-34 and 36 are the samples containing tumor cells. We'll include the controls, though, as a confirmation of tumor cells since we expect our tumor cells to be trancriptionally distinct from the stromal cells.
+# since the array will start at zero
+n_samples=$((n_samples - 1))
 
-```{bash}
-conda activate parallel_fastq_dump
-
-parallel-fastq-dump \
-    --outdir input/fastqs/GSE215239/ \
-    -t 4 \
-    --split-files \
-    -s SRR21863133 SRR21863134 SRR21863135 SRR21863136
-
-#Now I need to rename these
-# _1 is I1
-# _2 is I2
-# _3 is R1
-# _4 is R2
-
-for sra in SRR21863133 SRR21863134 SRR21863135 SRR21863136
-do
-    mkdir input/fastqs/GSE215239/${sra}
-    mv input/fastqs/GSE215239/${sra}_1.fastq \
-        input/fastqs/GSE215239/${sra}/${sra}_S1_I1_001.fastq
-    mv input/fastqs/GSE215239/${sra}_2.fastq \
-        input/fastqs/GSE215239/${sra}/${sra}_S1_I2_001.fastq
-    mv input/fastqs/GSE215239/${sra}_3.fastq \
-        input/fastqs/GSE215239/${sra}/${sra}_S1_R1_001.fastq
-    mv input/fastqs/GSE215239/${sra}_4.fastq \
-        input/fastqs/GSE215239/${sra}/${sra}_S1_R2_001.fastq
-done
-
-
-for sra in SRR21863133 SRR21863134 SRR21863135 SRR21863136
-do
-    pigz -J 5 input/fastqs/GSE215239/${sra}/${sra}_S1_I1_001.fastq
-    pigz -J 5 input/fastqs/GSE215239/${sra}/${sra}_S1_I2_001.fastq
-    pigz -J 5 input/fastqs/GSE215239/${sra}/${sra}_S1_R1_001.fastq
-    pigz -J 5 input/fastqs/GSE215239/${sra}/${sra}_S1_R2_001.fastq
-done
+sbatch --array=0-${n_samples} sbatchCmds/count_geo.sh
 ```
-
-### GSE215394
-
-```{bash}
-fastq-dump \
-    --outdir input/fastqs/GSE215394/ \
-    --split-3 \
-    SRR21874821
-
-pigz -j 5 input/fastqs/GSE215394/*.fastq
-```
-
-### GSE189856
-
-From this one, we're interested in just the samples containing GFP, GSM5708624-29.
-
-The SRR numbers associated with these samples are SRR17073332-37
-
-```{bash}
-fasterq-dump \
-    --outdir input/fastqs/GSE189856/ \
-    --progress \
-    SRR17073332 SRR17073333 SRR17073334 SRR17073335 SRR17073336 SRR17073337
-
-for sra in SRR17073332 SRR17073333 SRR17073334 SRR17073335 SRR17073336 SRR17073337
-do
-    mkdir input/fastqs/GSE189856/${sra}
-    mv input/fastqs/GSE189856/${sra}_1.fastq \
-        input/fastqs/GSE189856/${sra}/${sra}_S1_R1_001.fastq
-    mv input/fastqs/GSE189856/${sra}_2.fastq \
-        input/fastqs/GSE189856/${sra}/${sra}_S1_R2_001.fastq
-    pigz -J 5 input/fastqs/GSE189856/${sra}/${sra}_S1_R1_001.fastq
-    pigz -J 5 input/fastqs/GSE189856/${sra}/${sra}_S1_R2_001.fastq
-done
-```
-
-## Robert's Lab Samples
-
-### S0105
-
-K7M2 RFP tibia tumor
-
-https://www.snapgene.com/plasmids/fluorescent_protein_genes_and_plasmids/TurboRFP
-
-### S0122 + S0123
-
-K7M2 sLPmCherry lung mets
-
-### S0259
-
-Barcoded F420's (in culture?); S0260 - 61 are injected barcoded F420's post injection
-
-### S0282
-
-F420 FLUC
-
-https://www.addgene.org/17477/sequences/#addgene-full
