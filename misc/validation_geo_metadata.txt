@@ -23,10 +23,6 @@ GSE189856	SRR17073334	G0019	Low CIN - CINlow_GFP_KIF2B1	truthset validation	Trip
 GSE189856	SRR17073333	G0020	Low CIN - CINlow_GFP_KIF2B2	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10
 GSE189856	SRR17073332	G0021	Low CIN - CINlow_GFP_MCAK1	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10
 GSE189856	SRR17073335	G0022	Low CIN - CINlow_GFP_MCAK2	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10
-GSE297547	SRR33626895	G0023	PBMC from C01 sample	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38
-GSE297547	SRR33626894	G0024	PBMC from C02 sample	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38
-GSE297547	SRR33626893	G0025	PBMC from C03 sample	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38
-GSE297547	SRR33626892	G0026	PBMC from C04 sample	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38
 GSE162454	SRR13177101	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38
 GSE162454	SRR13177102	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38
 GSE162454	SRR13177103	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	3	/home/gdrobertslab/lab/GenRef/10x-hg38
@@ -74,3 +70,7 @@ GSE169396	SRR14041352	G0036	GSE169396: bone tissue cells-S4	healthy samples	heal
 GSE169396	SRR14041353	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	6	/home/gdrobertslab/lab/GenRef/10x-hg38
 GSE169396	SRR14041354	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	7	/home/gdrobertslab/lab/GenRef/10x-hg38
 GSE169396	SRR14041355	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	8	/home/gdrobertslab/lab/GenRef/10x-hg38
+GSE237579	SRR25308531	G0037	scRNA-seq PMBC healthy donor 6	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38
+GSE237579	SRR25308533	G0037	scRNA-seq PMBC healthy donor 6	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38
+GSE237579	SRR25308532	G0038	scRNA-seq PMBC healthy donor 7	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38
+GSE237579	SRR25308535	G0038	scRNA-seq PMBC healthy donor 7	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38

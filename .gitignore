@@ -19,3 +19,4 @@ just_gfp_counts
 small_fastqs
 small_fastq_alignment
 slurmOut
+.vscode
