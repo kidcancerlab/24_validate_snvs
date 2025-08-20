@@ -23,7 +23,7 @@ this_sample=${sample_name_array[$SLURM_ARRAY_TASK_ID]}
 
 cellranger count \
     --id ${this_sample} \
-    --output-dir input/counts/${this_sample} \
+    --output-dir output/cellranger_out/${this_sample} \
     --fastqs input/fastqs/${this_sample}/ \
     --localcores 10 \
     --transcriptome custom_ref/gfp_rfp_mm10 \

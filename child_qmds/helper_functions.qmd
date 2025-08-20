@@ -98,7 +98,10 @@ read_raw <- function(i,
                 rrrSingleCellUtils::process_seurat()
 
             opt_res <-
-                rrrSingleCellUtils::optimize_silhouette(sobj, summary_plot = FALSE) %>%
+                rrrSingleCellUtils::optimize_silhouette(
+                    sobj,
+                    summary_plot = FALSE
+                ) %>%
                 dplyr::arrange(dplyr::desc(sil_vals)) %>%
                 dplyr::pull(res_vals) %>%
                 head(1)
@@ -120,7 +123,8 @@ read_raw <- function(i,
                     ref = annotate_ref,
                     labels = annotate_labels,
                     add_ref = annotate_additional_ref,
-                    add_labels = annotate_additional_labels
+                    add_labels = annotate_additional_labels,
+                    aggr_ref = TRUE
                 )
 
             dimplot_fig <-
@@ -128,11 +132,12 @@ read_raw <- function(i,
                     sobj,
                     group.by = c("individ_clusters", "cell_type"),
                     label = TRUE,
+                    label.size = 2,
                     label.box = TRUE,
                     repel = TRUE,
                     ncol = 1
                 ) +
-                NoLegend()
+                Seurat::NoLegend()
 
             ggplot2::ggsave(
                 paste0(
@@ -149,10 +154,10 @@ read_raw <- function(i,
                     pre_filt_hist,
                     dimplot_fig,
                     ncol = 1,
-                    heights = c(1, 4)
+                    heights = c(1, 5)
                 ),
                 width = 10,
-                height = 15
+                height = 20
             )
 
             qs::qsave(
@@ -243,6 +248,49 @@ pull_species_cutoff <- function(from_sample_tsv,
     }
 }
 ```
+
+## Read raw from table of samples
+```{r helpers_raw_from_table}
+#| cache.vars: read_raw_from_table
+read_raw_from_table <- function(sample_table,
+                                h5_folder,
+                                organism,
+                                annotate_species,
+                                count_table_file,
+                                bam_file,
+                                annotate_additional_ref = list(),
+                                annotate_additional_labels = list()) {
+    count_table <- parallel::mclapply(
+        seq_len(nrow(sample_table)),
+        mc.preschedule = FALSE,
+        mc.cores = parallelly::availableCores(),
+        function(i) {
+            read_raw(
+                i = i,
+                h5_folder = h5_folder,
+                sample_table,
+                organism = organism,
+                annotate_species = annotate_species,
+                bam_file =
+                    paste0(
+                        h5_folder,
+                        "/",
+                        sample_table$Sample_ID[i],
+                        "/",
+                        bam_file
+                    ),
+                annotate_additional_ref = annotate_additional_ref,
+                annotate_additional_labels = annotate_additional_labels
+            )
+        }
+    ) |>
+        confirm_mclapply_worked() |>
+        dplyr::bind_rows()
+
+    readr::write_tsv(count_table, count_table_file)
+}
+```
+
 
 ```{r helper_gsea_plot}
 #| cache.vars: gsea_dotplot
@@ -576,18 +624,62 @@ scanbit_downsample_loop <- function(sobj,
 }
 ```
 
-## Random Utilities
 
-The opposite of %in%
+## Helper function to run scanbit
+This asssumes a bunch of things about the structure of this project
+```{r helpers_scanbit_one_sample}
+scanbit_one_sample <- function(this_sample,
+                               species,
+                               ploidy,
+                               ref_fasta,
+                               out_dir) {
+    sobj <-
+        qs::qread(paste0(
+            "output/seurat_objects/individual/",
+            this_sample,
+            "_",
+            species,
+            ".qs"
+        ))
 
-```{r}
-`%notin%` <- Negate(`%in%`)
-```
+    sobj$cell_group <-
+        paste0(
+            sobj$Sample_ID,
+            "_c",
+            sobj$individ_clusters
+        )
 
-## Random Utilities
+    cell_barcode_group_table <-
+        sobj@meta.data |>
+        dplyr::select(cell_group, cell_barcode, bam_file) |>
+        dplyr::as_tibble()
 
-The opposite of %in%
+    job_worked <-
+        scanBit::get_snp_tree(
+            cellid_bam_table = cell_barcode_group_table,
+            ploidy = ploidy,
+            output_dir = out_dir,
+            temp_dir = paste0("/gfpf0/scratch/mvc002/scanbit/", this_sample),
+            output_base_name = paste0("snvs_", this_sample),
+            ref_fasta = ref_fasta,
+            min_depth = c(5, 10, 20, 30),
+            job_base = paste0("sb_", this_sample),
+            log_base = paste0("slurmOut/snv_", this_sample),
+            min_snvs_per_cluster = 200,
+            n_bootstraps = 10000,
+            max_prop_missing_at_site = 0.9,
+            cleanup = TRUE,
+            other_job_header_options = c(
+                "--time=8:00:00",
+                "--partition=himem,general"
+            ),
+            other_batch_options = c(
+                "ml purge",
+                "ml miniforge3",
+                'eval "$(conda shell.bash hook)"',
+            ),
+        )
 
-```{r}
-`%notin%` <- Negate(`%in%`)
+    return(job_worked)
+}
 ```

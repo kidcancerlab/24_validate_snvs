@@ -1,0 +1,76 @@
+geo_id	sra_number	Sample_ID	description	sample_group	tumor_type	fake_lane	align_ref	subset_nCount_RNA_min	subset_nCount_RNA_max	subset_percent.mt_max
+GSE210358	SRR20761355	G0001	HMP11_A	tumor validation	Prostate	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	25
+GSE210358	SRR20761356	G0001	HMP11_A	tumor validation	Prostate	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	25
+GSE210358	SRR20761353	G0002	HMP11_B	tumor validation	Prostate	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	25
+GSE210358	SRR20761354	G0002	HMP11_B	tumor validation	Prostate	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	25
+GSE222703	SRR23063397	G0003	ccRCC tumor - patient 1	tumor validation	Clear cell renal cell carcinoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30
+GSE222703	SRR23063398	G0003	ccRCC tumor - patient 1	tumor validation	Clear cell renal cell carcinoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30
+GSE222703	SRR23063395	G0004	adjacent kidney tissue - patient 1	tumor validation	Clear cell renal cell carcinoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30
+GSE222703	SRR23063396	G0004	adjacent kidney tissue - patient 1	tumor validation	Clear cell renal cell carcinoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30
+GSE247228	SRR26705626	G0009	YUMM3_3-ActA_GFP_1	truthset validation	Melanoma	1	custom_ref/gfp_rfp_mm10	1000	75000	30
+GSE247228	SRR26705627	G0010	YUMM3_3-ActA_GFP_2	truthset validation	Melanoma	1	custom_ref/gfp_rfp_mm10	1000	100000	30
+GSE247228	SRR26705629	G0011	YUMM3_3-ActA_GFP_3	truthset validation	Melanoma	1	custom_ref/gfp_rfp_mm10	1000	100000	30
+GSE247228	SRR26705628	G0012	YUMM3_3-CTRL_GFP_1	truthset validation	Melanoma	1	custom_ref/gfp_rfp_mm10	1000	80000	20
+GSE247228	SRR26705630	G0013	YUMM3_3-CTRL_GFP_2	truthset validation	Melanoma	1	custom_ref/gfp_rfp_mm10	1000	75000	20
+GSE247228	SRR26705631	G0014	YUMM3_3-CTRL_GFP_3	truthset validation	Melanoma	1	custom_ref/gfp_rfp_mm10	1000	60000	20
+GSE201615	SRR18932566	G0015	"Replicate 1, mRNA-derived cDNA"	truthset validation	undifferentiated pleiomorphic sarcoma	1	custom_ref/gfp_rfp_mm10	1000	60000	20
+GSE201615	SRR18932567	G0015	"Replicate 1, mRNA-derived cDNA"	truthset validation	undifferentiated pleiomorphic sarcoma	2	custom_ref/gfp_rfp_mm10	1000	60000	20
+GSE201615	SRR18932562	G0016	"Replicate 2, mRNA-derived cDNA"	truthset validation	undifferentiated pleiomorphic sarcoma	1	custom_ref/gfp_rfp_mm10	1000	60000	20
+GSE201615	SRR18932563	G0016	"Replicate 2, mRNA-derived cDNA"	truthset validation	undifferentiated pleiomorphic sarcoma	2	custom_ref/gfp_rfp_mm10	1000	60000	20
+GSE189856	SRR17073337	G0017	High CIN - CINhigh_GFP	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	30000	20
+GSE189856	SRR17073336	G0018	High CIN - CINhigh_GFP_KIF2A	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	30000	20
+GSE189856	SRR17073334	G0019	Low CIN - CINlow_GFP_KIF2B1	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	35000	20
+GSE189856	SRR17073333	G0020	Low CIN - CINlow_GFP_KIF2B2	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	40000	20
+GSE189856	SRR17073332	G0021	Low CIN - CINlow_GFP_MCAK1	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	30000	20
+GSE189856	SRR17073335	G0022	Low CIN - CINlow_GFP_MCAK2	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	30000	20
+GSE162454	SRR13177101	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	140000	30
+GSE162454	SRR13177102	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	140000	30
+GSE162454	SRR13177103	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	140000	30
+GSE162454	SRR13177104	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	140000	30
+GSE162454	SRR13177105	G0028	GSE162454: Osteosarcoma GSM4952364: Patient 2	tumor validation	Osteosarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40
+GSE162454	SRR13177106	G0028	GSE162454: Osteosarcoma GSM4952364: Patient 2	tumor validation	Osteosarcoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40
+GSE162454	SRR13177107	G0028	GSE162454: Osteosarcoma GSM4952364: Patient 2	tumor validation	Osteosarcoma	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40
+GSE162454	SRR13177108	G0028	GSE162454: Osteosarcoma GSM4952364: Patient 2	tumor validation	Osteosarcoma	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40
+GSE162454	SRR13177109	G0029	GSE162454: Osteosarcoma GSM4952365: Patient 3	tumor validation	Osteosarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	40
+GSE162454	SRR13927112	G0030	GSE162454: Osteosarcoma GSM5155198: Patient 4	tumor validation	Osteosarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	120000	30
+GSE162454	SRR13927113	G0030	GSE162454: Osteosarcoma GSM5155198: Patient 4	tumor validation	Osteosarcoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	120000	30
+GSE162454	SRR13927114	G0030	GSE162454: Osteosarcoma GSM5155198: Patient 4	tumor validation	Osteosarcoma	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	120000	30
+GSE162454	SRR13927115	G0030	GSE162454: Osteosarcoma GSM5155198: Patient 4	tumor validation	Osteosarcoma	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	120000	30
+GSE162454	SRR13927116	G0031	GSE162454: Osteosarcoma GSM5155199: Patient 5	tumor validation	Osteosarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	120000	30
+GSE162454	SRR13927117	G0031	GSE162454: Osteosarcoma GSM5155199: Patient 5	tumor validation	Osteosarcoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	120000	30
+GSE162454	SRR13927118	G0031	GSE162454: Osteosarcoma GSM5155199: Patient 5	tumor validation	Osteosarcoma	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	120000	30
+GSE162454	SRR13927119	G0031	GSE162454: Osteosarcoma GSM5155199: Patient 5	tumor validation	Osteosarcoma	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	120000	30
+GSE162454	SRR13927120	G0032	GSE162454: Osteosarcoma GSM5155200: Patient 6	tumor validation	Osteosarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	30
+GSE162454	SRR13927121	G0032	GSE162454: Osteosarcoma GSM5155200: Patient 6	tumor validation	Osteosarcoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	30
+GSE162454	SRR13927122	G0032	GSE162454: Osteosarcoma GSM5155200: Patient 6	tumor validation	Osteosarcoma	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	30
+GSE162454	SRR13927123	G0032	GSE162454: Osteosarcoma GSM5155200: Patient 6	tumor validation	Osteosarcoma	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	30
+GSE169396	SRR14041330	G0033	GSE169396: bone tissue cells-S1	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20
+GSE169396	SRR14041331	G0033	GSE169396: bone tissue cells-S1	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20
+GSE169396	SRR14041332	G0033	GSE169396: bone tissue cells-S1	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20
+GSE169396	SRR14041333	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041334	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041335	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041336	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041337	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	5	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041338	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	6	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041339	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	7	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041340	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	8	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041341	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	9	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041342	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	10	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041343	G0034	GSE169396: bone tissue cells-S2	healthy samples	healthy	11	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041344	G0035	GSE169396: bone tissue cells-S3	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041345	G0035	GSE169396: bone tissue cells-S3	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041346	G0035	GSE169396: bone tissue cells-S3	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041347	G0035	GSE169396: bone tissue cells-S3	healthy samples	healthy	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041348	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041349	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041350	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041351	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041352	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	5	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041353	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	6	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041354	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	7	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE169396	SRR14041355	G0036	GSE169396: bone tissue cells-S4	healthy samples	healthy	8	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	20
+GSE237579	SRR25308531	G0037	scRNA-seq PMBC healthy donor 6	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	20000	20
+GSE237579	SRR25308533	G0037	scRNA-seq PMBC healthy donor 6	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	20000	20
+GSE237579	SRR25308532	G0038	scRNA-seq PMBC healthy donor 7	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	15000	20
+GSE237579	SRR25308535	G0038	scRNA-seq PMBC healthy donor 7	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	15000	20

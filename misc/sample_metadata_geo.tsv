@@ -1,3 +1,0 @@
-Sample_ID	Sample_Project	Name	Reference	Tissue	Tumor_Type	Description	subset_nCount_RNA_min	subset_nCount_RNA_max	subset_nFeature_RNA_max	subset_percent.mt_max
-HMP11_A	GSE210358	Prostate Adenocarcinoma Brain met	10x-hg38	brain	CRPC-adeno	Metastatic Prostate Adenocarcinoma Brain metastasis	1000	60000		25
-HMP11_B	GSE210358	Prostate Adenocarcinoma Epidural met	10x-hg38	epidural	CRPC-adeno	Metastatic Prostate Adenocarcinoma Epidural metastasis	1000	60000		25

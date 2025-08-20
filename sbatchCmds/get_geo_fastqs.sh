@@ -44,7 +44,7 @@ fastq-dump \
 # _1 is R1
 # _2 is R2
 
-pigz input/othertumors/fastqs/${this_sample}/${this_sra}*.fastq
+pigz -p 4 input/othertumors/fastqs/${this_sample}/${this_sra}*.fastq
 
 # need to rename the files:
 # https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/fastq-input

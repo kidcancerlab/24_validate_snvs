@@ -1,0 +1,159 @@
+## Read metadata, read data and make prepreocessed seurat objects
+Load in Seurat objects and save individual qs objects off to disk
+
+## Read in F420 and K7M2 samples to use as SingleR references
+```{r read_raw_mouse_references}
+#| dependson: [helper_read_raw_fun]
+read_raw_from_table(
+    sample_table = read_tsv(
+        "misc/mouse_samples_Roberts_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+        filter(Tissue == "cell culture"),
+    h5_folder = "/home/gdrobertslab/lab/Counts_2/",
+    organism = "mouse",
+    annotate_species = "mouse",
+    count_table_file = "output/counts/mouse_culture_cell_counts.txt",
+    bam_file = "possorted_genome_bam.bam"
+)
+```
+
+### Table of cell culture mouse cell counts per sample
+```{r read_raw_mouse_culture_cell_count_table}
+#| dependson: read_raw_mouse_references
+DT::datatable(read_tsv("output/counts/mouse_culture_cell_counts.txt"))
+```
+
+## Read in B6, Balbc, F420 and K7M2 samples
+```{r read_raw_mouse}
+#| dependson: [helper_read_raw_fun]
+culture_ref_samples <-
+    read_tsv(
+        "misc/mouse_samples_Roberts_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    filter(Tissue == "cell culture") %>%
+    pull(Sample_ID)
+
+tumor_refs <-
+    lapply(
+        culture_ref_samples,
+        function(x) {
+            sobj <- qs::qread(paste0(
+                "output/seurat_objects/individual/",
+                x,
+                "_mouse.qs"
+            )) %>%
+                subset(downsample = 500)
+
+            return(
+                list(
+                    sce = as.SingleCellExperiment(sobj),
+                    labels = rep("Tumor", ncol(sobj))
+                )
+            )
+        }
+    )
+
+read_raw_from_table(
+    sample_table = read_tsv(
+        "misc/mouse_samples_Roberts_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+        filter(Tissue != "cell culture"),
+    h5_folder = "/home/gdrobertslab/lab/Counts_2/",
+    organism = "mouse",
+    annotate_species = "mouse",
+    count_table_file = "output/counts/mouse_cell_counts.txt",
+    bam_file = "possorted_genome_bam.bam",
+    annotate_additional_ref = lapply(
+        tumor_refs,
+        function(x) x$sce
+    ),
+    annotate_additional_labels = lapply(
+        tumor_refs,
+        function(x) x$labels
+    )
+)
+```
+
+### Table of mouse cell counts per sample
+```{r read_raw_mouse_cell_count_table}
+#| dependson: read_raw_mouse
+DT::datatable(read_tsv("output/counts/mouse_cell_counts.txt"))
+```
+
+## Mouse flex data from 10x
+```{r read_raw_flex}
+#| dependson: helper_read_raw_fun
+read_raw_from_table(
+    sample_table = read_tsv(
+        "misc/flex_metadata.tsv",
+        show_col_types = FALSE
+    ),
+    h5_folder = "input/10x_flex",
+    organism = "mouse",
+    annotate_species = "mouse",
+    count_table_file = "output/counts/mouse_cell_counts_flex.txt",
+    bam_file = "count_sample_alignments.bam"
+)
+```
+
+### Table of 10x flex cell counts per sample
+```{r read_raw_flex_cell_count_table}
+#| dependson: read_raw_flex
+DT::datatable(read_tsv("output/counts/mouse_cell_counts_flex.txt"))
+```
+
+## Make Seurat objects from human GEO data
+```{r read_raw_human_geo}
+#| dependson: [helper_read_raw_fun, get_data_count_geo]
+read_raw_from_table(
+    sample_table = read_tsv(
+        "misc/validation_geo_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+        filter(
+            sample_group == "tumor validation" |
+                sample_group == "healthy samples"
+        ) %>%
+        select(-sra_number, -fake_lane) %>%
+        distinct(),
+    h5_folder = "output/cellranger_out",
+    organism = "human",
+    annotate_species = "human",
+    count_table_file = "output/counts/human_geo_cell_counts.txt",
+    bam_file = "possorted_genome_bam.bam"
+)
+```
+
+## Table of GEO human cell counts per sample
+```{r read_raw_human_geo_count_table}
+#| dependson: read_raw_human_geo
+DT::datatable(read_tsv("output/counts/human_geo_cell_counts.txt"))
+```
+
+## Get data from GEO mouse data
+```{r read_raw_mouse_geo}
+#| dependson: [helper_read_raw_fun, get_data_count_geo]
+read_raw_from_table(
+    sample_table = read_tsv(
+        "misc/validation_geo_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+        filter(sample_group == "truthset validation") %>%
+        select(-sra_number, -fake_lane) %>%
+        distinct(),
+    h5_folder = "output/cellranger_out",
+    organism = "mouse",
+    annotate_species = "mouse",
+    count_table_file = "output/counts/mouse_geo_cell_counts_geo.txt",
+    bam_file = "possorted_genome_bam.bam"
+)
+```
+
+### Table of GEO mouse data
+```{r read_raw_mouse_geo_count_table}
+#| dependson: read_raw_mouse_geo
+DT::datatable(read_tsv("output/counts/mouse_geo_cell_counts_geo.txt"))
+```
