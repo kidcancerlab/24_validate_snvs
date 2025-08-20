@@ -1,6 +1,6 @@
 ---
-title: "Get "
-author: "You!"
+title: "Validate that scanBit Correctly Identifies Tumor Cells"
+author: "Matt Cannon and Matt Gust"
 date: "`r format(Sys.time(), '%m/%d/%Y')`"
 format:
     html:
@@ -42,13 +42,13 @@ library(qs2)
 set.seed(1337)
 ```
 
-# Load in functions
-
+# Load in helper R functions
 {{< include child_qmds/helper_functions.qmd >}}
 
 # Set up directory structure
 ```{bash mkdirs}
 for directoryName in \
+    /gfpf0/scratch/mvc002/scanbit \
     input/10x_flex \
     output \
     slurmOut \
@@ -68,8 +68,10 @@ for directoryName in \
     output/read_depth/scanbit_out/x_samples \
     output/read_depth/depths \
     output/snv/tumor/x3 \
+    output/snv/human/ \
     output/snv/flex \
     output/snv/mouse \
+    output/snv/transgene/ \
     input \
     input/fastqs \
     custom_ref
@@ -89,109 +91,68 @@ hdf5_check()
 seurat_version_check()
 ```
 
-Control: do this on 10x flex single cell data
-Data from https://www.10xgenomics.com/datasets/40k-mixture-of-cells-dissociated-from-4-fixed-mouse-tissues-using-manual-dissociation-multiplexed-samples-4-probe-barcodes-1-standard
+# For these analysis we are going to do some key validations and analyses.
 
-Maybe https://pmc.ncbi.nlm.nih.gov/articles/PMC10543734/ - human patient data
-maybe https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE266519 - covid pbmcs
+- Run variant calling on 10x flex data to quantify the sequencing error rate at varying read depths.
+    - Data from https://www.10xgenomics.com/datasets/40k-mixture-of-cells-dissociated-from-4-fixed-mouse-tissues-using-manual-dissociation-multiplexed-samples-4-probe-barcodes-1-standard
+- Analyze samples where the tumor cells express a marker that allows us to know which cells should be called as tumor and then assess accuracy of the method.
+    - S0105 - K7M2-RFP tibia tumor
+    - S0122 - K7M2 sLPmCherry lung mets 10 days post injection. Flow sorted Cherry positive fraction 1:1:1 mix of CD45+, Epcam+ and double negative
+    - S0260 - barcoded F420 tumor samples
+    - S0261 - barcoded F420 tumor sample
+    - GSE247228 - lentiviral green fluorescent protein (GFP) in melanoma cells
+    - GSE201615 - Cas9 in soft-tissue sarcoma cells, also dsRED
+    - GSE189856 - Triple negative breast cancer with GFP tumor cells
+- Analyze samples from genetically distinct mouse strains where we know how the clustering should look.
+    - S0066 - B6 lung
+    - S0074 - Balb/c lung
+- Analyze mouse OS models where the tumor cells derive from the host mouse strain to simulate a genetic divergence more expected in patients.
+    - S0066 - (control) B6 lung
+    - S0067 - B6, F420 injected, lungs from ROB 273 A, B, D; Epcam postive:negative 1:1
+    - S0068 - B6, F420 injected, lungs from ROB 273E and ROB 274A; Epcam postive:negative 1:1
+    - S0074 - (control) Balb/c lung
+    - S0075 - Balb/c, K7M2 injected, lungs; Epcam postive:negative 1:1
+    - S0105 - K7M2-RFP tibia tumor
+    - S0200 - (control) F420 cellculture p17
+    - S0201 - (control) K7M2 cellculture p17
+    - S0246 - F420 lung mets and niche cells ctrl
+    - S0259 - (control) F420, barcoded, preinjection t0 ctrl
+    - S0260 - barcoded F420 tumor samples
+    - S0261 - barcoded F420 tumor sample
+ - Assess scanBit results when run on human patient tumor samples.
+    - GSE152048 OS samples
+    - GSE162454 OS samples
+    - GSE210358 prostate cancer samples
+    - GSE222703 renal cell carcinoma samples
+    - GSE169396 bone samples
+    - GSE237579 healthy PBMC samples
 
-### potential datasets for validation
+# Download raw data from GEO/SRA, process it and re-align Roberts lab data to GFP/RFP reference
+This also downloads the flex data from 10x
 
-- GSE246498
-    - ZsGreen in tumor cells
-    - I think this has no tumor cells
+The output here will be cellrange counts folders in output/cellranger_out/
 
-**- GSE247228 -- this one will work**
-    - lentiviral green fluorescent protein (GFP) in tumor cells
-    - data looks like it will work
-    - https://pmc.ncbi.nlm.nih.gov/articles/PMC10830842/
-    - realigned to reference, identified tumor cells, and saved as qs object
-
-**- GSE201615**
-    - Cas9 in tumor cells, also dsRED
-    - To generate sarcoma cells, mesenchymal cells were transduced for the stable expression of Ccne1 and red fluorescent protein
-    - https://pmc.ncbi.nlm.nih.gov/articles/PMC9249098/
-    - data looks good, wonder if low UMI counts
-    - Realigned and made objects, think I know which are tumor cells and saved as qs object
-
-- GSE158700
-    - Cas9 and EGFP
-    - https://pmc.ncbi.nlm.nih.gov/articles/PMC8168823/
-    - this may be a bit tough as the tumors were induced by KO
-
-*- GSE215239*
-    - GFP and luciferase in tumor cells
-    - no paper yet
-    - has no tumor controls
-    - likely would work, needs testing
-    - Currently aligning to new reference
-    - GFP and LUC reference didn't have any genes align to it
-    - realized tumors are harvested from other hemisphere of the brain that tumors were injected into, so may be the case that there's no tumor cells present
-        - they're also focused on the IME
-
-- GSE189856
-    - pEGFP in some tumor cells, I think?
-    - https://pmc.ncbi.nlm.nih.gov/articles/PMC10468402/#Sec11
-    - not sure if it's good
-
-- *GSE215394*
-    - GFP in tumor cells
-    - https://pmc.ncbi.nlm.nih.gov/articles/PMC10951347/
-    - meh? All cells seem bunched, only tumor and macs?
-    - downloading fastqs right now; can't figure out why index file doesn't get downloaded
-
-- GSE232335 <- gfp normal cells
-    - I don't think there are tumor cells in the data
-
-maybe look at lineage tracing data
-https://data.mendeley.com/datasets/t98pjcd7t6/1
-https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE173958
-https://pmc.ncbi.nlm.nih.gov/articles/PMC8782207/
-
-maybe human data to use:
-tumor[title] AND "homo sapiens"[orgn] AND ("single cell" OR "singlecell" OR "single-cell") AND "10x" NOT "sorted"
-- GSE253013
-
-Make fasta
-make gtf
-
-Make new reference with cat of mouse and tumor markers
-
-Align to new ref
-
-###  Our samples
-
-S0105 - K7M2-RFP tibia tumor
-S0122 - K7M2 sLPmCherry lung mets 10 days post injection. Flow sorted Cherry positive fraction 1:1:1 mix of CD45+, Epcam+ and double negative
-S0259 - F420, barcoded, preinjection t0 ctrl
-S0282 - F420 Control (from F420 FLUC + nintendanib study)
-S0066 - B6 lung
-S0074 - Balb/c lung
-
-
-S0105 S0122 S0259 S0282
-
- -- Need RFP, FLUC, sLPmCherry integrated into reference
-
-# Make a tumor reference from xenograft human cells
-
-{{< include child_qmds/prep_tumor_ref.qmd >}}
+{{< include child_qmds/process_raw_data.qmd >}}
 
 # Read in raw data and process to Seurat objects
 The metadata for all samples is stored in misc/sample_metadata.tsv.
 
 Note that in the sample_metadata, for samples with multiple references, the cutoff format is "GRCh38-40000;mm10---20000" where the species_pattern is at the beginning of the string, followed by the cutoff value (no dash or anything). This is split from the second cutoff value by a semicolon. If there is only one reference, just use the cutoff value, no species pattern is needed.
 
-{{< include child_qmds/read_raw_data.qmd >}}
+{{< include child_qmds/make_Seurat_objs.qmd >}}
+
+# Run scanBit on the Seurat objects
+
+
 
 # Merge the data by species and make DimPlots
 
-{{< include child_qmds/merge_dimplots.qmd >}}
+## {{< include child_qmds/merge_dimplots.qmd >}}
 
 # Test scanBit on prostate cancer
 This is a tumor type with low mutational burden
 
-{{< include child_qmds/prostate_cancer.qmd >}}
+## {{< include child_qmds/prostate_cancer.qmd >}}
 
 
 
