@@ -17,12 +17,6 @@ GSE201615	SRR18932566	G0015	"Replicate 1, mRNA-derived cDNA"	truthset validation
 GSE201615	SRR18932567	G0015	"Replicate 1, mRNA-derived cDNA"	truthset validation	undifferentiated pleiomorphic sarcoma	2	custom_ref/gfp_rfp_mm10	1000	60000	20
 GSE201615	SRR18932562	G0016	"Replicate 2, mRNA-derived cDNA"	truthset validation	undifferentiated pleiomorphic sarcoma	1	custom_ref/gfp_rfp_mm10	1000	60000	20
 GSE201615	SRR18932563	G0016	"Replicate 2, mRNA-derived cDNA"	truthset validation	undifferentiated pleiomorphic sarcoma	2	custom_ref/gfp_rfp_mm10	1000	60000	20
-GSE189856	SRR17073337	G0017	High CIN - CINhigh_GFP	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	30000	20
-GSE189856	SRR17073336	G0018	High CIN - CINhigh_GFP_KIF2A	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	30000	20
-GSE189856	SRR17073334	G0019	Low CIN - CINlow_GFP_KIF2B1	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	35000	20
-GSE189856	SRR17073333	G0020	Low CIN - CINlow_GFP_KIF2B2	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	40000	20
-GSE189856	SRR17073332	G0021	Low CIN - CINlow_GFP_MCAK1	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	30000	20
-GSE189856	SRR17073335	G0022	Low CIN - CINlow_GFP_MCAK2	truthset validation	Triple Negative Breast Cancer	1	custom_ref/gfp_rfp_mm10	1000	30000	20
 GSE162454	SRR13177101	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	140000	30
 GSE162454	SRR13177102	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	140000	30
 GSE162454	SRR13177103	G0027	GSE162454: Osteosarcoma GSM4952363: Patient 1	tumor validation	Osteosarcoma	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	140000	30
