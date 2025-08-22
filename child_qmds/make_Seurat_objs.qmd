@@ -24,8 +24,8 @@ read_raw_from_table(
 DT::datatable(read_tsv("output/counts/mouse_culture_cell_counts.txt"))
 ```
 
-## Read in B6, Balbc, F420 and K7M2 samples
-```{r read_raw_mouse}
+## Prep known tumor cells to add to SingleR ref
+```{r read_raw_prep_mouse_ref}
 #| dependson: [helper_read_raw_fun]
 culture_ref_samples <-
     read_tsv(
@@ -39,6 +39,7 @@ tumor_refs <-
     lapply(
         culture_ref_samples,
         function(x) {
+            set.seed(1337)
             sobj <- qs::qread(paste0(
                 "output/seurat_objects/individual/",
                 x,
@@ -55,12 +56,20 @@ tumor_refs <-
         }
     )
 
+qs::qsave(tumor_refs, "output/refs/mouse_tumor_refs.qs")
+```
+
+## Read in B6, Balbc, F420 and K7M2 samples
+```{r read_raw_mouse}
+#| dependson: [read_raw_prep_mouse_ref]
+tumor_refs <- qs::qread("output/refs/mouse_tumor_refs.qs")
+
 read_raw_from_table(
     sample_table = read_tsv(
         "misc/mouse_samples_Roberts_metadata.tsv",
         show_col_types = FALSE
     ) %>%
-        filter(Tissue != "cell culture"),
+        filter(Tissue != "cell culture") %>% tail(n = 2),
     h5_folder = "/home/gdrobertslab/lab/Counts_2/",
     organism = "mouse",
     annotate_species = "mouse",
@@ -83,9 +92,41 @@ read_raw_from_table(
 DT::datatable(read_tsv("output/counts/mouse_cell_counts.txt"))
 ```
 
+## Read in Robert's lab data that was re-aligned
+```{r read_raw_realigned}
+tumor_refs <- qs::qread("output/refs/mouse_tumor_refs.qs")
+
+read_raw_from_table(
+    sample_table = read_tsv(
+        "misc/mouse_samples_Roberts_realign_metadata.tsv",
+        show_col_types = FALSE
+    ),
+    h5_folder = "output/cellranger_out",
+    organism = "mouse",
+    annotate_species = "mouse",
+    count_table_file = "output/counts/mouse_cell_counts.txt",
+    bam_file = "possorted_genome_bam.bam",
+        annotate_additional_ref = lapply(
+        tumor_refs,
+        function(x) x$sce
+    ),
+    annotate_additional_labels = lapply(
+        tumor_refs,
+        function(x) x$labels
+    )
+)
+
+```
+
+### Table of mouse cell counts per sample
+```{r read_raw_mouse_realigned_cell_count_table}
+#| dependson: read_raw_realigned
+DT::datatable(read_tsv("output/counts/mouse_cell_counts.txt"))
+```
+
 ## Mouse flex data from 10x
 ```{r read_raw_flex}
-#| dependson: helper_read_raw_fun
+#| dependson: [helper_read_raw_fun, get_data_flex]
 read_raw_from_table(
     sample_table = read_tsv(
         "misc/flex_metadata.tsv",
