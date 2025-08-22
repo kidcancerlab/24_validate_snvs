@@ -659,7 +659,7 @@ scanbit_one_sample <- function(this_sample,
             cellid_bam_table = cell_barcode_group_table,
             ploidy = ploidy,
             output_dir = out_dir,
-            temp_dir = paste0("/gfpf0/scratch/mvc002/scanbit/", this_sample),
+            temp_dir = paste0("/gpfs0/scratch/mvc002/scanbit/", this_sample),
             output_base_name = paste0("snvs_", this_sample),
             ref_fasta = ref_fasta,
             min_depth = c(5, 10, 20, 30),
@@ -676,7 +676,7 @@ scanbit_one_sample <- function(this_sample,
             other_batch_options = c(
                 "ml purge",
                 "ml miniforge3",
-                'eval "$(conda shell.bash hook)"',
+                'eval "$(conda shell.bash hook)"'
             ),
         )
 
