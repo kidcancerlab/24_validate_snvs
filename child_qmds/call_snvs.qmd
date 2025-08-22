@@ -1,124 +1,247 @@
-## Annotate Cells
+## Prep the flex data
+We're going to run scanBit on a merged object for this so the data all ends up in one BCF file.
+```{r scanbit_prep_flex}
+#| dependson: read_raw_human
+#| cache.vars: flex_cell_barcode_group_table
+flex_samples <-
+    read_tsv("misc/flex_metadata.tsv", show_col_types = FALSE) %>%
+    pull(Sample_ID)
 
-I realized that in order to call SNVs, I have to have cell types annotated. I'm going to do that now for the samples in which I've labelled tumor cells.
+flex_sobj_list <-
+    lapply(
+        flex_samples,
+        function(this_sample) {
+            qs::qread(paste0(
+                "output/seurat_objects/individual/",
+                this_sample,
+                "_mouse.qs"
+            ))
+        }
+    )
 
-```{r}
-if (!file.exists("output/seurat_objects/annotated_obs.qs")) {
-    obs <- list.files("output/seurat_objects") %>%
-        str_remove(".qs") %>%
-        grep(pattern = "annotated", invert = TRUE, value = TRUE)
+merged_flex <-
+    merge(flex_sobj_list[[1]], flex_sobj_list[-1]) %>%
+    process_seurat()
 
-    ob_list <- list()
-    for (ob in obs) {
-        ob_list[[ob]] <- qs::qread(
-            paste0("output/seurat_objects/", ob, ".qs")
-        )
-    }
-    ob_list <- lapply(ob_list, JoinLayers)
+merged_flex$cell_group <-
+    paste0(
+        merged_flex$Sample_ID,
+        "_c",
+        merged_flex$individ_clusters
+    )
 
-    # annotate and save list of annotated objects for me to do stuff with tmr morning
-    ob_list <- lapply(ob_list, annotate_celltypes, species = "mouse")
-    qs::qsave(ob_list, "output/seurat_objects/annotated_obs.qs")
-} else {
-    ob_list <- qs::qread("output/seurat_objects/annotated_obs.qs")
-}
-```
+flex_dimplot <-
+    (DimPlot(
+        merged_flex,
+        group.by = "Name",
+        label = TRUE,
+        label.box = TRUE,
+        label.size = 2,
+        repel = TRUE,
+        ncol = 1
+    ) +
+        NoLegend()) +
+    (DimPlot(
+        merged_flex,
+        group.by = "cell_group",
+        label = TRUE,
+        label.box = TRUE,
+        label.size = 2,
+        repel = TRUE,
+        ncol = 1
+    ) +
+        NoLegend()) +
+    (DimPlot(
+        merged_flex,
+        group.by = "cell_type",
+        label = TRUE,
+        label.box = TRUE,
+        label.size = 2,
+        repel = TRUE,
+        ncol = 1
+    ) +
+        NoLegend())
 
-### Visualize Annotations
-
-```{r}
-annot_plots <- list()
-for (ob in names(ob_list)) {
-    annot_plots[[ob]] <-
-        dimplot_better(
-            ob_list[[ob]],
-            group = "cell_type"
-        ) +
-        NoLegend() |
-            dimplot_better(
-            ob_list[[ob]],
-            group = "is_tumor"
-        ) +
-    ggtitle(label = ob)
-}
-
-wrap_plots(annot_plots)
-
-# look at macrophage markers
-# these markers are from panglao db
-mac_markers <- c("Cd68", "Fcgr1", "Naaa", "March1")
-
-mac_plots <- list()
-for (ob in names(ob_list)) {
-    mac_plots[[ob]] <- 
-        r_feature_plot(
-            ob_list[[ob]],
-            features = mac_markers,
-            coord.fixed = TRUE
-        )
-}
-
-wrap_plots(mac_plots)
-```
-
-I feel confident that our tumor cells are actually tumor cells, since the cell type annotation labelled them as fibroblasts, which we commonly see happen in our single cell data. This cell type label matching the manual annotation based on the presence of our reporter plasmid confirms that these are our tumor cells and we can use these datasets as ground truth.
-
-Additionally, the macrophage and monocyte populations are likely macrophages and monocytes, evidenced by the expression of canonical macrophage markers from panglaodb. These genes were also expressed in the cell types labelled monocytes and neutrophils, so our normal control cell types will be macrophages, monocytes, and neutrophils.
-
-## Call SNVs
-
-This is going to be following along with the vignette from kidcancerlab/scanBit repo.
-
-```{r install-scanBit}
-# devtools::install_github("kidcancerlab/scanBit")
-bam_prefix <- list(
-    "merged_GSE189856" = "counts/GSE189856/",
-    "merged_GSE201615" = "counts/GSE201615/",
-    "merged_GSE247228" = "counts/GSE247228/",
-    "merged_S0260_61" = "/home/gdrobertslab/lab/Counts_2/"
+ggsave(
+    "output/figures/dimplot_flex_cell_type_group.pdf",
+    flex_dimplot,
+    width = 10,
+    height = 20
 )
 
-bam_suffix <- list(
-    "merged_GSE189856" = "/outs/possorted_genome_bam.bam",
-    "merged_GSE201615" = "/outs/possorted_genome_bam.bam",
-    "merged_GSE247228" = "/outs/possorted_genome_bam.bam",
-    "merged_S0260_61" =  "/possorted_genome_bam.bam"
-)
+flex_cell_barcode_group_table <-
+    merged_flex@meta.data %>%
+    select(cell_group, cell_barcode, bam_file) %>%
+    as_tibble()
+```
 
-start <- Sys.time()
-snp_tree <- list()
-for (ob in names(ob_list)) {
-    if (!dir.exists(paste0("output/", ob))) dir.create(paste0("output/", ob))
-    # make table with columns cell_barcode, cell_group, and bam_file
-    bc_bam_tbl <- 
-        ob_list[[ob]]@meta.data %>%
-        mutate(
-            cell_group = paste(sample_id, seurat_clusters, sep = "_"),
-            bam_file = paste0(bam_prefix[[ob]], ob_list[[ob]]$sample_id, bam_suffix[[ob]])
-        ) %>%
-        rownames_to_column("cell_barcode") %>%
-        mutate(cell_barcode = str_remove(cell_barcode, "_[1-9]")) %>%
-        select(cell_group, bam_file, cell_barcode) %>%
-        as_tibble()
-    
-    # get snp tree
-    snp_tree[[ob]] <-
-        get_snp_tree(
-            cellid_bam_table = bc_bam_tbl,
-            temp_dir = paste0("output/", ob, "/temp"),
-            ploidy = "mm10",
-            output_dir = paste0("output/", ob),
-            min_depth = c(5, 10, 20),
-            output_base_name = ob,
-            ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa",
-            sbatch_base = "snv_call",
-            other_sbatch_options = c(
-                "--time=8:00:00"
+## Run scanBit on the flex data
+```{r scanbit_run_flex}
+#| dependson: scanbit_prep_flex
+# This was erroring out because there aren't enough snvs
+# I lowered min_snvs_per_cluster to 5 to try to get it to work
+snp_tree <-
+    get_snp_tree(
+        cellid_bam_table = flex_cell_barcode_group_table,
+        ploidy = "mm10",
+        output_dir = "output/snv/flex/",
+        temp_dir = "output/snv/flex/tempdir",
+        output_base_name = "flex_snvs",
+        ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+        min_depth = c(1, 5, 10, 20, 30),
+        job_base = "flex_sbatch",
+        log_base = "slurmOut/flex_snv",
+        min_snvs_per_cluster = 5,
+        n_bootstraps = 10000,
+        max_prop_missing_at_site = 0.9,
+        cleanup = TRUE,
+        other_job_header_options = c(
+            "--time=8:00:00",
+            "--partition=himem,general"
+        ),
+        other_batch_options = c(
+            "ml purge",
+            "ml miniforge3",
+            'eval "$(conda shell.bash hook)"'
+        ),
+    )
+```
+
+## Prep the mouse samples to run scanBit
+We're going to merge all of these data together so the output is one big tree.
+We'll break it down further later on.
+```{r scanbit_prep_mouse}
+#| dependson: read_raw_mouse_references
+#| cache.vars: [mouse_cell_barcode_group_table]
+mouse_samples <-
+    read_tsv(
+        "misc/mouse_samples_Roberts_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    pull(Sample_ID)
+
+mouse_sobj_list <-
+    lapply(
+        mouse_samples,
+        function(this_sample) {
+            qs::qread(paste0(
+                "output/seurat_objects/individual/",
+                this_sample,
+                "_mouse.qs"
+            ))
+        }
+    )
+
+merged_mouse <-
+    merge(mouse_sobj_list[[1]], mouse_sobj_list[-1]) %>%
+    process_seurat()
+
+merged_mouse$cell_group <-
+    paste0(
+        merged_mouse$Sample_ID,
+        "_c",
+        merged_mouse$individ_clusters
+    )
+
+qs::qsave(merged_mouse, "output/seurat_objects/merged/merged_mouse.qs")
+
+mouse_cell_barcode_group_table <-
+    merged_mouse@meta.data %>%
+    select(cell_group, cell_barcode, bam_file) %>%
+    as_tibble()
+```
+
+## Run scanBit on the mouse data from our lab
+```{r scanbit_run_mouse}
+#| dependson: run_scanbit_prep_mouse
+snp_tree <-
+    get_snp_tree(
+        cellid_bam_table = mouse_cell_barcode_group_table,
+        ploidy = "mm10",
+        output_dir = "output/snv/mouse/",
+        temp_dir = "output/snv/mouse/tempdir",
+        output_base_name = "mouse_snvs",
+        ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+        min_depth = c(5, 10, 20, 30),
+        job_base = "mouse_sbatch",
+        log_base = "slurmOut/mouse_snv",
+        min_snvs_per_cluster = 200,
+        n_bootstraps = 10000,
+        max_prop_missing_at_site = 0.9,
+        cleanup = TRUE,
+        other_job_header_options = c(
+            "--time=8:00:00",
+            "--partition=himem,general"
+        ),
+        other_batch_options = c(
+            "ml purge",
+            "ml miniforge3",
+            'eval "$(conda shell.bash hook)"'
+        ),
+    )
+```
+
+## Prep the mouse samples with GFP/RFP from GEO
+```{r scanbit_prep_mouse_gfp_rfp}
+#| dependson: [read_raw_mouse_geo]
+transgene_samples <-
+    read_tsv(
+        "misc/validation_geo_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    filter(sample_group == "truthset validation") %>%
+    pull(Sample_ID) %>%
+    unique()
+
+samples_worked <-
+    parallel::mclapply(
+        transgene_samples,
+        mc.cores = 5,
+        mc.preschedule = FALSE,
+        function(this_sample) {
+            samples_worked[[this_sample]] <- scanbit_one_sample(
+                this_sample = this_sample,
+                species = "mouse",
+                ploidy = "mm10",
+                ref_fasta = "custom_ref/gfp_rfp_mm10/fasta/genome.fa",
+                out_dir = "output/snv/transgene/"
             )
-        )
-}
-end <- Sys.time()
-end - start
+        }
+    )
+names(samples_worked) <- transgene_samples
 
+print(samples_worked)
 ```
 
+## Run scanBit on the human samples
+Doing these individually
+```{r scanbit_run_human}
+#| dependson: read_raw_human
+human_samples <-
+    read_tsv(
+        "misc/validation_geo_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    filter(sample_group != "truthset validation") %>%
+    pull(Sample_ID) %>%
+    unique()
+
+samples_worked <-
+    parallel::mclapply(
+        human_samples,
+        mc.cores = 5,
+        mc.preschedule = FALSE,
+        function(this_sample) {
+            samples_worked[[this_sample]] <- scanbit_one_sample(
+                this_sample = this_sample,
+                species = "human",
+                ploidy = "GRCh38",
+                ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+                out_dir = "output/snv/human/"
+            )
+        }
+    )
+names(samples_worked) <- human_samples
+
+print(samples_worked)
+```
