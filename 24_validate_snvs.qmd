@@ -55,13 +55,13 @@ for directoryName in \
     output/counts \
     output/degs \
     output/gsea \
+    output/refs \
     output/figures \
     output/figures/qc_cutoffs \
     output/figures/volcano_plots \
     output/figures/gsea \
     output/seurat_objects/individual \
     output/seurat_objects/merged \
-    output/snv/norm_mouse \
     output/read_depth/depths/bcf_depth \
     output/read_depth/depths/call_count \
     output/downsample/scanbit_out/x_samples/ \
@@ -98,11 +98,10 @@ seurat_version_check()
 - Analyze samples where the tumor cells express a marker that allows us to know which cells should be called as tumor and then assess accuracy of the method.
     - S0105 - K7M2-RFP tibia tumor
     - S0122 - K7M2 sLPmCherry lung mets 10 days post injection. Flow sorted Cherry positive fraction 1:1:1 mix of CD45+, Epcam+ and double negative
-    - S0260 - barcoded F420 tumor samples
-    - S0261 - barcoded F420 tumor sample
     - GSE247228 - lentiviral green fluorescent protein (GFP) in melanoma cells
     - GSE201615 - Cas9 in soft-tissue sarcoma cells, also dsRED
-    - GSE189856 - Triple negative breast cancer with GFP tumor cells
+    - S0260 - barcoded F420 tumor samples
+    - S0261 - barcoded F420 tumor sample
 - Analyze samples from genetically distinct mouse strains where we know how the clustering should look.
     - S0066 - B6 lung
     - S0074 - Balb/c lung
