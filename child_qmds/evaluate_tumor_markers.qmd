@@ -1,0 +1,96 @@
+## Read in datasets and count the tumor transgene markers
+```{r transgene_read}
+#| dependson: []
+transgene_samples <-
+    read_tsv(
+        "misc/validation_geo_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    filter(sample_group == "truthset validation") %>%
+    pull(Sample_ID) %>%
+    unique()
+
+roberts_transgene_samples <-
+    read_tsv(
+        "misc/mouse_samples_Roberts_realign_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    pull(Sample_ID)
+
+transgene_samples <- c(transgene_samples, roberts_transgene_samples)
+
+sobj_list <- list()
+for (this_sample in transgene_samples) {
+    sobj_list[[this_sample]] <-
+        qs::qread(paste0("output/seurat_objects/individual/", this_sample, "_mouse.qs")) %>%
+        PercentageFeatureSet(pattern = "^tumor", col.name = "tumor_marker_pct")
+
+    tumor_markers <-
+        grep(
+            "^tumor",
+            rownames(sobj_list[[this_sample]]),
+            value = TRUE
+        )
+
+    sobj_list[[this_sample]]$tumor_marker_count <-
+        FetchData(
+            sobj_list[[this_sample]],
+            vars = tumor_markers,
+            layer = "counts"
+        ) %>%
+        rowSums()
+
+    sobj_list[[this_sample]]$tumor_cell <-
+        if_else(
+            sobj_list[[this_sample]]$tumor_marker_count > 0,
+            TRUE,
+            FALSE
+        )
+
+    print(paste(this_sample, ":", mean(sobj_list[[this_sample]]$tumor_marker_pct)))
+    print(grep("^tumor", rownames(sobj_list[[this_sample]]), value = TRUE))
+    print(table(sobj_list[[this_sample]]$tumor_cell, sobj_list[[this_sample]]$seurat_clusters) %>% prop.table(margin = 2))
+}
+
+VlnPlot(sobj_list[["G0010"]], features = c("tumor_marker_pct", "tumor_marker_count"))
+DimPlot(sobj_list[["G0016"]], group.by = "tumor_cell")
+```
+
+## Look at lineage tracing barcodes
+
+```{r transgene_ltbc}
+stuff <-
+    tenx_load_qc(
+        "/home/gdrobertslab/lab/Counts_2/S0261/filtered_feature_bc_matrix",
+        violin_plot = FALSE
+    ) %>%
+    process_seurat()
+
+ltbc_table <- gen_cellecta_bc_data(
+    "/home/gdrobertslab/lab/Counts_2/S0260/possorted_genome_bam.bam",
+    samtools_module = "GCC/9.3.0 SAMtools/1.10", verbose = TRUE
+)
+
+ltbc_sub <-
+    ltbc_table %>%
+    mutate(
+        cid = paste0(cid, "-1"),
+        barcode = paste0(lt_14, "_", lt_30),
+        has_barcode = TRUE
+    ) %>%
+    select(-lt_14, -lt_30) %>%
+    group_by(cid) %>%
+    slice_head(n = 1) %>%
+    column_to_rownames("cid")
+
+stuff <-
+    AddMetaData(
+        stuff,
+        ltbc_sub
+    )
+
+DimPlot(
+    stuff,
+    group.by = "has_barcode"
+)
+```
