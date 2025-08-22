@@ -36,16 +36,16 @@ fi
 
 export PATH=/gpfs0/home2/gdrobertslab/lab/Tools/10x/cellranger-7.2.0:$PATH
 
-# cellranger count \
-#   --id ${this_sample} \
-#   --fastqs input/othertumors/fastqs/${this_sample}/ \
-#   --sample ${this_sample} \
-#   --transcriptome ${this_ref} \
-#   --localcores 10 \
-#   --expect-cells 8000 \
-#   --nosecondary \
-#   --disable-ui \
-#   --output-dir output/cellranger_out/${this_sample}
+cellranger count \
+  --id ${this_sample} \
+  --fastqs input/othertumors/fastqs/${this_sample}/ \
+  --sample ${this_sample} \
+  --transcriptome ${this_ref} \
+  --localcores 10 \
+  --expect-cells 8000 \
+  --nosecondary \
+  --disable-ui \
+  --output-dir output/cellranger_out/${this_sample}
 
 rm output/cellranger_out/${this_sample}/_*
 
