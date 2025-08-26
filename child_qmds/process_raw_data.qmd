@@ -1,5 +1,6 @@
 ## Get FASTQ Files for GEO samples
 ```{bash get_data_dl_geo}
+#| eval: false
 n_geo_samples=$(grep -v geo_id misc/validation_geo_metadata.txt | wc -l)
 
 n_geo_samples=$((n_geo_samples - 1))
@@ -10,6 +11,7 @@ sbatch --array=0-${n_geo_samples}%10 sbatchCmds/get_geo_fastqs.sh
 ## Next, run cellranger count on the raw data from GEO
 ```{bash get_data_count_geo}
 #| dependson: get_data_dl_geo
+#| eval: false
 n_samples=($( \
     cut -f 3,8 misc/validation_geo_metadata.tsv \
     | uniq \
@@ -26,11 +28,13 @@ sbatch --array=0-${n_samples} sbatchCmds/count_geo.sh
 ## Delete the GEO fastqs to save space
 ```{bash get_data_rm_geo_fq}
 #| dependson: get_data_count_geo
+#| eval: false
 rm input/othertumors/fastqs/G*/*.fastq.gz
 ```
 
 ## Make up the fastqs for the data from our lab
 ```{bash get_data_roberts_fastqs}
+#| eval: false
 sbatch sbatchCmds/make_Roberts_fastqs.sh
 ```
 
@@ -38,12 +42,14 @@ sbatch sbatchCmds/make_Roberts_fastqs.sh
 These are aligned to the new reference with gfp/rfp
 ```{bash get_data_roberts_count}
 #| dependson: get_data_roberts_fastqs
+#| eval: false
 sbatch sbatchCmds/count_roberts_gfp_rfp_mm10.sh
 ```
 
 ## Delete the Roberts fastqs since we're done with those
 ```{bash get_data_del_rob_fq}
 #| dependson: get_data_roberts_count
+#| eval: false
 rm input/fastqs/S0*/*fastq.gz
 ```
 
