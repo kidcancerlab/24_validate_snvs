@@ -25,7 +25,7 @@ merged_flex <-
 
 merged_flex$cell_group <-
     paste0(
-        merged_flex$Sample_ID,
+        merged_flex$cluster_label,
         "_c",
         merged_flex$individ_clusters
     )
@@ -118,7 +118,14 @@ mouse_samples <-
         "misc/mouse_samples_Roberts_metadata.tsv",
         show_col_types = FALSE
     ) %>%
-    pull(Sample_ID)
+    pull(Sample_ID) %>%
+    c(
+        read_tsv(
+            "misc/mouse_samples_Roberts_realign_metadata.tsv",
+            show_col_types = FALSE
+        ) %>%
+            pull(Sample_ID)
+    )
 
 mouse_sobj_list <-
     lapply(
@@ -138,7 +145,7 @@ merged_mouse <-
 
 merged_mouse$cell_group <-
     paste0(
-        merged_mouse$Sample_ID,
+        merged_mouse$cluster_label,
         "_c",
         merged_mouse$individ_clusters
     )
@@ -177,7 +184,7 @@ snp_tree <-
             "ml purge",
             "ml miniforge3",
             'eval "$(conda shell.bash hook)"'
-        ),
+        )
     )
 ```
 

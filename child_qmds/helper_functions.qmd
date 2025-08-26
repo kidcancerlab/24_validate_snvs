@@ -644,7 +644,7 @@ scanbit_one_sample <- function(this_sample,
 
     sobj$cell_group <-
         paste0(
-            sobj$Sample_ID,
+            sobj$cluster_label,
             "_c",
             sobj$individ_clusters
         )

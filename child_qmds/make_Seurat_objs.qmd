@@ -69,7 +69,7 @@ read_raw_from_table(
         "misc/mouse_samples_Roberts_metadata.tsv",
         show_col_types = FALSE
     ) %>%
-        filter(Tissue != "cell culture") %>% tail(n = 2),
+        filter(Tissue != "cell culture"),
     h5_folder = "/home/gdrobertslab/lab/Counts_2/",
     organism = "mouse",
     annotate_species = "mouse",
@@ -106,7 +106,7 @@ read_raw_from_table(
     annotate_species = "mouse",
     count_table_file = "output/counts/mouse_cell_counts.txt",
     bam_file = "possorted_genome_bam.bam",
-        annotate_additional_ref = lapply(
+    annotate_additional_ref = lapply(
         tumor_refs,
         function(x) x$sce
     ),

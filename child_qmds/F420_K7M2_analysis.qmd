@@ -1,0 +1,215 @@
+## Test B6 and F420 split
+```{r f420_k7m2_make_f420_sobj}
+#| dependson: [read_raw_mouse, scanbit_run_mouse]
+b6_f420_samples <-
+    read_tsv(
+        "misc/mouse_samples_Roberts_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    filter(grepl("B6|F420", Name, perl = TRUE)) %>%
+    pull(Sample_ID)
+
+merged_mouse_b6_f420 <-
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs") %>%
+    JoinLayers() %>%
+    subset(Sample_ID %in% b6_f420_samples) %>%
+    process_seurat()
+
+qs::qsave(
+    merged_mouse_b6_f420,
+    "output/seurat_objects/merged/merged_mouse_b6_f420.qs"
+)
+
+merged_mouse_b6_f420$cell_group %>%
+    unique() %>%
+    write_lines("output/snv_processing/F420_K7M2/keep_clusters_b6_f420.txt")
+
+f420_b6_dimplot <-
+    DimPlot(
+        merged_mouse_b6_f420,
+        group.by = "cell_group",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE
+    ) +
+    NoLegend()
+
+ggsave(
+    "output/figures/b6_F420_dimplot_clusters.pdf",
+    plot = f420_b6_dimplot,
+    width = 10,
+    height = 10
+)
+```
+
+## Filter the merged bcf file for just the B6 and F420 samples
+```{bash f420_k7m2_filter_f420_bcfs}
+#| dependson: [scanbit_run_mouse]
+conda activate scanBit_xkcd_1337
+
+for cutoff in 5 10 20 30
+do
+bcftools \
+    view \
+    -S output/snv_processing/F420_K7M2/keep_clusters_b6_f420.txt \
+    output/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
+    -o output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c${cutoff}_filtered.bcf
+done
+```
+
+```{r f420_k7m2_b6_f420_trees}
+dist_worked <-
+    parallel::mclapply(
+        c("5", "10", "20", "30"),
+        mc.cores = 4,
+        mc.preschedule = FALSE,
+        function(cutoff) {
+            group_clusters_by_dist(
+                merged_bcf_file = paste0(
+                    "output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+                    cutoff,
+                    "_filtered.bcf"
+                ),
+                output_file = paste0(
+                    "output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+                    cutoff,
+                    "_groups.txt"
+                ),
+                min_snvs_per_cluster = 200,
+                n_bootstraps = 10000,
+                bootstrap_cutoff = 0.95,
+                tree_figure_file = paste0(
+                    "output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+                    cutoff,
+                    "_tree.pdf"
+                ),
+                verbose = FALSE,
+                other_job_header_options = c(
+                    "--time=8:00:00",
+                    "--partition=himem,general"
+                ),
+                other_batch_options = c(
+                    "ml purge",
+                    "ml miniforge3",
+                    'eval "$(conda shell.bash hook)"'
+                ),
+                sge_q = "",
+                sge_parallel_environment = ""
+            )
+        }
+    )
+```
+
+
+## Test Balbc and K7M2 split
+```{r f420_k7m2_make_f420_sobj}
+#| dependson: [read_raw_mouse, scanbit_run_mouse]
+merged_mouse_balbc_k7m2 <-
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+
+balbc_k7m2_samples <-
+    read_tsv(
+        "misc/mouse_samples_Roberts_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    filter(grepl("Balb|k7m2", Name, perl = TRUE)) %>%
+    pull(Sample_ID) %>%
+    c(
+        read_tsv(
+            "misc/mouse_samples_Roberts_realign_metadata.tsv",
+            show_col_types = FALSE
+        ) %>%
+            pull(Sample_ID)
+    )
+
+merged_mouse_balbc_k7m2 <-
+    merged_mouse_balbc_k7m2 %>%
+    JoinLayers() %>%
+    subset(Sample_ID %in% balbc_k7m2_samples) %>%
+    process_seurat()
+
+qs::qsave(
+    merged_mouse_balbc_k7m2,
+    "output/seurat_objects/merged/merged_mouse_balbc_k7m2.qs"
+)
+
+merged_mouse_balbc_k7m2$cell_group %>%
+    unique() %>%
+    write_lines("output/snv_processing/F420_K7M2/keep_clusters_balbc_k7m2.txt")
+
+f420_b6_dimplot <-
+    DimPlot(
+        merged_mouse_balbc_k7m2,
+        group.by = "cell_group",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE
+    ) +
+    NoLegend()
+
+ggsave(
+    "output/figures/balbc_k7m2_dimplot_clusters.pdf",
+    plot = f420_b6_dimplot,
+    width = 10,
+    height = 10
+)
+```
+
+## Filter the merged bcf file for just the Balbc and K7M2 samples
+```{bash f420_k7m2_filter_k7m2_bcfs}
+#| dependson: [scanbit_run_mouse]
+conda activate scanBit_xkcd_1337
+
+for cutoff in 5 10 20 30
+do
+bcftools \
+    view \
+    -S output/snv_processing/F420_K7M2/keep_clusters_balbc_k7m2.txt \
+    output/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
+    -o output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c${cutoff}_filtered.bcf
+done
+```
+
+```{r f420_k7m2_balbc_k7m2_trees}
+dist_worked <-
+    parallel::mclapply(
+        c("5", "10", "20", "30"),
+        mc.cores = 4,
+        mc.preschedule = FALSE,
+        function(cutoff) {
+            group_clusters_by_dist(
+                merged_bcf_file = paste0(
+                    "output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+                    cutoff,
+                    "_filtered.bcf"
+                ),
+                output_file = paste0(
+                    "output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+                    cutoff,
+                    "_groups.txt"
+                ),
+                min_snvs_per_cluster = 200,
+                n_bootstraps = 10000,
+                bootstrap_cutoff = 0.95,
+                tree_figure_file = paste0(
+                    "output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+                    cutoff,
+                    "_tree.pdf"
+                ),
+                verbose = FALSE,
+                other_job_header_options = c(
+                    "--time=8:00:00",
+                    "--partition=himem,general"
+                ),
+                other_batch_options = c(
+                    "ml purge",
+                    "ml miniforge3",
+                    'eval "$(conda shell.bash hook)"'
+                ),
+                sge_q = "",
+                sge_parallel_environment = ""
+            )
+        }
+    )
+```
+
