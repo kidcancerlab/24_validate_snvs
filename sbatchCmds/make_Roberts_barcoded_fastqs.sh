@@ -12,6 +12,8 @@
 
 set -e ### stops bash script if line ends with error
 
+# This is a bit different since two samples are reruns of two older samples and
+# so we want to re-align using all of the fastq data combined per sample
 echo ${HOSTNAME} ${SLURM_ARRAY_TASK_ID}
 
 ml purge
@@ -20,12 +22,18 @@ ml load Miniconda3/4.9.2
 export PATH=/gpfs0/home2/gdrobertslab/lab/Tools/10x/cellranger-7.2.0:$PATH
 
 sample_array=($( \
-    cut -f 1 misc/mouse_samples_Roberts_realign_metadata.tsv \
+    cut -f 1 misc/mouse_samples_Roberts_barcoded_metadata.tsv \
     | grep -v Sample_ID \
 ))
-
 this_sample=${sample_array[$SLURM_ARRAY_TASK_ID]}
-# Matt deleted the fastq's to create space, but we can recreate the FASTQ using bamtofastq from 10x.
+
+sample_label=($( \
+    cut -f 30 misc/mouse_samples_Roberts_barcoded_metadata.tsv \
+    | grep -v cluster_label \
+))
+this_label=${sample_label[$SLURM_ARRAY_TASK_ID]}
+
+echo ${this_sample} ${this_label}
 
 cellranger \
     bamtofastq \
@@ -35,9 +43,9 @@ cellranger \
 
 rename \
     bamtofastq \
-    ${this_sample} \
+    ${this_label} \
     input/fastqs/${this_sample}/*/*.fastq.gz
 
-mv \
-    input/fastqs/${this_sample}/*/*.fastq.gz \
-    input/fastqs/${this_sample}/
+# mv \
+#     input/fastqs/${this_sample}/*/*.fastq.gz \
+#     input/fastqs/${this_label}/
