@@ -20,3 +20,4 @@ small_fastqs
 small_fastq_alignment
 slurmOut
 .vscode
+24_validate_snvs_cache
