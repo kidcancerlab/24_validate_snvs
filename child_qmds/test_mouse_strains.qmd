@@ -1,22 +1,26 @@
 ## Validate with B6 and Balbc
+- S0066 - B6 lung
+- S0075 - Balbc lung
+```{r mouse_strain_make_sobj}
+#| dependson: [read_raw_mouse, scanbit_run_mouse]
+merged_norm_mouse <-
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs") %>%
+    JoinLayers() %>%
+    subset(Sample_ID %in% c("S0066", "S0074")) %>%
+    process_seurat()
 
-```{r mouse_b6_balb}
-merged_sobj_mouse <-
-    qs::qread("output/seurat_objects/merged/merged_mouse.qs")
+qs::qsave(
+    merged_norm_mouse,
+    "output/seurat_objects/merged/merged_norm_mouse.qs"
+)
 
-merged_sobj_mouse <-
-    merged_sobj_mouse[, merged_sobj_mouse$Sample_ID %in% c("S0066", "S0075")]
-
-merged_sobj_mouse$cell_group <-
-    paste0(
-        merged_sobj_mouse$Sample_ID,
-        "_c",
-        merged_sobj_mouse$individ_clusters
-    )
+merged_norm_mouse$cell_group %>%
+    unique() %>%
+    write_lines("output/snv_processing/norm_mouse/keep_clusters.txt")
 
 norm_mouse_dimplot <-
     DimPlot(
-        merged_sobj_mouse,
+        merged_norm_mouse,
         group.by = "cell_group",
         label = TRUE,
         label.box = TRUE,
@@ -25,33 +29,79 @@ norm_mouse_dimplot <-
     NoLegend()
 
 ggsave(
-    "output/figures/norm_mouse_dimplot_clusters.png",
+    "output/figures/norm_mouse_dimplot_clusters.pdf",
+    plot = norm_mouse_dimplot,
     width = 10,
     height = 10
 )
-
-cell_barcode_group_table <-
-    merged_sobj_mouse@meta.data %>%
-    select(cell_group, cell_barcode, bam_file) %>%
-    as_tibble()
-
-snp_tree <-
-    scanBit::get_snp_tree(
-        cellid_bam_table = cell_barcode_group_table,
-        ploidy = "mm10",
-        output_dir = "output/snv/norm_mouse/",
-        temp_dir = "output/snv/norm_mouse/tempdir",
-        output_base_name = "norm_mouse",
-        ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
-        min_depth = c(1, 5, 10, 20, 30),
-        sbatch_base = "norm_mouse_sbatch",
-        min_snvs_per_cluster = 500,
-        n_bootstraps = 10000,
-        max_prop_missing_at_site = 0.9,
-        cleanup = FALSE,
-        other_sbatch_options = "--time=24:00:00"
-    )
 ```
+
+## Filter the merged bcf file for just these samples
+```{bash mouse_strain_filter_bcfs}
+#| dependson: [scanbit_run_mouse]
+conda activate scanBit_xkcd_1337
+
+for cutoff in 5 10 20 30
+do
+bcftools \
+    view \
+    -S output/snv_processing/norm_mouse/keep_clusters.txt \
+    output/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
+    -o output/snv_processing/norm_mouse/mergedmouse_snvs_c${cutoff}_filtered.bcf
+done
+```
+
+## Make trees directly from merged bcfs
+This is so the figures and downstream analyses only have B6 and BALB/c
+```{r mouse_strain_trees}
+#| dependson: [mouse_strain_make_sobj]
+merged_norm_mouse <-
+    qs::qread("output/seurat_objects/merged/merged_norm_mouse.qs")
+
+dist_worked <-
+    parallel::mclapply(
+        c("5", "10", "20", "30"),
+        mc.cores = 4,
+        mc.preschedule = FALSE,
+        function(cutoff) {
+            group_clusters_by_dist(
+                merged_bcf_file = paste0(
+                    "output/snv_processing/norm_mouse/mergedmouse_snvs_c",
+                    cutoff,
+                    "_filtered.bcf"
+                ),
+                output_file = paste0(
+                    "output/snv_processing/norm_mouse/mergedmouse_snvs_c",
+                    cutoff,
+                    "_groups.txt"
+                ),
+                min_snvs_per_cluster = 200,
+                n_bootstraps = 10000,
+                bootstrap_cutoff = 0.95,
+                tree_figure_file = paste0(
+                    "output/snv_processing/norm_mouse/mergedmouse_snvs_c",
+                    cutoff,
+                    "_tree.pdf"
+                ),
+                verbose = FALSE,
+                other_job_header_options = c(
+                    "--time=8:00:00",
+                    "--partition=himem,general"
+                ),
+                other_batch_options = c(
+                    "ml purge",
+                    "ml miniforge3",
+                    'eval "$(conda shell.bash hook)"'
+                ),
+                sge_q = "",
+                sge_parallel_environment = ""
+            )
+        }
+    )
+
+```
+
+
 ##
 I want to look over the merged bcfs and quantify the proportion of positions covered by n reads has a variant call.
 
@@ -67,7 +117,7 @@ merged_sobj_mouse_ours <-
 
 merged_sobj_mouse_ours$cell_group <-
     paste0(
-        merged_sobj_mouse_ours$Sample_ID,
+        merged_sobj_mouse_ours$cluster_label,
         "_c",
         merged_sobj_mouse_ours$individ_clusters
     )
