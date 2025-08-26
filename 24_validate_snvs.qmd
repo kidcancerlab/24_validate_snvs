@@ -72,6 +72,7 @@ for directoryName in \
     output/snv/flex \
     output/snv/mouse \
     output/snv/transgene/ \
+    output/snv_processing/norm_mouse/ \
     input \
     input/fastqs \
     custom_ref
@@ -142,16 +143,16 @@ Note that in the sample_metadata, for samples with multiple references, the cuto
 
 # Run scanBit on the Seurat objects
 
-
+{{< include child_qmds/call_snvs.qmd >}}
 
 # Merge the data by species and make DimPlots
 
-## {{< include child_qmds/merge_dimplots.qmd >}}
+##{{< #include child_qmds/merge_dimplots.qmd >}}
 
 # Test scanBit on prostate cancer
 This is a tumor type with low mutational burden
 
-## {{< include child_qmds/prostate_cancer.qmd >}}
+##{{< #include child_qmds/prostate_cancer.qmd >}}
 
 
 
