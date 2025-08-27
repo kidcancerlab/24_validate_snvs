@@ -55,8 +55,9 @@ done
 This is so the figures and downstream analyses only have B6 and BALB/c
 ```{r mouse_strain_trees}
 #| dependson: [mouse_strain_make_sobj]
-merged_norm_mouse <-
-    qs::qread("output/seurat_objects/merged/merged_norm_mouse.qs")
+min_snvs_per_cluster <- 250
+n_bootstraps <- 10000
+bootstrap_cutoff <- 0.95
 
 dist_worked <-
     parallel::mclapply(
@@ -75,9 +76,9 @@ dist_worked <-
                     cutoff,
                     "_groups.txt"
                 ),
-                min_snvs_per_cluster = 200,
-                n_bootstraps = 10000,
-                bootstrap_cutoff = 0.95,
+                min_snvs_per_cluster = min_snvs_per_cluster,
+                n_bootstraps = n_bootstraps,
+                bootstrap_cutoff = bootstrap_cutoff,
                 tree_figure_file = paste0(
                     "output/snv_processing/norm_mouse/mergedmouse_snvs_c",
                     cutoff,

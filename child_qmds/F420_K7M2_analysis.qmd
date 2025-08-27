@@ -58,6 +58,10 @@ done
 ```
 
 ```{r f420_k7m2_b6_f420_trees}
+min_snvs_per_cluster <- 250
+n_bootstraps <- 10000
+bootstrap_cutoff <- 0.95
+
 dist_worked <-
     parallel::mclapply(
         c("5", "10", "20", "30"),
@@ -75,9 +79,9 @@ dist_worked <-
                     cutoff,
                     "_groups.txt"
                 ),
-                min_snvs_per_cluster = 200,
-                n_bootstraps = 10000,
-                bootstrap_cutoff = 0.95,
+                min_snvs_per_cluster = min_snvs_per_cluster,
+                n_bootstraps = n_bootstraps,
+                bootstrap_cutoff = bootstrap_cutoff,
                 tree_figure_file = paste0(
                     "output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c",
                     cutoff,
@@ -104,9 +108,6 @@ dist_worked <-
 ## Test Balbc and K7M2 split
 ```{r f420_k7m2_make_f420_sobj}
 #| dependson: [read_raw_mouse, scanbit_run_mouse]
-merged_mouse_balbc_k7m2 <-
-    qs::qread("output/seurat_objects/merged/merged_mouse.qs")
-
 balbc_k7m2_samples <-
     read_tsv(
         "misc/mouse_samples_Roberts_metadata.tsv",
@@ -123,7 +124,7 @@ balbc_k7m2_samples <-
     )
 
 merged_mouse_balbc_k7m2 <-
-    merged_mouse_balbc_k7m2 %>%
+    qs::qread("output/seurat_objects/merged/merged_mouse.qs") %>%
     JoinLayers() %>%
     subset(Sample_ID %in% balbc_k7m2_samples) %>%
     process_seurat()
@@ -137,7 +138,7 @@ merged_mouse_balbc_k7m2$cell_group %>%
     unique() %>%
     write_lines("output/snv_processing/F420_K7M2/keep_clusters_balbc_k7m2.txt")
 
-f420_b6_dimplot <-
+balbc_k7m2_dimplot <-
     DimPlot(
         merged_mouse_balbc_k7m2,
         group.by = "cell_group",
@@ -149,7 +150,7 @@ f420_b6_dimplot <-
 
 ggsave(
     "output/figures/balbc_k7m2_dimplot_clusters.pdf",
-    plot = f420_b6_dimplot,
+    plot = balbc_k7m2_dimplot,
     width = 10,
     height = 10
 )
@@ -171,6 +172,10 @@ done
 ```
 
 ```{r f420_k7m2_balbc_k7m2_trees}
+min_snvs_per_cluster <- 250
+n_bootstraps <- 10000
+bootstrap_cutoff <- 0.95
+
 dist_worked <-
     parallel::mclapply(
         c("5", "10", "20", "30"),
@@ -188,9 +193,9 @@ dist_worked <-
                     cutoff,
                     "_groups.txt"
                 ),
-                min_snvs_per_cluster = 200,
-                n_bootstraps = 10000,
-                bootstrap_cutoff = 0.95,
+                min_snvs_per_cluster = min_snvs_per_cluster,
+                n_bootstraps = n_bootstraps,
+                bootstrap_cutoff = bootstrap_cutoff,
                 tree_figure_file = paste0(
                     "output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
                     cutoff,
