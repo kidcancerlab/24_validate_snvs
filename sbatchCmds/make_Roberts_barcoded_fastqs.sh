@@ -46,6 +46,14 @@ rename \
     ${this_label} \
     input/fastqs/${this_sample}/*/*.fastq.gz
 
-# mv \
-#     input/fastqs/${this_sample}/*/*.fastq.gz \
-#     input/fastqs/${this_label}/
+if [ ! -d input/fastqs/${this_label} ]
+then
+    mkdir -p input/fastqs/${this_label}
+fi
+
+# I can do this in a simple way because I checked that the lanes used for the
+# resequencing were different than the original sequencing
+# Otherwise I'd overwrite files by accident
+mv \
+    input/fastqs/${this_sample}/*/*.fastq.gz \
+    input/fastqs/${this_label}/
