@@ -44,7 +44,7 @@ ggsave(
 
 ## Filter the merged bcf file for just the B6 and F420 samples
 ```{bash f420_k7m2_filter_f420_bcfs}
-#| dependson: [scanbit_run_mouse]
+#| dependson: [scanbit_run_mouse, f420_k7m2_make_f420_sobj]
 conda activate scanBit_xkcd_1337
 
 for cutoff in 5 10 20 30
@@ -57,7 +57,9 @@ bcftools \
 done
 ```
 
+## Make new trees and output files with just B6 and F420
 ```{r f420_k7m2_b6_f420_trees}
+#| dependson: [f420_k7m2_filter_f420_bcfs]
 min_snvs_per_cluster <- 250
 n_bootstraps <- 10000
 bootstrap_cutoff <- 0.95
@@ -104,8 +106,7 @@ dist_worked <-
     )
 ```
 
-
-## Test Balbc and K7M2 split
+## Prep data to analyze only Balbc and K7M2
 ```{r f420_k7m2_make_f420_sobj}
 #| dependson: [read_raw_mouse, scanbit_run_mouse]
 balbc_k7m2_samples <-
@@ -113,7 +114,7 @@ balbc_k7m2_samples <-
         "misc/mouse_samples_Roberts_metadata.tsv",
         show_col_types = FALSE
     ) %>%
-    filter(grepl("Balb|k7m2", Name, perl = TRUE)) %>%
+    filter(grepl("Balb|K7M2", Name, perl = TRUE)) %>%
     pull(Sample_ID) %>%
     c(
         read_tsv(
@@ -158,7 +159,7 @@ ggsave(
 
 ## Filter the merged bcf file for just the Balbc and K7M2 samples
 ```{bash f420_k7m2_filter_k7m2_bcfs}
-#| dependson: [scanbit_run_mouse]
+#| dependson: [scanbit_run_mouse, f420_k7m2_make_f420_sobj]
 conda activate scanBit_xkcd_1337
 
 for cutoff in 5 10 20 30
@@ -171,7 +172,9 @@ bcftools \
 done
 ```
 
+## Make new trees for just balbc and K7M2
 ```{r f420_k7m2_balbc_k7m2_trees}
+#| dependson: [f420_k7m2_filter_k7m2_bcfs]
 min_snvs_per_cluster <- 250
 n_bootstraps <- 10000
 bootstrap_cutoff <- 0.95
