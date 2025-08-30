@@ -1,15 +1,17 @@
 ## Run scanBit on individual cells with min_read_depth of 1 to use for read depth and accuracy Analysis
-
+For this I'm keeping ten individual cells per cluster, and each cell is assigned to its own cell_group so that I am calculating read depth data for many individual cells.
 ```{r readdepth_scanbit}
-samples_tsv_x <-
-    read_tsv("misc/sample_metadata.tsv", show_col_types = FALSE) %>%
-    filter(grepl("X00", Sample_ID))
+samples_geo <-
+    read_tsv("misc/validation_geo_metadata.tsv", show_col_types = FALSE) %>%
+    filter(grepl("tumor validation|healthy samples", sample_group)) %>%
+    pull(Sample_ID) %>%
+    unique()
 
 n_cell_cutoffs <- 1
 
 output <-
     parallel::mclapply(
-        samples_tsv_x$Sample_ID,
+        samples_geo,
         mc.cores = 10,
         mc.preschedule = FALSE,
         function(this_sample) {
@@ -29,6 +31,7 @@ output <-
                 )
 
             Idents(sobj) <- sobj$individ_clusters
+            set.seed(1337)
             sobj <- subset(sobj, downsample = 10)
 
             Idents(sobj) <-
@@ -39,27 +42,77 @@ output <-
                 cutoff_vector = n_cell_cutoffs,
                 min_read_depth = 1,
                 out_dir_base = file.path(
-                    "output/read_depth/scanbit_out/x_samples/",
+                    "output/read_depth/scanbit_out/geo_samples/",
                     this_sample
                 ),
                 keep_temp_dir = TRUE,
-                sample_label = this_sample
+                sample_label = this_sample,
+                ploidy = "GRCh38",
+                ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa"
             )
         }
     )
 ```
 
+## Batch job to count site coverage
 ```{bash readdepth_count_depth}
-sbatch x_bcf_depths.sh
+sbatch sbatchCmds/geo_bcf_depths.sh
 ```
 
+## Calculate the # of positions covered where any cell has a variant
+```{r readdepth_var_positions}
+#| cache.vars: [var_depths, ave_var_depths]
+all_var_files <-
+    list.files(
+        path = "output/read_depth/depths/bcf_depth",
+        pattern = "variant_pos",
+        full.names = TRUE
+    )
+
+var_depths <-
+    read_tsv(
+        all_var_files,
+        id = "cell_sample",
+        show_col_types = FALSE,
+        skip_empty_rows = FALSE
+    ) %>%
+    mutate(
+        cell_sample = basename(cell_sample) %>%
+            str_remove("variant_pos_") %>%
+            str_remove(".txt"),
+        group = "Variant sites"
+    )
+
+ave_var_depths <-
+    var_depths %>%
+    pivot_wider(
+        names_from = "depth",
+        values_from = "count",
+        values_fill = 0
+    ) %>%
+    pivot_longer(
+        cols = c(-cell_sample, -group),
+        names_to = "depth",
+        values_to = "count"
+    ) %>%
+    group_by(depth) %>%
+    summarize(
+        mean_count_var = mean(count),
+        se_count = sd(count) / sqrt(n()),
+        .groups = "drop",
+    ) %>%
+    mutate(depth = as.numeric(depth)) %>%
+    arrange(depth) %>%
+    slice_head(n = 30)
+```
 
 ## Compile all single-cell variant call depths
 ```{r readdepth_compile_depths}
+#| cache.vars: [all_depths, ave_depths]
 all_depth_files <-
     list.files(
         path = "output/read_depth/depths/bcf_depth",
-        pattern = "bcf_depth_X",
+        pattern = "bcf_depth_G",
         full.names = TRUE
     )
 all_depths <-
@@ -67,25 +120,50 @@ all_depths <-
         all_depth_files,
         id = "cell_sample",
         show_col_types = FALSE,
-        col_names = c("depth", "count")
     ) %>%
     mutate(
         cell_sample = basename(cell_sample) %>%
             str_remove("bcf_depth_") %>%
-            str_remove(".txt")
+            str_remove(".txt"),
+        group = "All sites"
     )
 
 ave_depths <-
     all_depths %>%
+    pivot_wider(
+        names_from = "depth",
+        values_from = "count",
+        values_fill = 0
+    ) %>%
+    pivot_longer(
+        cols = c(-cell_sample, -group),
+        names_to = "depth",
+        values_to = "count"
+    ) %>%
     group_by(depth) %>%
-    summarize(mean_count = mean(count))
+    summarize(
+        mean_count = mean(count),
+        se_count = sd(count) / sqrt(n()),
+        .groups = "drop"
+    ) %>%
+    mutate(depth = as.numeric(depth)) %>%
+    arrange(depth) %>%
+    slice_head(n = 50)
+```
 
+```{r readdepth_plot_coverage}
 site_covered_plot <-
-    head(ave_depths, n = 50) %>%
-    ggplot(
-        aes(x = depth, y = mean_count)
+    ggplot() +
+    geom_point(
+        data = ave_depths,
+        aes(x = depth, y = mean_count),
+        color = "black"
     ) +
-    geom_point() +
+    geom_point(
+        data = ave_var_depths,
+        aes(x = depth, y = mean_count_var),
+        color = "red"
+    ) +
     scale_y_log10(labels = scales::label_comma()) +
     labs(
         title = "Mean Sites Covered to a Given Depth",
@@ -100,7 +178,59 @@ ggsave(
     width = 6,
     height = 4
 )
+
+jitter_coverage_plot <-
+    rbind(all_depths, var_depths) %>%
+    filter(depth <= 20) %>%
+    pivot_wider(
+        names_from = "depth",
+        values_from = "count",
+        values_fill = 0
+    ) %>%
+    pivot_longer(
+        cols = c(-cell_sample, -group),
+        names_to = "depth",
+        values_to = "count"
+    ) %>%
+    mutate(
+        depth_factor = as.factor(depth) %>%
+            fct_reorder(as.numeric(depth))
+    ) %>%
+    ggplot(
+        aes(
+            x = depth_factor,
+            y = count,
+            color = group
+        )
+    ) +
+    geom_jitter(height = 0, alpha = 0.5, size = 0.5) +
+    scale_y_log10(labels = scales::label_comma()) +
+    scale_color_manual(values = plot_cols[1:2]) +
+    labs(
+        title = "Number of Total and Non-reference Sites Covered by Single Cells at Varying Depths",
+        x = "Read depth of variant call",
+        y = "Number of sites covered at each depth",
+        color = NULL
+    ) +
+    theme(
+        legend.position = c(0.9, 0.9)
+    )
+
+ggsave(
+    "output/figures/total_and_nonref_site_coverage.pdf",
+    jitter_coverage_plot,
+    width = 8,
+    height = 6
+)
+
+rm(all_depths, var_depths, ave_depths, ave_var_depths)
 ```
+
+```{r readdepth_shared_sites}
+
+
+```
+
 
 ## Calculate expected number of mistakes for each depth
 Based on flex accuracy calculations
@@ -232,7 +362,7 @@ percent_wrong_plot <-
             y = perc_wrong
         )
     ) +
-    #geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs")) +
+    # geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs")) +
     geom_point() +
     scale_y_continuous(labels = scales::label_percent()) +
     labs(
@@ -248,3 +378,4 @@ ggsave(
     height = 4
 )
 ```
+

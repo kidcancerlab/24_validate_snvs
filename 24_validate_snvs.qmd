@@ -62,10 +62,11 @@ for directoryName in \
     output/figures/gsea \
     output/seurat_objects/individual \
     output/seurat_objects/merged \
+    output/downsample/scanbit_out \
+    output/downsample/scanbit_out/geo_samples/ \
     output/read_depth/depths/bcf_depth \
     output/read_depth/depths/call_count \
-    output/downsample/scanbit_out/x_samples/ \
-    output/read_depth/scanbit_out/x_samples \
+    output/read_depth/scanbit_out/geo_samples \
     output/read_depth/depths \
     output/snv/tumor/x3 \
     output/snv/human/ \
@@ -145,9 +146,25 @@ Note that in the sample_metadata, for samples with multiple references, the cuto
 
 {{< include child_qmds/call_snvs.qmd >}}
 
-# Merge the data by species and make DimPlots
+# Downsample GEO samples to one cell and quantify read depth coverage
 
-##{{< #include child_qmds/merge_dimplots.qmd >}}
+{{< include child_qmds/read_depth_analysis.qmd >}}
+
+# Downsample each sample to a range of cells per cluster
+This is to test the minimum number of cells/reads needed to accurately identify genetically distinct populations.
+
+Also, I will use the data where I downsample to one cell to calculate coverage provided by one cell on average
+
+{{< include child_qmds/downsample_analysis.qmd >}}
+
+# Look at how well scanBit works to distinguish B6 from Balbc
+
+{{< include child_qmds/test_mouse_strains.qmd >}}
+
+# Look at how well scanBit can distinguish B6 from F420 and Balbc from K7M2
+This is more similar to the situation found in patients where the tumor cells derive from the patient
+
+{{< include child_qmds/F420_K7M2_analysis.qmd >}}
 
 # Test scanBit on prostate cancer
 This is a tumor type with low mutational burden

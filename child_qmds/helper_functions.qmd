@@ -453,7 +453,7 @@ confirm_mclapply_worked <- function(input_list) {
 
 ## Plotting Functions
 
-```{r dimplot-better}
+```{r helper_dimplot_better}
 dimplot_better <- function(object,
                            group_by = NULL,
                            cols,
@@ -479,7 +479,7 @@ dimplot_better <- function(object,
 ```
 
 ## Samples for downsample analysis
-```{r funs}
+```{r helper_downsample_scanbit}
 filter_cells_umi_cutoff <- function(sobj, max_umi) {
     keep_cells <-
         sobj |>
@@ -537,7 +537,9 @@ scanbit_downsample_loop <- function(sobj,
                                     min_read_depth = 5,
                                     min_snvs_per_cluster = 10,
                                     downsample_type = "n_cells",
-                                    keep_temp_dir = FALSE) {
+                                    keep_temp_dir = FALSE,
+                                    ploidy,
+                                    ref_fasta) {
     parallel::mclapply(
         cutoff_vector,
         mc.cores = 10,
@@ -600,7 +602,7 @@ scanbit_downsample_loop <- function(sobj,
 
             scanBit::get_snp_tree(
                 cellid_bam_table = cell_barcode_group_table,
-                ploidy = "GRCh38",
+                ploidy = ploidy,
                 temp_dir = temp_dir,
                 output_dir = out_dir,
                 output_base_name = paste0(
@@ -609,15 +611,23 @@ scanbit_downsample_loop <- function(sobj,
                     "_",
                     sprintf("%.0f", cutoff)
                 ),
-                ref_fasta =
-                    "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+                ref_fasta = ref_fasta,
                 min_depth = min_read_depth,
-                sbatch_base = "downsample_cells",
+                job_base = "downsample_cells",
                 min_snvs_per_cluster = min_snvs_per_cluster,
                 n_bootstraps = 10000,
                 max_prop_missing_at_site = 0.9,
                 cleanup = cleanup,
-                other_sbatch_options = "--time=12:00:00\nml miniforge3"
+                tree_image_type = "pdf",
+                other_job_header_options = c(
+                    "--time=8:00:00",
+                    "--partition=himem,general"
+                ),
+                other_batch_options = c(
+                    "ml purge",
+                    "ml miniforge3",
+                    'eval "$(conda shell.bash hook)"'
+                ),
             )
         }
     )
