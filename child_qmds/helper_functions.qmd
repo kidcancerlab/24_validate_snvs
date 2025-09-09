@@ -454,6 +454,7 @@ confirm_mclapply_worked <- function(input_list) {
 ## Plotting Functions
 
 ```{r helper_dimplot_better}
+#| cache.vars: [dimplot_better]
 dimplot_better <- function(object,
                            group_by = NULL,
                            cols,
@@ -480,6 +481,7 @@ dimplot_better <- function(object,
 
 ## Samples for downsample analysis
 ```{r helper_downsample_scanbit}
+#| cache.vars: [scanbit_downsample_loop, filter_cells_umi_cutoff, filter_cells_n_cell_cutoff, make_cbt]
 filter_cells_umi_cutoff <- function(sobj, max_umi) {
     keep_cells <-
         sobj |>
@@ -638,6 +640,7 @@ scanbit_downsample_loop <- function(sobj,
 ## Helper function to run scanbit
 This asssumes a bunch of things about the structure of this project
 ```{r helpers_scanbit_one_sample}
+#| cache.vars: [scanbit_one_sample]
 scanbit_one_sample <- function(this_sample,
                                species,
                                ploidy,
