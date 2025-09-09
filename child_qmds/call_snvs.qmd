@@ -138,6 +138,34 @@ mouse_sobj_list <-
             ))
         }
     )
+names(mouse_sobj_list) <- mouse_samples
+
+# With the clustering I did initially, S0067 had a cluster that was roughly
+# 50/50 tumor normal and it messes up the whole F420/B6 tree
+# This is a good example of how important good clustering is to get this to work
+# I renamed the original tree plots with _orig.pdf to maybe show in supplement
+# Reclustering so this mixed cluster is split fixes the issue
+
+mouse_sobj_list$S0067 <-
+    mouse_sobj_list$S0067 %>%
+    process_seurat(resolution = 0.25)
+
+mouse_sobj_list$S0067$individ_clusters <- mouse_sobj_list$S0067$seurat_clusters
+mouse_sobj_list$S0067$cell_group <-
+    paste0(
+        mouse_sobj_list$S0067$cluster_label,
+        "_c",
+        mouse_sobj_list$S0067$individ_clusters
+    )
+
+DimPlot(
+    mouse_sobj_list$S0067,
+    group.by = c("cell_group", "cell_type"),
+    label = TRUE,
+    label.box = TRUE,
+    repel = TRUE
+) +
+    NoLegend()
 
 merged_mouse <-
     merge(mouse_sobj_list[[1]], mouse_sobj_list[-1]) %>%
