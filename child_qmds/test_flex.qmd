@@ -2,17 +2,31 @@
 
 ## Quantify the number of SNVs for each level of coverage
 
-Ultimately want a plot of SNVs vs read depth
+## Merge the bcf files from min depth of 1 from flex scanbit analysis
+This keeps all the positions, not just those with an alt position
 
+This requires that the `scanbit_run_flex` chunk has cleanup set to FALSE
+```{bash flex_merge_c1}
+#| dependson: [scanbit_run_flex]
+# sbatch sbatchCmds/flex_merge_c1_all.sh
+```
+
+### Count the total number of positions covered by flex data for each cluster
 ```{bash flex_cov_alts}
+#| dependson: [flex_merge_c1]
 sbatch sbatchCmds/flex_count_vars.sh
 ```
 
+### Count the total number of positions that include an alt in flex data
 ```{bash flex_alt_counting}
-sbatch sbatchCmds/count_alts.sh
+#| dependson: [flex_merge_c1]
+# sbatch sbatchCmds/count_alts.sh
 ```
 
+### Calculate variant calling accuracy in flex data
+Any mutation called in the flex data is almost certainly a PCR/sequencing error since this method uses probes.
 ```{r flex_prop_wrong}
+#| dependson: [flex_cov_alts, flex_alt_counting]
 all_flex_files <-
     list.files(
         path = "output/flex/var_counts_d1",
@@ -89,6 +103,7 @@ ggsave(
 
 ## Calculate how many positions covered to each depth by normal data
 ```{r flex_actual_covered}
+#| dependson: [flex_cov_alts, flex_alt_counting]
 all_flex_files <-
     list.files(
         path = "output/flex/var_counts_d1",
@@ -139,36 +154,3 @@ flex_accuracy <-
 ## Plot how many inaccurate variant calls we would expect at each depth
 
 
-read_tsv("output/snv/mouse/alt_pos_counts.txt")
-
-
-ggplot(stuff, aes(x = depth, y = sites_cov)) +
-    geom_point() +
-    scale_y_log10()
-
-ggplot(stuff, aes(x = depth, y = wrong)) +
-    geom_point() +
-    scale_y_log10() +
-    scale_x_log10() +
-    coord_fixed() +
-    geom_smooth(show.legend = TRUE)
-
-ggplot(stuff, aes(x = depth, y = wrong / sites_cov)) +
-    geom_point() +
-    #scale_y_log10() +
-    scale_x_log10()
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Can I split this up by Chr? maybe keep mt chr and toss other chrs data where depth > 100
-
-head(stuff, n = 1000) %>%
-    ggplot(aes(x = depth, y = cumul_wrong)) +
-    geom_point() +
-    scale_y_log10() +
-    scale_x_log10()
-
-head(stuff, n = 1000) %>%
-    ggplot(aes(x = depth, y = cumul_wrong / cumul_sites * 100)) +
-    geom_point() +
-    scale_y_log10() +
-    scale_x_log10()
-
-```
