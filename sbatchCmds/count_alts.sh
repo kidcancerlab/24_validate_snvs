@@ -1,12 +1,13 @@
 #!/bin/sh
 #SBATCH --account=gdrobertslab
-#SBATCH --output=output/snv/mouse/tempdir//slurmOut_merge-%j.out_merge-%j.out
-#SBATCH --error=output/snv/mouse/tempdir//slurmOut_merge-%j.out_merge-%j.out
-#SBATCH --job-name=merge_bcfs
+#SBATCH --output=output/snv/mouse/tempdir/slurmOut_merge-%j.out
+#SBATCH --error=output/snv/mouse/tempdir/slurmOut_merge-%j.out
+#SBATCH --job-name=count_alts
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=30
 #SBATCH --partition=himem
+#SBATCH --time=24:00:00
 #SBATCH --wait
 
 set -e ### stops bash script if line ends with error
@@ -18,6 +19,8 @@ ml load Miniconda3/4.9.2
 
 eval "$(conda shell.bash hook)"
 conda activate scanBit_xkcd_1337
+
+##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! I bet this has variants with more than one alt
 
 python scripts/count_variant_pos.py \
     --threads 4 \
