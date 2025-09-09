@@ -9,10 +9,11 @@ samples_geo <-
 
 n_cell_cutoffs <- 1
 
+# Keeping mc.cores low since each run submits 100+ jobs
 output <-
     parallel::mclapply(
         samples_geo,
-        mc.cores = 10,
+        mc.cores = 2,
         mc.preschedule = FALSE,
         function(this_sample) {
             sobj <-
@@ -40,7 +41,7 @@ output <-
             scanbit_downsample_loop(
                 sobj,
                 cutoff_vector = n_cell_cutoffs,
-                min_read_depth = 1,
+                min_read_depth = c(1, 2, 5, 10, 20),
                 out_dir_base = file.path(
                     "output/read_depth/scanbit_out/geo_samples/",
                     this_sample
@@ -226,15 +227,10 @@ ggsave(
 rm(all_depths, var_depths, ave_depths, ave_var_depths)
 ```
 
-```{r readdepth_shared_sites}
-
-
-```
-
-
 ## Calculate expected number of mistakes for each depth
 Based on flex accuracy calculations
 ```{r readdepth_accuracy_calc}
+#| cache.vars: [expected_mis_calls]
 # Make a named vector or accuracy - name is depth, value is % accurate
 flex_accuracy_prop <-
     read_tsv("output/flex/flex_accuracy.txt", show_col_types = FALSE) %>%
@@ -261,16 +257,15 @@ ggsave(
 ```
 
 ```{bash readdepth_actual_n_vars}
-sbatch count_single_cell_variant_calls.sh
+sbatch sbatchCmds/count_single_cell_variant_calls.sh
 ```
 
-
 # Calculate the average number of variants actually called by depth
-```{r readdepth_compile_depths}
+```{r readdepth_compile_depths_ave}
 all_call_files <-
     list.files(
         path = "output/read_depth/depths/call_count",
-        pattern = "bcf_calls_depth_X0",
+        pattern = "bcf_calls_depth_G0",
         full.names = TRUE
     )
 all_call_depths <-
@@ -362,7 +357,6 @@ percent_wrong_plot <-
             y = perc_wrong
         )
     ) +
-    # geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs")) +
     geom_point() +
     scale_y_continuous(labels = scales::label_percent()) +
     labs(
@@ -379,3 +373,105 @@ ggsave(
 )
 ```
 
+## Calculate how many sites have shared variant information per sample
+```{bash readdepth_calc_shared}
+#| dependson: [readdepth_scanbit]
+sbatch sbatchCmds/count_single_cell_shared_sites.sh
+```
+
+```{r readdepth_shared_sites}
+#| dependson: [readdepth_calc_shared]
+shared_files <-
+    list.files(
+        path = "output/read_depth/shared",
+        pattern = "shared.+\\.txt",
+        full.names = TRUE
+    )
+
+parse_shared <- function(file_name) {
+    dataset <- read_tsv(
+        file_name,
+        name_repair = "minimal",
+        show_col_types = FALSE,
+        id = "dataset"
+    ) |>
+        mutate(
+            dataset = str_remove(dataset, ".+shared_") |>
+                str_remove(".txt")#,
+            #cell_1 = str_replace(cell_1, "-", ".")
+        ) |>
+        pivot_longer(
+            cols = starts_with("clust"),
+            names_to = "cell_2",
+            values_to = "shared_sites"
+        ) |>
+        filter(cell_1 != cell_2) |>
+        separate(dataset, into = c("sample", "cutoff"), sep = "_") %>%
+        mutate(cutoff = factor(cutoff, levels = c("1", "2", "5", "10", "20")))
+
+    return(dataset)
+}
+
+shared_sites <-
+    lapply(
+        shared_files,
+        parse_shared
+    ) %>%
+    bind_rows()
+
+
+shared_sites %>%
+    filter(sample == "G0001" & cutoff == 1) %>%
+    select(cell_1, cell_2, shared_sites) %>%
+    pivot_wider(
+        names_from = cell_2,
+        values_from = shared_sites,
+        values_fill = NA
+    ) %>%
+    column_to_rownames("cell_1") %>%
+    pheatmap::pheatmap(
+        silent = TRUE,
+        fontsize = 5,
+        filename = "output/figures/shared_sites_G0001_c1.pdf",
+        width = 10,
+        height = 10
+    )
+
+shared_sites_histograms <-
+    shared_sites %>%
+    ggplot(
+        aes(
+            x = shared_sites,
+            fill = cutoff
+        )
+    ) +
+    geom_histogram(bins = 200) +
+    scale_x_continuous(n.breaks = 20) +
+    facet_wrap(
+        ~ cutoff,
+        ncol = 1,
+        scales = "free_y"
+    ) +
+    labs(
+        title = "Distribution of Number of Genomic Positions With Shared Variant\nInformation Between Two Cells",
+        subtitle = "For sites where any cell has a non-reference variant call",
+        x = "Shared covered genomic positions",
+        y = "Count",
+        fill = "Minimum read depth\nto call variants"
+    )
+
+ggsave(
+    "output/figures/shared_sites_histograms.pdf",
+    plot = shared_sites_histograms,
+    width = 8,
+    height = 8
+)
+
+shared_sites %>%
+    group_by(cutoff) %>%
+    summarize(
+        mean_shared_sites = mean(shared_sites),
+        median_shared_sites = median(shared_sites)
+    ) %>%
+    write_tsv("output/read_depth/shared_sites_stats.tsv")
+```
