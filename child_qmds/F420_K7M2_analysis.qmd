@@ -20,6 +20,18 @@ qs::qsave(
     "output/seurat_objects/merged/merged_mouse_b6_f420.qs"
 )
 
+# Write out which clusters were primarily identified as tumor by SingleR
+merged_mouse_b6_f420@meta.data %>%
+    as_tibble() %>%
+    select(Sample_ID, cell_group, cell_type) %>%
+    group_by(Sample_ID, cell_group, cell_type) %>%
+    summarize(n = n(), .groups = "drop") %>%
+    group_by(Sample_ID, cell_group) %>%
+    mutate(proportion = n / sum(n)) %>%
+    filter(cell_type == "Tumor" & proportion > 0.3) %>%
+    arrange(desc(proportion)) %>%
+    write_tsv("output/snv_processing/F420_K7M2/b6_f420_singler_tumor_clust.txt")
+
 merged_mouse_b6_f420$cell_group %>%
     unique() %>%
     write_lines("output/snv_processing/F420_K7M2/keep_clusters_b6_f420.txt")
@@ -45,7 +57,7 @@ ggsave(
 ## Filter the merged bcf file for just the B6 and F420 samples
 ```{bash f420_k7m2_filter_f420_bcfs}
 #| dependson: [scanbit_run_mouse, f420_k7m2_make_f420_sobj]
-conda activate scanBit_xkcd_1337
+#conda activate scanBit_xkcd_1337
 
 for cutoff in 5 10 20 30
 do
@@ -107,7 +119,7 @@ dist_worked <-
 ```
 
 ## Prep data to analyze only Balbc and K7M2
-```{r f420_k7m2_make_f420_sobj}
+```{r f420_k7m2_make_k7m2_sobj}
 #| dependson: [read_raw_mouse, scanbit_run_mouse]
 balbc_k7m2_samples <-
     read_tsv(
@@ -135,6 +147,17 @@ qs::qsave(
     "output/seurat_objects/merged/merged_mouse_balbc_k7m2.qs"
 )
 
+merged_mouse_balbc_k7m2@meta.data %>%
+    as_tibble() %>%
+    select(Sample_ID, cell_group, cell_type) %>%
+    group_by(Sample_ID, cell_group, cell_type) %>%
+    summarize(n = n(), .groups = "drop") %>%
+    group_by(Sample_ID, cell_group) %>%
+    mutate(proportion = n / sum(n)) %>%
+    filter(cell_type == "Tumor" & proportion > 0.3) %>%
+    arrange(desc(proportion)) %>%
+    write_tsv("output/snv_processing/F420_K7M2/balb_k7m2_singler_tumor_clust.txt")
+
 merged_mouse_balbc_k7m2$cell_group %>%
     unique() %>%
     write_lines("output/snv_processing/F420_K7M2/keep_clusters_balbc_k7m2.txt")
@@ -159,8 +182,8 @@ ggsave(
 
 ## Filter the merged bcf file for just the Balbc and K7M2 samples
 ```{bash f420_k7m2_filter_k7m2_bcfs}
-#| dependson: [scanbit_run_mouse, f420_k7m2_make_f420_sobj]
-conda activate scanBit_xkcd_1337
+#| dependson: [scanbit_run_mouse, f420_k7m2_make_k7m2_sobj]
+#conda activate scanBit_xkcd_1337
 
 for cutoff in 5 10 20 30
 do
