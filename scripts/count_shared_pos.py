@@ -1,14 +1,14 @@
 import argparse
 import sys
-import multiprocessing
-from itertools import repeat, chain
+# import multiprocessing
+# from itertools import repeat, chain
 from pysam import VariantFile
 import numpy as np
-from scipy.cluster.hierarchy import linkage, dendrogram
-from scipy.spatial.distance import squareform
-import matplotlib
-import matplotlib.pyplot as plt
-matplotlib.use('pdf')
+# from scipy.cluster.hierarchy import linkage, dendrogram
+# from scipy.spatial.distance import squareform
+# import matplotlib
+# import matplotlib.pyplot as plt
+# matplotlib.use('pdf')
 
 ################################################################################
 ### Code
@@ -17,15 +17,11 @@ def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--bcf',
                         type = str,
-                        default=  'output/read_depth/scanbit_out/x_samples/X00001/downsample_1_cells/mergeddownsample_X00001_1_c1.bcf',
+                        default=  'test.bcf',
                         help = 'BCF file with multiple samples as columns')
-    parser.add_argument('--min_snvs_for_cluster',
-                        type = int,
-                        default = 1000,
-                        help = 'minimum number of SNVs for a cluster to be included')
     parser.add_argument('--max_prop_missing',
                         type = float,
-                        default = 0.9,
+                        default = 0.75,
                         help = 'max proportion of missing data allowed at a single locus')
     parser.add_argument('--verbose',
                         action = 'store_true',
@@ -40,9 +36,14 @@ def main():
 
     n_shared_pos, samples = get_n_shared_pos_from_bcf(
         args.bcf,
-        args.min_snvs_for_cluster,
         args.max_prop_missing,
         args.processes)
+
+    print('cell_1', *samples, sep = '\t')
+
+    for i in range(n_shared_pos.shape[0]):
+        print(samples[i], end = '\t')
+        print(*n_shared_pos[i, :], sep = '\t')
 
     if args.verbose:
         print("Done!", file=sys.stderr)
@@ -54,9 +55,8 @@ def main():
 
 ####### Can I clear out genotypes with all missing data? #################
 def get_n_shared_pos_from_bcf(bcf_file,
-                             min_snvs_for_cluster,
-                             max_prop_missing,
-                             threads):
+                              max_prop_missing,
+                              threads):
     dist_key_dict = {'00':            0.5,
                      '01':            0.5,
                      '10':            0.5,
@@ -65,7 +65,8 @@ def get_n_shared_pos_from_bcf(bcf_file,
     ### Check if bcf index exists
     bcf_in = VariantFile(bcf_file, threads = threads)
     samples = tuple(bcf_in.header.samples)
-    records = tuple(x for x in list(bcf_in.fetch()) if (len(x.alts) == 1))
+
+    records = tuple(x for x in list(bcf_in.fetch()) if x.alts is not None)
     bcf_in.close()
 
     # Precompute the genotype tuples for all samples
@@ -94,9 +95,8 @@ def get_n_shared_pos_from_bcf(bcf_file,
 def pad_len_1_genotype(gt):
     if len(gt) == 1:
         return (gt[0], 0)
-    else:
-        return gt
 
+    return gt
 
 ################################################################################
 ### main
