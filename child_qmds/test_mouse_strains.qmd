@@ -39,7 +39,7 @@ ggsave(
 ## Filter the merged bcf file for just these samples
 ```{bash mouse_strain_filter_bcfs}
 #| dependson: [scanbit_run_mouse]
-conda activate scanBit_xkcd_1337
+# conda activate scanBit_xkcd_1337 #! Do this before rendering the quarto doc
 
 for cutoff in 5 10 20 30
 do

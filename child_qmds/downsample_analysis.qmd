@@ -92,7 +92,7 @@ output <-
 
 ## Show how bootstrap values degrade with decreasing cell count and UMI per pseudobulked cluster
 The data were gathered by hand since I don't have a programatic way to pull the top node bootstrap values out of the pdfs
-```{r}
+```{r downsample_plot}
 rna_per_run <-
     list.files(
         path = "output/downsample/scanbit_out",
@@ -136,7 +136,7 @@ bootstrap_downsample_data <-
     mutate(
         cells_char = as.factor(cells_char) %>% fct_reorder(cells),
     ) %>%
-    filter(cells > 1 & sample_group != "Mouse")
+    filter(cells > 1 & sample_group != "Mouse") #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Do separate plot for mouse!!!!!!!!!!!!!
 
 bootstrap_ncell_plot <-
     bootstrap_downsample_data %>%
@@ -159,7 +159,7 @@ bootstrap_ncell_plot <-
 
 ggsave(
     "output/figures/downsample_bootstrap_cells_plot.pdf",
-    plot = bootstrap_downsample_plot,
+    plot = bootstrap_ncell_plot,
     width = 8,
     height = 10
 )
@@ -196,6 +196,4 @@ ggsave(
     width = 10,
     height = 8
 )
-
 ```
-
