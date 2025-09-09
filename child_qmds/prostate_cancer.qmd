@@ -5,12 +5,8 @@ There are two samples from a single patient. Normal cells should cluster all tog
 GSM6428955 HMP11_1
 GSM6428956 HMP11_2
 
-## Download and process the raw prostate data
-```{bash prostate_get}
-sbatch sbatchCmds/get_two_prostate.sh
+#!!!!!!!!!! Need to merge the bcfs from individual samples here to make a tree with everything
 
-sbatch sbatchCmds/count_two_prostate.sh
-```
 
 ## Analyze the prostate data using Seurat
 ```{r prostate}
@@ -73,29 +69,29 @@ qs_save(
 
 ## Run scanBit on prostate data
 ```{r prostate_scanbit}
-merged_sobj_prost <- qs_read("output/seurat_objects/merged_sobj_prost.qs2")
+# merged_sobj_prost <- qs_read("output/seurat_objects/merged_sobj_prost.qs2")
 
-cell_barcode_group_table <-
-    merged_sobj_prost@meta.data %>%
-    select(cell_group, cell_barcode, bam_file) %>%
-    as_tibble()
+# cell_barcode_group_table <-
+#     merged_sobj_prost@meta.data %>%
+#     select(cell_group, cell_barcode, bam_file) %>%
+#     as_tibble()
 
-snp_tree <-
-    scanBit::get_snp_tree(
-        cellid_bam_table = cell_barcode_group_table,
-        ploidy = "GRCh38",
-        output_dir = "output/snv/prostate/",
-        temp_dir = "output/snv/prostate/tempdir",
-        output_base_name = "prostate",
-        ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
-        min_depth = c(5, 10, 20, 30),
-        job_base = "prostate_sbatch",
-        min_snvs_per_cluster = 250,
-        n_bootstraps = 10000,
-        max_prop_missing_at_site = 0.9,
-        cleanup = FALSE,
-        other_batch_options = c("ml purge", "ml miniforge3")
-    )
+# snp_tree <-
+#     scanBit::get_snp_tree(
+#         cellid_bam_table = cell_barcode_group_table,
+#         ploidy = "GRCh38",
+#         output_dir = "output/snv/prostate/",
+#         temp_dir = "output/snv/prostate/tempdir",
+#         output_base_name = "prostate",
+#         ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+#         min_depth = c(5, 10, 20, 30),
+#         job_base = "prostate_sbatch",
+#         min_snvs_per_cluster = 250,
+#         n_bootstraps = 10000,
+#         max_prop_missing_at_site = 0.9,
+#         cleanup = FALSE,
+#         other_batch_options = c("ml purge", "ml miniforge3")
+#     )
 ```
 
 ## Merge scanBit output back into prostate data and make plots
