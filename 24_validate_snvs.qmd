@@ -58,8 +58,7 @@ for directoryName in \
     output/refs \
     output/figures \
     output/figures/qc_cutoffs \
-    output/figures/volcano_plots \
-    output/figures/gsea \
+    output/figures/transgene \
     output/seurat_objects/individual \
     output/seurat_objects/merged \
     output/downsample/scanbit_out \
@@ -68,12 +67,14 @@ for directoryName in \
     output/read_depth/depths/call_count \
     output/read_depth/scanbit_out/geo_samples \
     output/read_depth/depths \
+    output/read_depth/shared \
     output/snv/tumor/x3 \
     output/snv/human/ \
     output/snv/flex \
     output/snv/mouse \
     output/snv/transgene/ \
     output/snv_processing/norm_mouse/ \
+    output/snv_processing/transgene \
     input \
     input/fastqs \
     custom_ref
@@ -145,6 +146,10 @@ Note that in the sample_metadata, for samples with multiple references, the cuto
 # Run scanBit on the Seurat objects
 
 {{< include child_qmds/call_snvs.qmd >}}
+
+# Run analysis on flex data to calculate accuracy
+
+{{< include child_qmds/test_flex.qmd >}}
 
 # Downsample GEO samples to one cell and quantify read depth coverage
 

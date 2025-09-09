@@ -6,7 +6,7 @@ import numpy as np
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--bcf',
                     type = str,
-                    default=  'output/snv/flex/mergedflex_snvs_c1_keep_all.bcf',
+                    default=  'test.bcf',
                     help = 'BCF file with multiple samples as columns')
 parser.add_argument('--threads',
                     '-t',
@@ -71,10 +71,9 @@ def get_samps_records(bcf_file, threads):
 
 def get_genotypes(records, samples):
     genotypes = np.array([
-        [''.join(map(str, rec.samples[sample]['GT'])) for sample in samples if ''.join(map(str, rec.samples[sample]['GT'])) != 'NoneNone'] #!!!!!!!!!!!!!!!!!!!!!!!! Maybe
+        [''.join(map(str, rec.samples[sample]['GT'])) for sample in samples if ''.join(map(str, rec.samples[sample]['GT'])) != 'NoneNone']
         for rec in records
     ]).flatten()
-    #genotypes = genotypes[genotypes != 'NoneNone']
 
     return genotypes
 

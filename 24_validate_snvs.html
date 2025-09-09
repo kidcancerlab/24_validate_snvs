@@ -5,7 +5,7 @@
 <meta name="generator" content="quarto-1.4.550">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Matt Cannon and Matt Gust">
-<meta name="dcterms.date" content="2025-08-25">
+<meta name="dcterms.date" content="2025-09-03">
 <title>Validate that scanBit Correctly Identifies Tumor Cells</title>
 <style>
 code{white-space: pre-wrap;}
@@ -5625,7 +5625,63 @@ color: #333;
   <li><a href="#run-scanbit-on-the-human-samples" id="toc-run-scanbit-on-the-human-samples" class="nav-link" data-scroll-target="#run-scanbit-on-the-human-samples">Run scanBit on the human samples</a></li>
   </ul>
 </li>
-  <li><a href="#merge-the-data-by-species-and-make-dimplots" id="toc-merge-the-data-by-species-and-make-dimplots" class="nav-link" data-scroll-target="#merge-the-data-by-species-and-make-dimplots">Merge the data by species and make DimPlots</a></li>
+  <li>
+<a href="#run-analysis-on-flex-data-to-calculate-accuracy" id="toc-run-analysis-on-flex-data-to-calculate-accuracy" class="nav-link" data-scroll-target="#run-analysis-on-flex-data-to-calculate-accuracy">Run analysis on flex data to calculate accuracy</a>
+  <ul class="collapse">
+<li><a href="#test-snp-calling-on-flex-data" id="toc-test-snp-calling-on-flex-data" class="nav-link" data-scroll-target="#test-snp-calling-on-flex-data">Test snp calling on flex data</a></li>
+  <li><a href="#quantify-the-number-of-snvs-for-each-level-of-coverage" id="toc-quantify-the-number-of-snvs-for-each-level-of-coverage" class="nav-link" data-scroll-target="#quantify-the-number-of-snvs-for-each-level-of-coverage">Quantify the number of SNVs for each level of coverage</a></li>
+  <li>
+<a href="#merge-the-bcf-files-from-min-depth-of-1-from-flex-scanbit-analysis" id="toc-merge-the-bcf-files-from-min-depth-of-1-from-flex-scanbit-analysis" class="nav-link" data-scroll-target="#merge-the-bcf-files-from-min-depth-of-1-from-flex-scanbit-analysis">Merge the bcf files from min depth of 1 from flex scanbit analysis</a>
+  <ul class="collapse">
+<li><a href="#count-the-total-number-of-positions-covered-by-flex-data-for-each-cluster" id="toc-count-the-total-number-of-positions-covered-by-flex-data-for-each-cluster" class="nav-link" data-scroll-target="#count-the-total-number-of-positions-covered-by-flex-data-for-each-cluster">Count the total number of positions covered by flex data for each cluster</a></li>
+  <li><a href="#count-the-total-number-of-positions-that-include-an-alt-in-flex-data" id="toc-count-the-total-number-of-positions-that-include-an-alt-in-flex-data" class="nav-link" data-scroll-target="#count-the-total-number-of-positions-that-include-an-alt-in-flex-data">Count the total number of positions that include an alt in flex data</a></li>
+  <li><a href="#calculate-variant-calling-accuracy-in-flex-data" id="toc-calculate-variant-calling-accuracy-in-flex-data" class="nav-link" data-scroll-target="#calculate-variant-calling-accuracy-in-flex-data">Calculate variant calling accuracy in flex data</a></li>
+  </ul>
+</li>
+  <li><a href="#calculate-how-many-positions-covered-to-each-depth-by-normal-data" id="toc-calculate-how-many-positions-covered-to-each-depth-by-normal-data" class="nav-link" data-scroll-target="#calculate-how-many-positions-covered-to-each-depth-by-normal-data">Calculate how many positions covered to each depth by normal data</a></li>
+  <li><a href="#plot-how-many-sites-are-covered-at-each-depth" id="toc-plot-how-many-sites-are-covered-at-each-depth" class="nav-link" data-scroll-target="#plot-how-many-sites-are-covered-at-each-depth">Plot how many sites are covered at each depth</a></li>
+  <li><a href="#plot-how-many-inaccurate-variant-calls-we-would-expect-at-each-depth" id="toc-plot-how-many-inaccurate-variant-calls-we-would-expect-at-each-depth" class="nav-link" data-scroll-target="#plot-how-many-inaccurate-variant-calls-we-would-expect-at-each-depth">Plot how many inaccurate variant calls we would expect at each depth</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#downsample-geo-samples-to-one-cell-and-quantify-read-depth-coverage" id="toc-downsample-geo-samples-to-one-cell-and-quantify-read-depth-coverage" class="nav-link" data-scroll-target="#downsample-geo-samples-to-one-cell-and-quantify-read-depth-coverage">Downsample GEO samples to one cell and quantify read depth coverage</a>
+  <ul class="collapse">
+<li><a href="#run-scanbit-on-individual-cells-with-min_read_depth-of-1-to-use-for-read-depth-and-accuracy-analysis" id="toc-run-scanbit-on-individual-cells-with-min_read_depth-of-1-to-use-for-read-depth-and-accuracy-analysis" class="nav-link" data-scroll-target="#run-scanbit-on-individual-cells-with-min_read_depth-of-1-to-use-for-read-depth-and-accuracy-analysis">Run scanBit on individual cells with min_read_depth of 1 to use for read depth and accuracy Analysis</a></li>
+  <li><a href="#batch-job-to-count-site-coverage" id="toc-batch-job-to-count-site-coverage" class="nav-link" data-scroll-target="#batch-job-to-count-site-coverage">Batch job to count site coverage</a></li>
+  <li><a href="#calculate-the-of-positions-covered-where-any-cell-has-a-variant" id="toc-calculate-the-of-positions-covered-where-any-cell-has-a-variant" class="nav-link" data-scroll-target="#calculate-the-of-positions-covered-where-any-cell-has-a-variant">Calculate the # of positions covered where any cell has a variant</a></li>
+  <li><a href="#compile-all-single-cell-variant-call-depths" id="toc-compile-all-single-cell-variant-call-depths" class="nav-link" data-scroll-target="#compile-all-single-cell-variant-call-depths">Compile all single-cell variant call depths</a></li>
+  <li><a href="#calculate-expected-number-of-mistakes-for-each-depth" id="toc-calculate-expected-number-of-mistakes-for-each-depth" class="nav-link" data-scroll-target="#calculate-expected-number-of-mistakes-for-each-depth">Calculate expected number of mistakes for each depth</a></li>
+  </ul>
+</li>
+  <li><a href="#calculate-the-average-number-of-variants-actually-called-by-depth" id="toc-calculate-the-average-number-of-variants-actually-called-by-depth" class="nav-link" data-scroll-target="#calculate-the-average-number-of-variants-actually-called-by-depth">Calculate the average number of variants actually called by depth</a></li>
+  <li>
+<a href="#downsample-each-sample-to-a-range-of-cells-per-cluster" id="toc-downsample-each-sample-to-a-range-of-cells-per-cluster" class="nav-link" data-scroll-target="#downsample-each-sample-to-a-range-of-cells-per-cluster">Downsample each sample to a range of cells per cluster</a>
+  <ul class="collapse">
+<li><a href="#here-i-am-going-to-downsample-the-mouse-samples-to-varying-number-of-cells-per-cluster-to-run-scanbit" id="toc-here-i-am-going-to-downsample-the-mouse-samples-to-varying-number-of-cells-per-cluster-to-run-scanbit" class="nav-link" data-scroll-target="#here-i-am-going-to-downsample-the-mouse-samples-to-varying-number-of-cells-per-cluster-to-run-scanbit">Here I am going to downsample the mouse samples to varying number of cells per cluster to run scanBit</a></li>
+  <li><a href="#loop-over-all-the-geo-human-datasets-and-run-scanbit" id="toc-loop-over-all-the-geo-human-datasets-and-run-scanbit" class="nav-link" data-scroll-target="#loop-over-all-the-geo-human-datasets-and-run-scanbit">Loop over all the GEO human datasets and run scanBit</a></li>
+  <li><a href="#show-how-bootstrap-values-degrade-with-decreasing-cell-count-and-umi-per-pseudobulked-cluster" id="toc-show-how-bootstrap-values-degrade-with-decreasing-cell-count-and-umi-per-pseudobulked-cluster" class="nav-link" data-scroll-target="#show-how-bootstrap-values-degrade-with-decreasing-cell-count-and-umi-per-pseudobulked-cluster">Show how bootstrap values degrade with decreasing cell count and UMI per pseudobulked cluster</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#look-at-how-well-scanbit-works-to-distinguish-b6-from-balbc" id="toc-look-at-how-well-scanbit-works-to-distinguish-b6-from-balbc" class="nav-link" data-scroll-target="#look-at-how-well-scanbit-works-to-distinguish-b6-from-balbc">Look at how well scanBit works to distinguish B6 from Balbc</a>
+  <ul class="collapse">
+<li><a href="#validate-with-b6-and-balbc" id="toc-validate-with-b6-and-balbc" class="nav-link" data-scroll-target="#validate-with-b6-and-balbc">Validate with B6 and Balbc</a></li>
+  <li><a href="#filter-the-merged-bcf-file-for-just-these-samples" id="toc-filter-the-merged-bcf-file-for-just-these-samples" class="nav-link" data-scroll-target="#filter-the-merged-bcf-file-for-just-these-samples">Filter the merged bcf file for just these samples</a></li>
+  <li><a href="#make-trees-directly-from-merged-bcfs" id="toc-make-trees-directly-from-merged-bcfs" class="nav-link" data-scroll-target="#make-trees-directly-from-merged-bcfs">Make trees directly from merged bcfs</a></li>
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a></li>
+  </ul>
+</li>
+  <li>
+<a href="#look-at-how-well-scanbit-can-distinguish-b6-from-f420-and-balbc-from-k7m2" id="toc-look-at-how-well-scanbit-can-distinguish-b6-from-f420-and-balbc-from-k7m2" class="nav-link" data-scroll-target="#look-at-how-well-scanbit-can-distinguish-b6-from-f420-and-balbc-from-k7m2">Look at how well scanBit can distinguish B6 from F420 and Balbc from K7M2</a>
+  <ul class="collapse">
+<li><a href="#test-b6-and-f420-split" id="toc-test-b6-and-f420-split" class="nav-link" data-scroll-target="#test-b6-and-f420-split">Test B6 and F420 split</a></li>
+  <li><a href="#filter-the-merged-bcf-file-for-just-the-b6-and-f420-samples" id="toc-filter-the-merged-bcf-file-for-just-the-b6-and-f420-samples" class="nav-link" data-scroll-target="#filter-the-merged-bcf-file-for-just-the-b6-and-f420-samples">Filter the merged bcf file for just the B6 and F420 samples</a></li>
+  <li><a href="#make-new-trees-and-output-files-with-just-b6-and-f420" id="toc-make-new-trees-and-output-files-with-just-b6-and-f420" class="nav-link" data-scroll-target="#make-new-trees-and-output-files-with-just-b6-and-f420">Make new trees and output files with just B6 and F420</a></li>
+  <li><a href="#prep-data-to-analyze-only-balbc-and-k7m2" id="toc-prep-data-to-analyze-only-balbc-and-k7m2" class="nav-link" data-scroll-target="#prep-data-to-analyze-only-balbc-and-k7m2">Prep data to analyze only Balbc and K7M2</a></li>
+  <li><a href="#filter-the-merged-bcf-file-for-just-the-balbc-and-k7m2-samples" id="toc-filter-the-merged-bcf-file-for-just-the-balbc-and-k7m2-samples" class="nav-link" data-scroll-target="#filter-the-merged-bcf-file-for-just-the-balbc-and-k7m2-samples">Filter the merged bcf file for just the Balbc and K7M2 samples</a></li>
+  <li><a href="#make-new-trees-for-just-balbc-and-k7m2" id="toc-make-new-trees-for-just-balbc-and-k7m2" class="nav-link" data-scroll-target="#make-new-trees-for-just-balbc-and-k7m2">Make new trees for just balbc and K7M2</a></li>
+  </ul>
+</li>
   <li><a href="#test-scanbit-on-prostate-cancer" id="toc-test-scanbit-on-prostate-cancer" class="nav-link" data-scroll-target="#test-scanbit-on-prostate-cancer">Test scanBit on prostate cancer</a></li>
   <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session info</a></li>
   </ul></nav>
@@ -5648,7 +5704,7 @@ color: #333;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 25, 2025</p>
+      <p class="date">September 3, 2025</p>
     </div>
   </div>
   
@@ -6187,7 +6243,9 @@ color: #333;
 <span>                                    <span class="va">min_read_depth</span> <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>                                    <span class="va">min_snvs_per_cluster</span> <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>                                    <span class="va">downsample_type</span> <span class="op">=</span> <span class="st">&quot;n_cells&quot;</span>,</span>
-<span>                                    <span class="va">keep_temp_dir</span> <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
+<span>                                    <span class="va">keep_temp_dir</span> <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                                    <span class="va">ploidy</span>,</span>
+<span>                                    <span class="va">ref_fasta</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/mclapply.html">mclapply</a></span><span class="op">(</span></span>
 <span>        <span class="va">cutoff_vector</span>,</span>
 <span>        mc.cores <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -6250,7 +6308,7 @@ color: #333;
 <span></span>
 <span>            <span class="fu">scanBit</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/scanBit/man/get_snp_tree.html">get_snp_tree</a></span><span class="op">(</span></span>
 <span>                cellid_bam_table <span class="op">=</span> <span class="va">cell_barcode_group_table</span>,</span>
-<span>                ploidy <span class="op">=</span> <span class="st">&quot;GRCh38&quot;</span>,</span>
+<span>                ploidy <span class="op">=</span> <span class="va">ploidy</span>,</span>
 <span>                temp_dir <span class="op">=</span> <span class="va">temp_dir</span>,</span>
 <span>                output_dir <span class="op">=</span> <span class="va">out_dir</span>,</span>
 <span>                output_base_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
@@ -6259,15 +6317,23 @@ color: #333;
 <span>                    <span class="st">&quot;_&quot;</span>,</span>
 <span>                    <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">&quot;%.0f&quot;</span>, <span class="va">cutoff</span><span class="op">)</span></span>
 <span>                <span class="op">)</span>,</span>
-<span>                ref_fasta <span class="op">=</span></span>
-<span>                    <span class="st">&quot;/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa&quot;</span>,</span>
+<span>                ref_fasta <span class="op">=</span> <span class="va">ref_fasta</span>,</span>
 <span>                min_depth <span class="op">=</span> <span class="va">min_read_depth</span>,</span>
-<span>                sbatch_base <span class="op">=</span> <span class="st">&quot;downsample_cells&quot;</span>,</span>
+<span>                job_base <span class="op">=</span> <span class="st">&quot;downsample_cells&quot;</span>,</span>
 <span>                min_snvs_per_cluster <span class="op">=</span> <span class="va">min_snvs_per_cluster</span>,</span>
 <span>                n_bootstraps <span class="op">=</span> <span class="fl">10000</span>,</span>
 <span>                max_prop_missing_at_site <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>                cleanup <span class="op">=</span> <span class="va">cleanup</span>,</span>
-<span>                other_sbatch_options <span class="op">=</span> <span class="st">&quot;--time=12:00:00\nml miniforge3&quot;</span></span>
+<span>                tree_image_type <span class="op">=</span> <span class="st">&quot;pdf&quot;</span>,</span>
+<span>                other_job_header_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;--time=8:00:00&quot;</span>,</span>
+<span>                    <span class="st">&quot;--partition=himem,general&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                other_batch_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;ml purge&quot;</span>,</span>
+<span>                    <span class="st">&quot;ml miniforge3&quot;</span>,</span>
+<span>                    <span class="st">&#39;eval &quot;$(conda shell.bash hook)&quot;&#39;</span></span>
+<span>                <span class="op">)</span>,</span>
 <span>            <span class="op">)</span></span>
 <span>        <span class="op">}</span></span>
 <span>    <span class="op">)</span></span>
@@ -6348,26 +6414,27 @@ color: #333;
 <span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    output/figures/gsea <span class="dt">\</span></span>
 <span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    output/seurat_objects/individual <span class="dt">\</span></span>
 <span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    output/seurat_objects/merged <span class="dt">\</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    output/read_depth/depths/bcf_depth <span class="dt">\</span></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    output/read_depth/depths/call_count <span class="dt">\</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    output/downsample/scanbit_out/x_samples/ <span class="dt">\</span></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    output/read_depth/scanbit_out/x_samples <span class="dt">\</span></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    output/read_depth/depths <span class="dt">\</span></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    output/snv/tumor/x3 <span class="dt">\</span></span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    output/snv/human/ <span class="dt">\</span></span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    output/snv/flex <span class="dt">\</span></span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    output/snv/mouse <span class="dt">\</span></span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    output/snv/transgene/ <span class="dt">\</span></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    output/snv_processing/norm_mouse/ <span class="dt">\</span></span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    input <span class="dt">\</span></span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>    input/fastqs <span class="dt">\</span></span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>    custom_ref</span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-d</span> <span class="va">${directoryName}</span> <span class="bu">]</span></span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">then</span></span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">${directoryName}</span></span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    output/downsample/scanbit_out <span class="dt">\</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    output/downsample/scanbit_out/geo_samples/ <span class="dt">\</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    output/read_depth/depths/bcf_depth <span class="dt">\</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    output/read_depth/depths/call_count <span class="dt">\</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    output/read_depth/scanbit_out/geo_samples <span class="dt">\</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    output/read_depth/depths <span class="dt">\</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    output/snv/tumor/x3 <span class="dt">\</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    output/snv/human/ <span class="dt">\</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    output/snv/flex <span class="dt">\</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    output/snv/mouse <span class="dt">\</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    output/snv/transgene/ <span class="dt">\</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    output/snv_processing/norm_mouse/ <span class="dt">\</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>    input <span class="dt">\</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>    input/fastqs <span class="dt">\</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>    custom_ref</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-d</span> <span class="va">${directoryName}</span> <span class="bu">]</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">then</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">${directoryName}</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details><div class="cell-output cell-output-stdout">
 <pre><code>mkdir: cannot create directory ‘/gfpf0’: Permission denied</code></pre>
 </div>
@@ -6779,7 +6846,7 @@ color: #333;
 <span>        min_snvs_per_cluster <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>        n_bootstraps <span class="op">=</span> <span class="fl">10000</span>,</span>
 <span>        max_prop_missing_at_site <span class="op">=</span> <span class="fl">0.9</span>,</span>
-<span>        cleanup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        cleanup <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>        other_job_header_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
 <span>            <span class="st">&quot;--time=8:00:00&quot;</span>,</span>
 <span>            <span class="st">&quot;--partition=himem,general&quot;</span></span>
@@ -7033,14 +7100,1047 @@ $G0038
 [1] TRUE</code></pre>
 </div>
 <p>:::</p>
-</section></section><section id="merge-the-data-by-species-and-make-dimplots" class="level1"><h1>Merge the data by species and make DimPlots</h1>
-<p>##{{&lt; #include child_qmds/merge_dimplots.qmd &gt;}}</p>
-</section><section id="test-scanbit-on-prostate-cancer" class="level1"><h1>Test scanBit on prostate cancer</h1>
+</section></section><section id="run-analysis-on-flex-data-to-calculate-accuracy" class="level1"><h1>Run analysis on flex data to calculate accuracy</h1>
+<section id="test-snp-calling-on-flex-data" class="level2"><h2 class="anchored" data-anchor-id="test-snp-calling-on-flex-data">Test snp calling on flex data</h2>
+</section><section id="quantify-the-number-of-snvs-for-each-level-of-coverage" class="level2"><h2 class="anchored" data-anchor-id="quantify-the-number-of-snvs-for-each-level-of-coverage">Quantify the number of SNVs for each level of coverage</h2>
+</section><section id="merge-the-bcf-files-from-min-depth-of-1-from-flex-scanbit-analysis" class="level2"><h2 class="anchored" data-anchor-id="merge-the-bcf-files-from-min-depth-of-1-from-flex-scanbit-analysis">Merge the bcf files from min depth of 1 from flex scanbit analysis</h2>
+<p>This keeps all the positions, not just those with an alt position</p>
+<p>This requires that the <code>scanbit_run_flex</code> chunk has cleanup set to FALSE ::: {.cell}</p>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sbatch sbatchCmds/flex_merge_c1_all.sh</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><p>:::</p>
+<section id="count-the-total-number-of-positions-covered-by-flex-data-for-each-cluster" class="level3"><h3 class="anchored" data-anchor-id="count-the-total-number-of-positions-covered-by-flex-data-for-each-cluster">Count the total number of positions covered by flex data for each cluster</h3>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> sbatchCmds/flex_count_vars.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Submitted batch job 7085039</code></pre>
+</div>
+</div>
+</section><section id="count-the-total-number-of-positions-that-include-an-alt-in-flex-data" class="level3"><h3 class="anchored" data-anchor-id="count-the-total-number-of-positions-that-include-an-alt-in-flex-data">Count the total number of positions that include an alt in flex data</h3>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sbatch sbatchCmds/count_alts.sh</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="calculate-variant-calling-accuracy-in-flex-data" class="level3"><h3 class="anchored" data-anchor-id="calculate-variant-calling-accuracy-in-flex-data">Calculate variant calling accuracy in flex data</h3>
+<p>Any mutation called in the flex data is almost certainly a PCR/sequencing error since this method uses probes. ::: {.cell}</p>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb45"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">all_flex_files</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span></span>
+<span>        path <span class="op">=</span> <span class="st">&quot;output/flex/var_counts_d1&quot;</span>,</span>
+<span>        pattern <span class="op">=</span> <span class="st">&quot;.txt&quot;</span>,</span>
+<span>        full.names <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># In the future, break this down by mt vs non-mt to see if the non-mt are the wierd inaccurate calls ~ 500 - 1000 depth</span></span>
+<span><span class="va">flex_accuracy</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>        <span class="va">all_flex_files</span>,</span>
+<span>        id <span class="op">=</span> <span class="st">&quot;sample&quot;</span>,</span>
+<span>        show_col_types <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        col_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;chr&quot;</span>, <span class="st">&quot;alt&quot;</span>, <span class="st">&quot;depth&quot;</span>, <span class="st">&quot;count&quot;</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html">basename</a></span><span class="op">(</span><span class="va">sample</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;.txt&quot;</span><span class="op">)</span>,</span>
+<span>        alt <span class="op">=</span> <span class="fu">if_else</span><span class="op">(</span></span>
+<span>            <span class="va">alt</span> <span class="op">==</span> <span class="st">&quot;.&quot;</span>,</span>
+<span>            <span class="st">&quot;ref&quot;</span>,</span>
+<span>            <span class="st">&quot;variant&quot;</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">sample</span>, <span class="va">depth</span>, <span class="va">alt</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span>count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">count</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">sample</span>, <span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>total_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">count</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_wider</span><span class="op">(</span></span>
+<span>        id_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">sample</span>, <span class="va">depth</span>, <span class="va">total_count</span><span class="op">)</span>,</span>
+<span>        names_from <span class="op">=</span> <span class="st">&quot;alt&quot;</span>,</span>
+<span>        values_from <span class="op">=</span> <span class="st">&quot;count&quot;</span>,</span>
+<span>        values_fill <span class="op">=</span> <span class="fl">0</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>perc_wrong <span class="op">=</span> <span class="va">variant</span> <span class="op">/</span> <span class="va">total_count</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span></span>
+<span>        mean_total_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">total_count</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>        mean_perc_wrong <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">perc_wrong</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>        .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">depth</span> <span class="op">!=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">write_tsv</span><span class="op">(</span></span>
+<span>    <span class="va">flex_accuracy</span>,</span>
+<span>    <span class="st">&quot;output/flex/flex_accuracy.txt&quot;</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">accuracy_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">flex_accuracy</span>, <span class="va">depth</span> <span class="op">&lt;=</span> <span class="fl">50</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">mean_perc_wrong</span> <span class="op">/</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="co">#geom_smooth(alpha = 0.5) +</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_text</span><span class="op">(</span></span>
+<span>        data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">flex_accuracy</span>, <span class="va">depth</span> <span class="op">&lt;=</span> <span class="fl">10</span><span class="op">)</span>,</span>
+<span>        <span class="fu">aes</span><span class="op">(</span>label <span class="op">=</span> <span class="va">depth</span><span class="op">)</span>,</span>
+<span>        nudge_y <span class="op">=</span> <span class="fl">0.00001</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_y_continuous</span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_percent.html">label_percent</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">labs</span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">&quot;Percent Inaccurate Calls by Read Depth&quot;</span>,</span>
+<span>        x <span class="op">=</span> <span class="st">&quot;Read depth of variant calls&quot;</span>,</span>
+<span>        y <span class="op">=</span> <span class="st">&quot;% inaccurate variant calls&quot;</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/flex_accuracy_scatterplot.png&quot;</span>,</span>
+<span>    plot <span class="op">=</span> <span class="va">accuracy_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><p>:::</p>
+</section></section><section id="calculate-how-many-positions-covered-to-each-depth-by-normal-data" class="level2"><h2 class="anchored" data-anchor-id="calculate-how-many-positions-covered-to-each-depth-by-normal-data">Calculate how many positions covered to each depth by normal data</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb46"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">all_flex_files</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span></span>
+<span>        path <span class="op">=</span> <span class="st">&quot;output/flex/var_counts_d1&quot;</span>,</span>
+<span>        pattern <span class="op">=</span> <span class="st">&quot;.txt&quot;</span>,</span>
+<span>        full.names <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># In the future, break this down by mt vs non-mt to see if the non-mt are the weird inaccurate calls ~ 500 - 1000 depth</span></span>
+<span><span class="va">flex_accuracy</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>        <span class="va">all_flex_files</span>,</span>
+<span>        id <span class="op">=</span> <span class="st">&quot;sample&quot;</span>,</span>
+<span>        show_col_types <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        col_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;chr&quot;</span>, <span class="st">&quot;alt&quot;</span>, <span class="st">&quot;depth&quot;</span>, <span class="st">&quot;count&quot;</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html">basename</a></span><span class="op">(</span><span class="va">sample</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;.txt&quot;</span><span class="op">)</span>,</span>
+<span>        alt <span class="op">=</span> <span class="fu">if_else</span><span class="op">(</span></span>
+<span>            <span class="va">alt</span> <span class="op">==</span> <span class="st">&quot;.&quot;</span>,</span>
+<span>            <span class="st">&quot;ref&quot;</span>,</span>
+<span>            <span class="st">&quot;variant&quot;</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">sample</span>, <span class="va">depth</span>, <span class="va">alt</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span>count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">count</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">sample</span>, <span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>total_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">count</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_wider</span><span class="op">(</span></span>
+<span>        id_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">sample</span>, <span class="va">depth</span>, <span class="va">total_count</span><span class="op">)</span>,</span>
+<span>        names_from <span class="op">=</span> <span class="st">&quot;alt&quot;</span>,</span>
+<span>        values_from <span class="op">=</span> <span class="st">&quot;count&quot;</span>,</span>
+<span>        values_fill <span class="op">=</span> <span class="fl">0</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>perc_wrong <span class="op">=</span> <span class="va">variant</span> <span class="op">/</span> <span class="va">ref</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span></span>
+<span>        mean_total_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">total_count</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>        mean_perc_wrong <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">perc_wrong</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>        .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">depth</span> <span class="op">!=</span> <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="plot-how-many-sites-are-covered-at-each-depth" class="level2"><h2 class="anchored" data-anchor-id="plot-how-many-sites-are-covered-at-each-depth">Plot how many sites are covered at each depth</h2>
+</section><section id="plot-how-many-inaccurate-variant-calls-we-would-expect-at-each-depth" class="level2"><h2 class="anchored" data-anchor-id="plot-how-many-inaccurate-variant-calls-we-would-expect-at-each-depth">Plot how many inaccurate variant calls we would expect at each depth</h2>
+</section></section><section id="downsample-geo-samples-to-one-cell-and-quantify-read-depth-coverage" class="level1"><h1>Downsample GEO samples to one cell and quantify read depth coverage</h1>
+<section id="run-scanbit-on-individual-cells-with-min_read_depth-of-1-to-use-for-read-depth-and-accuracy-analysis" class="level2"><h2 class="anchored" data-anchor-id="run-scanbit-on-individual-cells-with-min_read_depth-of-1-to-use-for-read-depth-and-accuracy-analysis">Run scanBit on individual cells with min_read_depth of 1 to use for read depth and accuracy Analysis</h2>
+<p>For this I’m keeping ten individual cells per cluster, and each cell is assigned to its own cell_group so that I am calculating read depth data for many individual cells. ::: {.cell}</p>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb47"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">samples_geo</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span><span class="st">&quot;misc/validation_geo_metadata.tsv&quot;</span>, show_col_types <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grepl</a></span><span class="op">(</span><span class="st">&quot;tumor validation|healthy samples&quot;</span>, <span class="va">sample_group</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pull</span><span class="op">(</span><span class="va">Sample_ID</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">n_cell_cutoffs</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span></span>
+<span><span class="va">output</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/mclapply.html">mclapply</a></span><span class="op">(</span></span>
+<span>        <span class="va">samples_geo</span>,</span>
+<span>        mc.cores <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>        mc.preschedule <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        <span class="kw">function</span><span class="op">(</span><span class="va">this_sample</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="va">sobj</span> <span class="op">&lt;-</span></span>
+<span>                <span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qread.html">qread</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/seurat_objects/individual/&quot;</span>,</span>
+<span>                    <span class="va">this_sample</span>,</span>
+<span>                    <span class="st">&quot;_human.qs&quot;</span></span>
+<span>                <span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span>            <span class="va">sobj</span><span class="op">$</span><span class="va">cell_group</span> <span class="op">&lt;-</span></span>
+<span>                <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;clust_&quot;</span>,</span>
+<span>                    <span class="va">sobj</span><span class="op">$</span><span class="va">individ_clusters</span>,</span>
+<span>                    <span class="st">&quot;_&quot;</span>,</span>
+<span>                    <span class="va">sobj</span><span class="op">$</span><span class="va">cell_barcode</span></span>
+<span>                <span class="op">)</span></span>
+<span></span>
+<span>            <span class="fu">Idents</span><span class="op">(</span><span class="va">sobj</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">sobj</span><span class="op">$</span><span class="va">individ_clusters</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1337</span><span class="op">)</span></span>
+<span>            <span class="va">sobj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">sobj</span>, downsample <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span>            <span class="fu">Idents</span><span class="op">(</span><span class="va">sobj</span><span class="op">)</span> <span class="op">&lt;-</span></span>
+<span>                <span class="va">sobj</span><span class="op">$</span><span class="va">cell_group</span></span>
+<span></span>
+<span>            <span class="fu">scanbit_downsample_loop</span><span class="op">(</span></span>
+<span>                <span class="va">sobj</span>,</span>
+<span>                cutoff_vector <span class="op">=</span> <span class="va">n_cell_cutoffs</span>,</span>
+<span>                min_read_depth <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                out_dir_base <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/read_depth/scanbit_out/geo_samples/&quot;</span>,</span>
+<span>                    <span class="va">this_sample</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                keep_temp_dir <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                sample_label <span class="op">=</span> <span class="va">this_sample</span>,</span>
+<span>                ploidy <span class="op">=</span> <span class="st">&quot;GRCh38&quot;</span>,</span>
+<span>                ref_fasta <span class="op">=</span> <span class="st">&quot;/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa&quot;</span></span>
+<span>            <span class="op">)</span></span>
+<span>        <span class="op">}</span></span>
+<span>    <span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><p>:::</p>
+</section><section id="batch-job-to-count-site-coverage" class="level2"><h2 class="anchored" data-anchor-id="batch-job-to-count-site-coverage">Batch job to count site coverage</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> sbatchCmds/geo_bcf_depths.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Submitted batch job 7081157</code></pre>
+</div>
+</div>
+</section><section id="calculate-the-of-positions-covered-where-any-cell-has-a-variant" class="level2"><h2 class="anchored" data-anchor-id="calculate-the-of-positions-covered-where-any-cell-has-a-variant">Calculate the # of positions covered where any cell has a variant</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb50"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">all_var_files</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span></span>
+<span>        path <span class="op">=</span> <span class="st">&quot;output/read_depth/depths/bcf_depth&quot;</span>,</span>
+<span>        pattern <span class="op">=</span> <span class="st">&quot;variant_pos&quot;</span>,</span>
+<span>        full.names <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="va">var_depths</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>        <span class="va">all_var_files</span>,</span>
+<span>        id <span class="op">=</span> <span class="st">&quot;cell_sample&quot;</span>,</span>
+<span>        show_col_types <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        skip_empty_rows <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        cell_sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html">basename</a></span><span class="op">(</span><span class="va">cell_sample</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;variant_pos_&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;.txt&quot;</span><span class="op">)</span>,</span>
+<span>        group <span class="op">=</span> <span class="st">&quot;Variant sites&quot;</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="va">ave_var_depths</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">var_depths</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_wider</span><span class="op">(</span></span>
+<span>        names_from <span class="op">=</span> <span class="st">&quot;depth&quot;</span>,</span>
+<span>        values_from <span class="op">=</span> <span class="st">&quot;count&quot;</span>,</span>
+<span>        values_fill <span class="op">=</span> <span class="fl">0</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_longer</span><span class="op">(</span></span>
+<span>        cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">cell_sample</span>, <span class="op">-</span><span class="va">group</span><span class="op">)</span>,</span>
+<span>        names_to <span class="op">=</span> <span class="st">&quot;depth&quot;</span>,</span>
+<span>        values_to <span class="op">=</span> <span class="st">&quot;count&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span></span>
+<span>        mean_count_var <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span>,</span>
+<span>        se_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>        .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span>,</span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>depth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="va">depth</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">arrange</span><span class="op">(</span><span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">slice_head</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="compile-all-single-cell-variant-call-depths" class="level2"><h2 class="anchored" data-anchor-id="compile-all-single-cell-variant-call-depths">Compile all single-cell variant call depths</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb51"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">all_depth_files</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span></span>
+<span>        path <span class="op">=</span> <span class="st">&quot;output/read_depth/depths/bcf_depth&quot;</span>,</span>
+<span>        pattern <span class="op">=</span> <span class="st">&quot;bcf_depth_G&quot;</span>,</span>
+<span>        full.names <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="va">all_depths</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>        <span class="va">all_depth_files</span>,</span>
+<span>        id <span class="op">=</span> <span class="st">&quot;cell_sample&quot;</span>,</span>
+<span>        show_col_types <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        cell_sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html">basename</a></span><span class="op">(</span><span class="va">cell_sample</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;bcf_depth_&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;.txt&quot;</span><span class="op">)</span>,</span>
+<span>        group <span class="op">=</span> <span class="st">&quot;All sites&quot;</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="va">ave_depths</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">all_depths</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_wider</span><span class="op">(</span></span>
+<span>        names_from <span class="op">=</span> <span class="st">&quot;depth&quot;</span>,</span>
+<span>        values_from <span class="op">=</span> <span class="st">&quot;count&quot;</span>,</span>
+<span>        values_fill <span class="op">=</span> <span class="fl">0</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_longer</span><span class="op">(</span></span>
+<span>        cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">cell_sample</span>, <span class="op">-</span><span class="va">group</span><span class="op">)</span>,</span>
+<span>        names_to <span class="op">=</span> <span class="st">&quot;depth&quot;</span>,</span>
+<span>        values_to <span class="op">=</span> <span class="st">&quot;count&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span></span>
+<span>        mean_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span>,</span>
+<span>        se_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>        .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>depth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="va">depth</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">arrange</span><span class="op">(</span><span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">slice_head</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb52"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">site_covered_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span></span>
+<span>        data <span class="op">=</span> <span class="va">ave_depths</span>,</span>
+<span>        <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">mean_count</span><span class="op">)</span>,</span>
+<span>        color <span class="op">=</span> <span class="st">&quot;black&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span></span>
+<span>        data <span class="op">=</span> <span class="va">ave_var_depths</span>,</span>
+<span>        <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">mean_count_var</span><span class="op">)</span>,</span>
+<span>        color <span class="op">=</span> <span class="st">&quot;red&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_y_log10</span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_number.html">label_comma</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">labs</span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">&quot;Mean Sites Covered to a Given Depth&quot;</span>,</span>
+<span>        subtitle <span class="op">=</span> <span class="st">&quot;In Variant Call Data on Single Cells&quot;</span>,</span>
+<span>        x <span class="op">=</span> <span class="st">&quot;Depth&quot;</span>,</span>
+<span>        y <span class="op">=</span> <span class="st">&quot;Average number of positions covered&quot;</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/mean_coverage_1_cell.png&quot;</span>,</span>
+<span>    <span class="va">site_covered_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">jitter_coverage_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span><span class="op">(</span><span class="va">all_depths</span>, <span class="va">var_depths</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">depth</span> <span class="op">&lt;=</span> <span class="fl">20</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_wider</span><span class="op">(</span></span>
+<span>        names_from <span class="op">=</span> <span class="st">&quot;depth&quot;</span>,</span>
+<span>        values_from <span class="op">=</span> <span class="st">&quot;count&quot;</span>,</span>
+<span>        values_fill <span class="op">=</span> <span class="fl">0</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_longer</span><span class="op">(</span></span>
+<span>        cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">cell_sample</span>, <span class="op">-</span><span class="va">group</span><span class="op">)</span>,</span>
+<span>        names_to <span class="op">=</span> <span class="st">&quot;depth&quot;</span>,</span>
+<span>        values_to <span class="op">=</span> <span class="st">&quot;count&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        depth_factor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">fct_reorder</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="va">depth</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span></span>
+<span>        <span class="fu">aes</span><span class="op">(</span></span>
+<span>            x <span class="op">=</span> <span class="va">depth_factor</span>,</span>
+<span>            y <span class="op">=</span> <span class="va">count</span>,</span>
+<span>            color <span class="op">=</span> <span class="va">group</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_jitter</span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0</span>, alpha <span class="op">=</span> <span class="fl">0.5</span>, size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_y_log10</span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_number.html">label_comma</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="va">plot_cols</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">labs</span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">&quot;Number of Total and Non-reference Sites Covered by Single Cells at Varying Depths&quot;</span>,</span>
+<span>        x <span class="op">=</span> <span class="st">&quot;Read depth of variant call&quot;</span>,</span>
+<span>        y <span class="op">=</span> <span class="st">&quot;Number of sites covered at each depth&quot;</span>,</span>
+<span>        color <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">theme</span><span class="op">(</span></span>
+<span>        legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.9</span>, <span class="fl">0.9</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/total_and_nonref_site_coverage.pdf&quot;</span>,</span>
+<span>    <span class="va">jitter_coverage_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">6</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/rm.html">rm</a></span><span class="op">(</span><span class="va">all_depths</span>, <span class="va">var_depths</span>, <span class="va">ave_depths</span>, <span class="va">ave_var_depths</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="calculate-expected-number-of-mistakes-for-each-depth" class="level2"><h2 class="anchored" data-anchor-id="calculate-expected-number-of-mistakes-for-each-depth">Calculate expected number of mistakes for each depth</h2>
+<p>Based on flex accuracy calculations ::: {.cell}</p>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb53"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Make a named vector or accuracy - name is depth, value is % accurate</span></span>
+<span><span class="va">flex_accuracy_prop</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span><span class="st">&quot;output/flex/flex_accuracy.txt&quot;</span>, show_col_types <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pull</span><span class="op">(</span><span class="va">mean_perc_wrong</span>, name <span class="op">=</span> <span class="va">depth</span><span class="op">)</span> <span class="op">/</span> <span class="fl">100</span></span>
+<span></span>
+<span><span class="va">expected_mis_calls</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">ave_depths</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>exp_bad_variants <span class="op">=</span> <span class="va">mean_count</span> <span class="op">*</span> <span class="va">flex_accuracy_prop</span><span class="op">[</span><span class="va">depth</span><span class="op">]</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">expected_errors_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">expected_mis_calls</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">mean_count</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">&quot;black&quot;</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">exp_bad_variants</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">&quot;red&quot;</span>, size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_y_log10</span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_number.html">label_comma</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/expected_errors_1_cell.png&quot;</span>,</span>
+<span>    <span class="va">expected_errors_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><p>:::</p>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> sbatchCmds/count_single_cell_variant_calls.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Submitted batch job 7085040</code></pre>
+</div>
+</div>
+</section></section><section id="calculate-the-average-number-of-variants-actually-called-by-depth" class="level1"><h1>Calculate the average number of variants actually called by depth</h1>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb56"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">all_call_files</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span></span>
+<span>        path <span class="op">=</span> <span class="st">&quot;output/read_depth/depths/call_count&quot;</span>,</span>
+<span>        pattern <span class="op">=</span> <span class="st">&quot;bcf_calls_depth_G0&quot;</span>,</span>
+<span>        full.names <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="va">all_call_depths</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>        <span class="va">all_call_files</span>,</span>
+<span>        id <span class="op">=</span> <span class="st">&quot;cell_sample&quot;</span>,</span>
+<span>        show_col_types <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        col_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;chr&quot;</span>, <span class="st">&quot;alt&quot;</span>, <span class="st">&quot;depth&quot;</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        cell_sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html">basename</a></span><span class="op">(</span><span class="va">cell_sample</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;bcf_calls_depth_&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;.txt&quot;</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="va">average_num_calls</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">all_call_depths</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">depth</span>, <span class="va">cell_sample</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span>n_vars <span class="op">=</span> <span class="fu">n</span><span class="op">(</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">depth</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span>mean_n_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">n_vars</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">n_vars_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">average_num_calls</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">50</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">mean_n_vars</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">&quot;black&quot;</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">labs</span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">&quot;Average Number of Variants Called by Depth&quot;</span>,</span>
+<span>        subtitle <span class="op">=</span> <span class="st">&quot;In Variant Call Data on Single Cells&quot;</span>,</span>
+<span>        x <span class="op">=</span> <span class="st">&quot;Depth&quot;</span>,</span>
+<span>        y <span class="op">=</span> <span class="st">&quot;Mean number of variants called per cell&quot;</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/average_vars_1_cell.png&quot;</span>,</span>
+<span>    <span class="va">n_vars_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">calls_table</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">full_join</span><span class="op">(</span><span class="va">expected_mis_calls</span>, <span class="va">average_num_calls</span>, by <span class="op">=</span> <span class="st">&quot;depth&quot;</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="va">calls_summary_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">calls_table</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">rename</span><span class="op">(</span>wrong_variants <span class="op">=</span> <span class="va">exp_bad_variants</span>, called_variants <span class="op">=</span> <span class="va">mean_n_vars</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pivot_longer</span><span class="op">(</span></span>
+<span>        cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">wrong_variants</span>, <span class="va">called_variants</span><span class="op">)</span>,</span>
+<span>        names_to <span class="op">=</span> <span class="st">&quot;var_type&quot;</span>,</span>
+<span>        values_to <span class="op">=</span> <span class="st">&quot;count&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        var_type <span class="op">=</span> <span class="fu">str_replace</span><span class="op">(</span><span class="va">var_type</span>, <span class="st">&quot;_&quot;</span>, <span class="st">&quot; &quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_to_title</span><span class="op">(</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">depth</span> <span class="op">&lt;=</span> <span class="fl">50</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">count</span>, group <span class="op">=</span> <span class="va">depth</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="va">var_type</span>, shape <span class="op">=</span> <span class="va">var_type</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;black&quot;</span>, <span class="st">&quot;red&quot;</span><span class="op">)</span>, name <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_shape_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">19</span>, <span class="fl">4</span><span class="op">)</span>, name <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">labs</span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">&quot;Total and Inaccurate Variant Calls&quot;</span>,</span>
+<span>        x <span class="op">=</span> <span class="st">&quot;Depth&quot;</span>,</span>
+<span>        y <span class="op">=</span> <span class="st">&quot;Number of variant calls&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">theme</span><span class="op">(</span></span>
+<span>        legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.85</span>, <span class="fl">0.9</span><span class="op">)</span>,</span>
+<span>        legend.background <span class="op">=</span> <span class="fu">element_blank</span><span class="op">(</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/wrong_vs_called_nvars_1_cell.png&quot;</span>,</span>
+<span>    <span class="va">calls_summary_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">percent_wrong_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">calls_table</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">depth</span> <span class="op">&lt;=</span> <span class="fl">50</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">rename</span><span class="op">(</span>wrong_variants <span class="op">=</span> <span class="va">exp_bad_variants</span>, called_variants <span class="op">=</span> <span class="va">mean_n_vars</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>perc_wrong <span class="op">=</span> <span class="va">wrong_variants</span> <span class="op">/</span> <span class="va">called_variants</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span></span>
+<span>        <span class="fu">aes</span><span class="op">(</span></span>
+<span>            x <span class="op">=</span> <span class="va">depth</span>,</span>
+<span>            y <span class="op">=</span> <span class="va">perc_wrong</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_y_continuous</span><span class="op">(</span>labels <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/label_percent.html">label_percent</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">labs</span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">&quot;Percent of Inaccurate Variant Calls by Depth&quot;</span>,</span>
+<span>        x <span class="op">=</span> <span class="st">&quot;Depth&quot;</span>,</span>
+<span>        y <span class="op">=</span> <span class="st">&quot;Percent inaccurate variant calls&quot;</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/percent_wrong_1_cell.png&quot;</span>,</span>
+<span>    <span class="va">percent_wrong_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="downsample-each-sample-to-a-range-of-cells-per-cluster" class="level1"><h1>Downsample each sample to a range of cells per cluster</h1>
+<p>This is to test the minimum number of cells/reads needed to accurately identify genetically distinct populations.</p>
+<p>Also, I will use the data where I downsample to one cell to calculate coverage provided by one cell on average</p>
+<section id="here-i-am-going-to-downsample-the-mouse-samples-to-varying-number-of-cells-per-cluster-to-run-scanbit" class="level2"><h2 class="anchored" data-anchor-id="here-i-am-going-to-downsample-the-mouse-samples-to-varying-number-of-cells-per-cluster-to-run-scanbit">Here I am going to downsample the mouse samples to varying number of cells per cluster to run scanBit</h2>
+<p>This is to test how low we can go while the algorithm still works and provide bcf files to use to quantify coverage per cell in later analyses ::: {.cell}</p>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb57"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">merged_sobj_mouse_ctrls</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qread.html">qread</a></span><span class="op">(</span><span class="st">&quot;output/seurat_objects/merged/merged_norm_mouse.qs&quot;</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">min_n_cells</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
+<span></span>
+<span><span class="va">keep_clusters</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">merged_sobj_mouse_ctrls</span><span class="op">$</span><span class="va">cell_group</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">Freq</span> <span class="op">&gt;</span> <span class="va">min_n_cells</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pull</span><span class="op">(</span><span class="st">&quot;.&quot;</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Keep only clusters with &gt; min_n_cells cells</span></span>
+<span><span class="va">merged_sobj_mouse_ctrls</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">merged_sobj_mouse_ctrls</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">cell_group</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">keep_clusters</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Here, 500000 is forcing us to keep all the cells, so functions as a control</span></span>
+<span><span class="va">n_cell_cutoffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">100</span>, <span class="fl">500</span>, <span class="fl">500000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">scanbit_downsample_loop</span><span class="op">(</span></span>
+<span>    <span class="va">merged_sobj_mouse_ctrls</span>,</span>
+<span>    cutoff_vector <span class="op">=</span> <span class="va">n_cell_cutoffs</span>,</span>
+<span>    out_dir_base <span class="op">=</span> <span class="st">&quot;output/downsample/scanbit_out/mouse/&quot;</span>,</span>
+<span>    sample_label <span class="op">=</span> <span class="st">&quot;mouse&quot;</span>,</span>
+<span>    min_read_depth <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>    ploidy <span class="op">=</span> <span class="st">&quot;mm10&quot;</span>,</span>
+<span>    ref_fasta <span class="op">=</span> <span class="st">&quot;/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa&quot;</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><p>:::</p>
+</section><section id="loop-over-all-the-geo-human-datasets-and-run-scanbit" class="level2"><h2 class="anchored" data-anchor-id="loop-over-all-the-geo-human-datasets-and-run-scanbit">Loop over all the GEO human datasets and run scanBit</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb58"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">samples_geo</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span><span class="st">&quot;misc/validation_geo_metadata.tsv&quot;</span>, show_col_types <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grepl</a></span><span class="op">(</span><span class="st">&quot;tumor validation|healthy samples&quot;</span>, <span class="va">sample_group</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pull</span><span class="op">(</span><span class="va">Sample_ID</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">min_n_cells</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
+<span></span>
+<span><span class="va">n_cell_cutoffs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">100</span>, <span class="fl">500</span>, <span class="fl">500000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">output</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/mclapply.html">mclapply</a></span><span class="op">(</span></span>
+<span>        <span class="va">samples_geo</span>,</span>
+<span>        mc.cores <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>        mc.preschedule <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        <span class="kw">function</span><span class="op">(</span><span class="va">this_sample</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="va">sobj</span> <span class="op">&lt;-</span></span>
+<span>                <span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qread.html">qread</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/seurat_objects/individual/&quot;</span>,</span>
+<span>                    <span class="va">this_sample</span>,</span>
+<span>                    <span class="st">&quot;_human.qs&quot;</span></span>
+<span>                <span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span>            <span class="va">sobj</span><span class="op">$</span><span class="va">cell_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">&quot;clust_&quot;</span>, <span class="va">sobj</span><span class="op">$</span><span class="va">individ_clusters</span><span class="op">)</span></span>
+<span></span>
+<span>            <span class="va">keep_clusters</span> <span class="op">&lt;-</span></span>
+<span>                <span class="va">sobj</span><span class="op">$</span><span class="va">cell_group</span> <span class="op">%&gt;%</span></span>
+<span>                <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>                <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>                <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">Freq</span> <span class="op">&gt;</span> <span class="va">min_n_cells</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>                <span class="fu">pull</span><span class="op">(</span><span class="st">&quot;.&quot;</span><span class="op">)</span></span>
+<span></span>
+<span>            <span class="co"># Keep only clusters with &gt; min_n_cells cells</span></span>
+<span>            <span class="va">sobj</span> <span class="op">&lt;-</span></span>
+<span>                <span class="va">sobj</span> <span class="op">%&gt;%</span></span>
+<span>                <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">cell_group</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">keep_clusters</span><span class="op">)</span></span>
+<span></span>
+<span>            <span class="fu">Idents</span><span class="op">(</span><span class="va">sobj</span><span class="op">)</span> <span class="op">&lt;-</span></span>
+<span>                <span class="va">sobj</span><span class="op">$</span><span class="va">cell_group</span></span>
+<span></span>
+<span>            <span class="fu">scanbit_downsample_loop</span><span class="op">(</span></span>
+<span>                <span class="va">sobj</span>,</span>
+<span>                cutoff_vector <span class="op">=</span> <span class="va">n_cell_cutoffs</span>,</span>
+<span>                out_dir_base <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/downsample/scanbit_out/geo_samples/&quot;</span>,</span>
+<span>                    <span class="va">this_sample</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                sample_label <span class="op">=</span> <span class="va">this_sample</span>,</span>
+<span>                ploidy <span class="op">=</span> <span class="st">&quot;GRCh38&quot;</span>,</span>
+<span>                ref_fasta <span class="op">=</span> <span class="st">&quot;/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa&quot;</span></span>
+<span>            <span class="op">)</span></span>
+<span>        <span class="op">}</span></span>
+<span>    <span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="show-how-bootstrap-values-degrade-with-decreasing-cell-count-and-umi-per-pseudobulked-cluster" class="level2"><h2 class="anchored" data-anchor-id="show-how-bootstrap-values-degrade-with-decreasing-cell-count-and-umi-per-pseudobulked-cluster">Show how bootstrap values degrade with decreasing cell count and UMI per pseudobulked cluster</h2>
+<p>The data were gathered by hand since I don’t have a programatic way to pull the top node bootstrap values out of the pdfs ::: {.cell}</p>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb59"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">rna_per_run</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span></span>
+<span>        path <span class="op">=</span> <span class="st">&quot;output/downsample/scanbit_out&quot;</span>,</span>
+<span>        pattern <span class="op">=</span> <span class="st">&quot;cell_barcode_table*&quot;</span>,</span>
+<span>        recursive <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        full.names <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span>id <span class="op">=</span> <span class="st">&quot;run&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">select</span><span class="op">(</span><span class="op">-</span><span class="va">cell_barcode</span>, <span class="op">-</span><span class="va">bam_file</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        run <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html">basename</a></span><span class="op">(</span><span class="va">run</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;cell_barcode_table_&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">str_remove</span><span class="op">(</span><span class="st">&quot;_cells.txt&quot;</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">separate_wider_delim</span><span class="op">(</span></span>
+<span>        <span class="va">run</span>,</span>
+<span>        delim <span class="op">=</span> <span class="st">&quot;_&quot;</span>,</span>
+<span>        names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;sample&quot;</span>, <span class="st">&quot;cells&quot;</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span>cells <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">sample</span>, <span class="va">cells</span>, <span class="va">cell_group</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span>total_umi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">nCount_RNA</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">sample</span>, <span class="va">cells</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">summarize</span><span class="op">(</span>mean_umi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">total_umi</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">&quot;drop&quot;</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bootstrap_downsample_data</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">readxl</span><span class="fu">::</span><span class="fu"><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_xlsx</a></span><span class="op">(</span><span class="st">&quot;downsample_bootstrap_values.xlsx&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">full_join</span><span class="op">(</span><span class="va">rna_per_run</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">left_join</span><span class="op">(</span></span>
+<span>        <span class="fu">bind_rows</span><span class="op">(</span></span>
+<span>            <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>                <span class="st">&quot;misc/validation_geo_metadata.tsv&quot;</span>,</span>
+<span>                show_col_types <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>            <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>                <span class="fu">select</span><span class="op">(</span><span class="va">Sample_ID</span>, <span class="va">sample_group</span>, <span class="va">tumor_type</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>                <span class="fu">rename</span><span class="op">(</span>sample <span class="op">=</span> <span class="va">Sample_ID</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>                <span class="fu">distinct</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>            <span class="fu">tibble</span><span class="op">(</span>sample <span class="op">=</span> <span class="st">&quot;mouse&quot;</span>, sample_group <span class="op">=</span> <span class="st">&quot;Mouse&quot;</span><span class="op">)</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span></span>
+<span>        cells_char <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">cells_char</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">fct_reorder</span><span class="op">(</span><span class="va">cells</span><span class="op">)</span>,</span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">cells</span> <span class="op">&gt;</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">sample_group</span> <span class="op">!=</span> <span class="st">&quot;Mouse&quot;</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bootstrap_ncell_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">bootstrap_downsample_data</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span></span>
+<span>        <span class="fu">aes</span><span class="op">(</span></span>
+<span>            x <span class="op">=</span> <span class="va">cells_char</span>,</span>
+<span>            y <span class="op">=</span> <span class="va">bootstrap_val</span>,</span>
+<span>            group <span class="op">=</span> <span class="va">sample</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_boxplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>group <span class="op">=</span> <span class="va">cells</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">&quot;black&quot;</span>, fill <span class="op">=</span> <span class="st">&quot;lightgray&quot;</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggbeeswarm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggbeeswarm/man/geom_beeswarm.html">geom_beeswarm</a></span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="va">tumor_type</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span> <span class="va">sample_group</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">labs</span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">&quot;Top Level Bootstrap Values for Downsampled Data&quot;</span>,</span>
+<span>        subtitle <span class="op">=</span> <span class="st">&quot;Confidence When Using Only &#39;X&#39; Cells&quot;</span>,</span>
+<span>        x <span class="op">=</span> <span class="st">&quot;Cells per cluster&quot;</span>,</span>
+<span>        y <span class="op">=</span> <span class="st">&quot;Bootstrap value of top tree division&quot;</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/downsample_bootstrap_cells_plot.pdf&quot;</span>,</span>
+<span>    plot <span class="op">=</span> <span class="va">bootstrap_ncell_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">10</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bootstrap_numi_plot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">bootstrap_downsample_data</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">ggplot</span><span class="op">(</span></span>
+<span>        <span class="fu">aes</span><span class="op">(</span></span>
+<span>            x <span class="op">=</span> <span class="va">mean_umi</span>,</span>
+<span>            y <span class="op">=</span> <span class="va">bootstrap_val</span>,</span>
+<span>            group <span class="op">=</span> <span class="va">sample</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="va">tumor_type</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_vline</span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fl">250000</span>, color <span class="op">=</span> <span class="st">&quot;red&quot;</span>, linetype <span class="op">=</span> <span class="st">&quot;dashed&quot;</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span> <span class="va">sample_group</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">scale_x_continuous</span><span class="op">(</span></span>
+<span>        breaks <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/breaks_width.html">breaks_width</a></span><span class="op">(</span><span class="fl">5000000</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">labs</span><span class="op">(</span></span>
+<span>        title <span class="op">=</span> <span class="st">&quot;Top Level Bootstrap Values for Downsampled Data&quot;</span>,</span>
+<span>        subtitle <span class="op">=</span> <span class="st">&quot;Confidence When Using Only &#39;X&#39; UMIs per Cluster. Vertical line at 250,000&quot;</span>,</span>
+<span>        x <span class="op">=</span> <span class="st">&quot;Mean UMI per cluster&quot;</span>,</span>
+<span>        y <span class="op">=</span> <span class="st">&quot;Bootstrap value of top tree division&quot;</span>,</span>
+<span>        color <span class="op">=</span> <span class="st">&quot;Sample type&quot;</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">theme</span><span class="op">(</span></span>
+<span>        legend.position <span class="op">=</span> <span class="st">&quot;bottom&quot;</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/downsample_bootstrap_UMI_plot.pdf&quot;</span>,</span>
+<span>    plot <span class="op">=</span> <span class="va">bootstrap_numi_plot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">8</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><p>:::</p>
+</section></section><section id="look-at-how-well-scanbit-works-to-distinguish-b6-from-balbc" class="level1"><h1>Look at how well scanBit works to distinguish B6 from Balbc</h1>
+<section id="validate-with-b6-and-balbc" class="level2"><h2 class="anchored" data-anchor-id="validate-with-b6-and-balbc">Validate with B6 and Balbc</h2>
+<ul>
+<li>S0066 - B6 lung</li>
+<li>S0075 - Balbc lung ::: {.cell}</li>
+</ul>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb60"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">merged_norm_mouse</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qread.html">qread</a></span><span class="op">(</span><span class="st">&quot;output/seurat_objects/merged/merged_mouse.qs&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">JoinLayers</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">Sample_ID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;S0066&quot;</span>, <span class="st">&quot;S0074&quot;</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">process_seurat</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qsave.html">qsave</a></span><span class="op">(</span></span>
+<span>    <span class="va">merged_norm_mouse</span>,</span>
+<span>    <span class="st">&quot;output/seurat_objects/merged/merged_norm_mouse.qs&quot;</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">merged_norm_mouse</span><span class="op">$</span><span class="va">cell_group</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">write_lines</span><span class="op">(</span><span class="st">&quot;output/snv_processing/norm_mouse/keep_clusters.txt&quot;</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">norm_mouse_dimplot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">DimPlot</span><span class="op">(</span></span>
+<span>        <span class="va">merged_norm_mouse</span>,</span>
+<span>        group.by <span class="op">=</span> <span class="st">&quot;cell_group&quot;</span>,</span>
+<span>        label <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        label.box <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        repel <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">NoLegend</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/norm_mouse_dimplot_clusters.pdf&quot;</span>,</span>
+<span>    plot <span class="op">=</span> <span class="va">norm_mouse_dimplot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">10</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><p>:::</p>
+</section><section id="filter-the-merged-bcf-file-for-just-these-samples" class="level2"><h2 class="anchored" data-anchor-id="filter-the-merged-bcf-file-for-just-these-samples">Filter the merged bcf file for just these samples</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># conda activate scanBit_xkcd_1337 #! Do this before rendering the quarto doc</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cutoff <span class="kw">in</span> 5 10 20 30</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> <span class="dt">\</span></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>    view <span class="dt">\</span></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">-S</span> output/snv_processing/norm_mouse/keep_clusters.txt <span class="dt">\</span></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>    output/snv/mouse/mergedmouse_snvs_c<span class="va">${cutoff}</span>.bcf <span class="dt">\</span></span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">-o</span> output/snv_processing/norm_mouse/mergedmouse_snvs_c<span class="va">${cutoff}</span>_filtered.bcf</span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="make-trees-directly-from-merged-bcfs" class="level2"><h2 class="anchored" data-anchor-id="make-trees-directly-from-merged-bcfs">Make trees directly from merged bcfs</h2>
+<p>This is so the figures and downstream analyses only have B6 and BALB/c ::: {.cell}</p>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb62"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">min_snvs_per_cluster</span> <span class="op">&lt;-</span> <span class="fl">250</span></span>
+<span><span class="va">n_bootstraps</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
+<span><span class="va">bootstrap_cutoff</span> <span class="op">&lt;-</span> <span class="fl">0.95</span></span>
+<span></span>
+<span><span class="va">dist_worked</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/mclapply.html">mclapply</a></span><span class="op">(</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;5&quot;</span>, <span class="st">&quot;10&quot;</span>, <span class="st">&quot;20&quot;</span>, <span class="st">&quot;30&quot;</span><span class="op">)</span>,</span>
+<span>        mc.cores <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>        mc.preschedule <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        <span class="kw">function</span><span class="op">(</span><span class="va">cutoff</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="fu">group_clusters_by_dist</span><span class="op">(</span></span>
+<span>                merged_bcf_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/norm_mouse/mergedmouse_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_filtered.bcf&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                output_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/norm_mouse/mergedmouse_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_groups.txt&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                min_snvs_per_cluster <span class="op">=</span> <span class="va">min_snvs_per_cluster</span>,</span>
+<span>                n_bootstraps <span class="op">=</span> <span class="va">n_bootstraps</span>,</span>
+<span>                bootstrap_cutoff <span class="op">=</span> <span class="va">bootstrap_cutoff</span>,</span>
+<span>                tree_figure_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/norm_mouse/mergedmouse_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_tree.pdf&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                other_job_header_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;--time=8:00:00&quot;</span>,</span>
+<span>                    <span class="st">&quot;--partition=himem,general&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                other_batch_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;ml purge&quot;</span>,</span>
+<span>                    <span class="st">&quot;ml miniforge3&quot;</span>,</span>
+<span>                    <span class="st">&#39;eval &quot;$(conda shell.bash hook)&quot;&#39;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                sge_q <span class="op">=</span> <span class="st">&quot;&quot;</span>,</span>
+<span>                sge_parallel_environment <span class="op">=</span> <span class="st">&quot;&quot;</span></span>
+<span>            <span class="op">)</span></span>
+<span>        <span class="op">}</span></span>
+<span>    <span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><p>:::</p>
+</section><section id="section" class="level2"><h2 class="anchored" data-anchor-id="section"></h2>
+<p>I want to look over the merged bcfs and quantify the proportion of positions covered by n reads has a variant call.</p>
+<p>Then I want to compare these values between the flex data, where any variant call is artifactual and the B6 data, where an unknown proportion of variant calls at any depth are artifactual. This will allow me to estimate the false positive rate for SNV calls in the pipeline.</p>
+</section></section><section id="look-at-how-well-scanbit-can-distinguish-b6-from-f420-and-balbc-from-k7m2" class="level1"><h1>Look at how well scanBit can distinguish B6 from F420 and Balbc from K7M2</h1>
+<p>This is more similar to the situation found in patients where the tumor cells derive from the patient</p>
+<section id="test-b6-and-f420-split" class="level2"><h2 class="anchored" data-anchor-id="test-b6-and-f420-split">Test B6 and F420 split</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb63"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">b6_f420_samples</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>        <span class="st">&quot;misc/mouse_samples_Roberts_metadata.tsv&quot;</span>,</span>
+<span>        show_col_types <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grepl</a></span><span class="op">(</span><span class="st">&quot;B6|F420&quot;</span>, <span class="va">Name</span>, perl <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pull</span><span class="op">(</span><span class="va">Sample_ID</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">merged_mouse_b6_f420</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qread.html">qread</a></span><span class="op">(</span><span class="st">&quot;output/seurat_objects/merged/merged_mouse.qs&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">JoinLayers</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">Sample_ID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">b6_f420_samples</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">process_seurat</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qsave.html">qsave</a></span><span class="op">(</span></span>
+<span>    <span class="va">merged_mouse_b6_f420</span>,</span>
+<span>    <span class="st">&quot;output/seurat_objects/merged/merged_mouse_b6_f420.qs&quot;</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">merged_mouse_b6_f420</span><span class="op">$</span><span class="va">cell_group</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">write_lines</span><span class="op">(</span><span class="st">&quot;output/snv_processing/F420_K7M2/keep_clusters_b6_f420.txt&quot;</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">f420_b6_dimplot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">DimPlot</span><span class="op">(</span></span>
+<span>        <span class="va">merged_mouse_b6_f420</span>,</span>
+<span>        group.by <span class="op">=</span> <span class="st">&quot;cell_group&quot;</span>,</span>
+<span>        label <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        label.box <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        repel <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">NoLegend</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/b6_F420_dimplot_clusters.pdf&quot;</span>,</span>
+<span>    plot <span class="op">=</span> <span class="va">f420_b6_dimplot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">10</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="filter-the-merged-bcf-file-for-just-the-b6-and-f420-samples" class="level2"><h2 class="anchored" data-anchor-id="filter-the-merged-bcf-file-for-just-the-b6-and-f420-samples">Filter the merged bcf file for just the B6 and F420 samples</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co">#conda activate scanBit_xkcd_1337</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cutoff <span class="kw">in</span> 5 10 20 30</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> <span class="dt">\</span></span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>    view <span class="dt">\</span></span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">-S</span> output/snv_processing/F420_K7M2/keep_clusters_b6_f420.txt <span class="dt">\</span></span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>    output/snv/mouse/mergedmouse_snvs_c<span class="va">${cutoff}</span>.bcf <span class="dt">\</span></span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">-o</span> output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c<span class="va">${cutoff}</span>_filtered.bcf</span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="make-new-trees-and-output-files-with-just-b6-and-f420" class="level2"><h2 class="anchored" data-anchor-id="make-new-trees-and-output-files-with-just-b6-and-f420">Make new trees and output files with just B6 and F420</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb65"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">min_snvs_per_cluster</span> <span class="op">&lt;-</span> <span class="fl">250</span></span>
+<span><span class="va">n_bootstraps</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
+<span><span class="va">bootstrap_cutoff</span> <span class="op">&lt;-</span> <span class="fl">0.95</span></span>
+<span></span>
+<span><span class="va">dist_worked</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/mclapply.html">mclapply</a></span><span class="op">(</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;5&quot;</span>, <span class="st">&quot;10&quot;</span>, <span class="st">&quot;20&quot;</span>, <span class="st">&quot;30&quot;</span><span class="op">)</span>,</span>
+<span>        mc.cores <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>        mc.preschedule <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        <span class="kw">function</span><span class="op">(</span><span class="va">cutoff</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="fu">group_clusters_by_dist</span><span class="op">(</span></span>
+<span>                merged_bcf_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_filtered.bcf&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                output_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_groups.txt&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                min_snvs_per_cluster <span class="op">=</span> <span class="va">min_snvs_per_cluster</span>,</span>
+<span>                n_bootstraps <span class="op">=</span> <span class="va">n_bootstraps</span>,</span>
+<span>                bootstrap_cutoff <span class="op">=</span> <span class="va">bootstrap_cutoff</span>,</span>
+<span>                tree_figure_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_tree.pdf&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                other_job_header_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;--time=8:00:00&quot;</span>,</span>
+<span>                    <span class="st">&quot;--partition=himem,general&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                other_batch_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;ml purge&quot;</span>,</span>
+<span>                    <span class="st">&quot;ml miniforge3&quot;</span>,</span>
+<span>                    <span class="st">&#39;eval &quot;$(conda shell.bash hook)&quot;&#39;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                sge_q <span class="op">=</span> <span class="st">&quot;&quot;</span>,</span>
+<span>                sge_parallel_environment <span class="op">=</span> <span class="st">&quot;&quot;</span></span>
+<span>            <span class="op">)</span></span>
+<span>        <span class="op">}</span></span>
+<span>    <span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="prep-data-to-analyze-only-balbc-and-k7m2" class="level2"><h2 class="anchored" data-anchor-id="prep-data-to-analyze-only-balbc-and-k7m2">Prep data to analyze only Balbc and K7M2</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb66"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">balbc_k7m2_samples</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>        <span class="st">&quot;misc/mouse_samples_Roberts_metadata.tsv&quot;</span>,</span>
+<span>        show_col_types <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grepl</a></span><span class="op">(</span><span class="st">&quot;Balb|K7M2&quot;</span>, <span class="va">Name</span>, perl <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">pull</span><span class="op">(</span><span class="va">Sample_ID</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>        <span class="fu">read_tsv</span><span class="op">(</span></span>
+<span>            <span class="st">&quot;misc/mouse_samples_Roberts_realign_metadata.tsv&quot;</span>,</span>
+<span>            show_col_types <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>        <span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>            <span class="fu">pull</span><span class="op">(</span><span class="va">Sample_ID</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span><span class="va">merged_mouse_balbc_k7m2</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qread.html">qread</a></span><span class="op">(</span><span class="st">&quot;output/seurat_objects/merged/merged_mouse.qs&quot;</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">JoinLayers</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">Sample_ID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">balbc_k7m2_samples</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">process_seurat</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">qs</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/qs/man/qsave.html">qsave</a></span><span class="op">(</span></span>
+<span>    <span class="va">merged_mouse_balbc_k7m2</span>,</span>
+<span>    <span class="st">&quot;output/seurat_objects/merged/merged_mouse_balbc_k7m2.qs&quot;</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">merged_mouse_balbc_k7m2</span><span class="op">$</span><span class="va">cell_group</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">write_lines</span><span class="op">(</span><span class="st">&quot;output/snv_processing/F420_K7M2/keep_clusters_balbc_k7m2.txt&quot;</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">balbc_k7m2_dimplot</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">DimPlot</span><span class="op">(</span></span>
+<span>        <span class="va">merged_mouse_balbc_k7m2</span>,</span>
+<span>        group.by <span class="op">=</span> <span class="st">&quot;cell_group&quot;</span>,</span>
+<span>        label <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        label.box <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>        repel <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">NoLegend</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggsave</span><span class="op">(</span></span>
+<span>    <span class="st">&quot;output/figures/balbc_k7m2_dimplot_clusters.pdf&quot;</span>,</span>
+<span>    plot <span class="op">=</span> <span class="va">balbc_k7m2_dimplot</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">10</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="filter-the-merged-bcf-file-for-just-the-balbc-and-k7m2-samples" class="level2"><h2 class="anchored" data-anchor-id="filter-the-merged-bcf-file-for-just-the-balbc-and-k7m2-samples">Filter the merged bcf file for just the Balbc and K7M2 samples</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="co">#conda activate scanBit_xkcd_1337</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cutoff <span class="kw">in</span> 5 10 20 30</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a><span class="ex">bcftools</span> <span class="dt">\</span></span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>    view <span class="dt">\</span></span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">-S</span> output/snv_processing/F420_K7M2/keep_clusters_balbc_k7m2.txt <span class="dt">\</span></span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a>    output/snv/mouse/mergedmouse_snvs_c<span class="va">${cutoff}</span>.bcf <span class="dt">\</span></span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">-o</span> output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c<span class="va">${cutoff}</span>_filtered.bcf</span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="make-new-trees-for-just-balbc-and-k7m2" class="level2"><h2 class="anchored" data-anchor-id="make-new-trees-for-just-balbc-and-k7m2">Make new trees for just balbc and K7M2</h2>
+<div class="cell">
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb68"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">min_snvs_per_cluster</span> <span class="op">&lt;-</span> <span class="fl">250</span></span>
+<span><span class="va">n_bootstraps</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
+<span><span class="va">bootstrap_cutoff</span> <span class="op">&lt;-</span> <span class="fl">0.95</span></span>
+<span></span>
+<span><span class="va">dist_worked</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/mclapply.html">mclapply</a></span><span class="op">(</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">&quot;5&quot;</span>, <span class="st">&quot;10&quot;</span>, <span class="st">&quot;20&quot;</span>, <span class="st">&quot;30&quot;</span><span class="op">)</span>,</span>
+<span>        mc.cores <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>        mc.preschedule <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        <span class="kw">function</span><span class="op">(</span><span class="va">cutoff</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="fu">group_clusters_by_dist</span><span class="op">(</span></span>
+<span>                merged_bcf_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_filtered.bcf&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                output_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_groups.txt&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                min_snvs_per_cluster <span class="op">=</span> <span class="va">min_snvs_per_cluster</span>,</span>
+<span>                n_bootstraps <span class="op">=</span> <span class="va">n_bootstraps</span>,</span>
+<span>                bootstrap_cutoff <span class="op">=</span> <span class="va">bootstrap_cutoff</span>,</span>
+<span>                tree_figure_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c&quot;</span>,</span>
+<span>                    <span class="va">cutoff</span>,</span>
+<span>                    <span class="st">&quot;_tree.pdf&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                other_job_header_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;--time=8:00:00&quot;</span>,</span>
+<span>                    <span class="st">&quot;--partition=himem,general&quot;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                other_batch_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                    <span class="st">&quot;ml purge&quot;</span>,</span>
+<span>                    <span class="st">&quot;ml miniforge3&quot;</span>,</span>
+<span>                    <span class="st">&#39;eval &quot;$(conda shell.bash hook)&quot;&#39;</span></span>
+<span>                <span class="op">)</span>,</span>
+<span>                sge_q <span class="op">=</span> <span class="st">&quot;&quot;</span>,</span>
+<span>                sge_parallel_environment <span class="op">=</span> <span class="st">&quot;&quot;</span></span>
+<span>            <span class="op">)</span></span>
+<span>        <span class="op">}</span></span>
+<span>    <span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section></section><section id="test-scanbit-on-prostate-cancer" class="level1"><h1>Test scanBit on prostate cancer</h1>
 <p>This is a tumor type with low mutational burden</p>
 <p>##{{&lt; #include child_qmds/prostate_cancer.qmd &gt;}}</p>
 </section><section id="session-info" class="level1"><h1>Session info</h1>
 <div class="cell">
-<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details class="code-fold"><summary>Code</summary><div class="sourceCode" id="cb69"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details><div class="cell-output cell-output-stdout">
 <pre><code>R version 4.3.0 (2023-04-21)
 Platform: x86_64-pc-linux-gnu (64-bit)
@@ -7077,103 +8177,66 @@ other attached packages:
 [19] rrrSingleCellUtils_0.18.0 nichenetr_2.2.0          
 
 loaded via a namespace (and not attached):
-  [1] matrixStats_1.2.0           spatstat.sparse_3.1-0      
-  [3] bitops_1.0-7                httr_1.4.7                 
-  [5] RColorBrewer_1.1-3          doParallel_1.0.17          
-  [7] tools_4.3.0                 sctransform_0.4.1          
-  [9] backports_1.4.1             DT_0.32                    
- [11] utf8_1.2.4                  R6_2.5.1                   
- [13] lazyeval_0.2.2              uwot_0.1.16                
- [15] GetoptLong_1.0.5            withr_2.5.2                
- [17] fdrtool_1.2.17              progressr_0.14.0           
- [19] textshaping_0.3.7           Biobase_2.62.0             
- [21] cli_3.6.2                   spatstat.explore_3.3-1     
- [23] fastDummies_1.7.3           labeling_0.4.3             
- [25] sass_0.4.8                  spatstat.data_3.1-2        
- [27] randomForest_4.7-1.1        proxy_0.4-27               
- [29] ggridges_0.5.5              pbapply_1.7-2              
- [31] systemfonts_1.0.5           foreign_0.8-84             
- [33] parallelly_1.45.0           rstudioapi_0.15.0          
- [35] visNetwork_2.1.2            generics_0.1.3             
- [37] shape_1.4.6                 RApiSerialize_0.1.2        
- [39] crosstalk_1.2.1             vroom_1.6.5                
- [41] ica_1.0-3                   spatstat.random_3.3-1      
- [43] car_3.1-2                   Matrix_1.6-4               
- [45] fansi_1.0.6                 S4Vectors_0.40.2           
- [47] abind_1.4-5                 lifecycle_1.0.4            
- [49] yaml_2.3.8                  carData_3.0-5              
- [51] SummarizedExperiment_1.32.0 SparseArray_1.2.2          
- [53] recipes_1.0.9               Rtsne_0.17                 
- [55] grid_4.3.0                  promises_1.2.1             
- [57] crayon_1.5.2                miniUI_0.1.1.1             
- [59] lattice_0.21-8              cowplot_1.1.2              
- [61] pillar_1.9.0                knitr_1.45                 
- [63] ComplexHeatmap_2.18.0       GenomicRanges_1.54.1       
- [65] rjson_0.2.21                future.apply_1.11.1        
- [67] codetools_0.2-19            leiden_0.4.3.1             
- [69] glue_1.6.2                  spatstat.univar_3.0-0      
- [71] data.table_1.14.10          vctrs_0.6.5                
- [73] png_0.1-8                   spam_2.10-0                
- [75] gtable_0.3.4                cachem_1.0.8               
- [77] gower_1.0.1                 xfun_0.41                  
- [79] S4Arrays_1.2.0              mime_0.12                  
- [81] prodlim_2023.08.28          survival_3.5-5             
- [83] timeDate_4032.109           SingleCellExperiment_1.24.0
- [85] iterators_1.0.14            hardhat_1.3.0              
- [87] lava_1.7.3                  DiagrammeR_1.0.10          
- [89] ellipsis_0.3.2              fitdistrplus_1.1-11        
- [91] ROCR_1.0-11                 ipred_0.9-14               
- [93] nlme_3.1-162                bit64_4.0.5                
- [95] RcppAnnoy_0.0.21            GenomeInfoDb_1.38.8        
- [97] bslib_0.6.1                 irlba_2.3.5.1              
- [99] KernSmooth_2.23-20          rpart_4.1.19               
-[101] colorspace_2.1-0            BiocGenerics_0.48.1        
-[103] Hmisc_5.1-1                 nnet_7.3-18                
-[105] tidyselect_1.2.0            bit_4.0.5                  
-[107] compiler_4.3.0              extrafontdb_1.0            
-[109] htmlTable_2.4.2             DelayedArray_0.28.0        
-[111] plotly_4.10.3               stringfish_0.16.0          
-[113] shadowtext_0.1.2            checkmate_2.3.1            
-[115] scales_1.3.0                caTools_1.18.2             
-[117] lmtest_0.9-40               digest_0.6.33              
-[119] goftest_1.2-3               spatstat.utils_3.0-5       
-[121] rmarkdown_2.25              XVector_0.42.0             
-[123] htmltools_0.5.7             pkgconfig_2.0.3            
-[125] base64enc_0.1-3             extrafont_0.19             
-[127] MatrixGenerics_1.14.0       fastmap_1.1.1              
-[129] rlang_1.1.2                 GlobalOptions_0.1.2        
-[131] htmlwidgets_1.6.4           shiny_1.8.0                
-[133] jquerylib_0.1.4             farver_2.1.1               
-[135] zoo_1.8-12                  jsonlite_1.8.8             
-[137] ModelMetrics_1.2.2.2        RCurl_1.98-1.13            
-[139] magrittr_2.0.3              GenomeInfoDbData_1.2.11    
-[141] Formula_1.2-5               dotCall64_1.1-1            
-[143] munsell_0.5.0               Rcpp_1.0.11                
-[145] ggnewscale_0.4.9            reticulate_1.34.0          
-[147] stringi_1.8.4               pROC_1.18.5                
-[149] zlibbioc_1.48.0             MASS_7.3-58.4              
-[151] plyr_1.8.9                  parallel_4.3.0             
-[153] listenv_0.9.0               ggrepel_0.9.4              
-[155] deldir_2.0-2                splines_4.3.0              
-[157] tensor_1.5                  hms_1.1.3                  
-[159] circlize_0.4.15             igraph_2.0.3               
-[161] ggpubr_0.6.0                spatstat.geom_3.3-2        
-[163] ggsignif_0.6.4              RcppHNSW_0.5.0             
-[165] reshape2_1.4.4              stats4_4.3.0               
-[167] evaluate_0.23               RcppParallel_5.1.7         
-[169] tzdb_0.4.0                  foreach_1.5.2              
-[171] tweenr_2.0.2                httpuv_1.6.13              
-[173] Rttf2pt1_1.3.12             RANN_2.6.1                 
-[175] polyclip_1.10-6             qs_0.25.7                  
-[177] clue_0.3-65                 scattermore_1.2            
-[179] ggforce_0.4.1               broom_1.0.5                
-[181] xtable_1.8-4                e1071_1.7-14               
-[183] RSpectra_0.16-1             rstatix_0.7.2              
-[185] later_1.3.2                 ragg_1.2.7                 
-[187] viridisLite_0.4.2           class_7.3-21               
-[189] IRanges_2.36.0              cluster_2.1.4              
-[191] timechange_0.2.0            globals_0.18.0             
-[193] caret_6.0-94               </code></pre>
+  [1] matrixStats_1.2.0      spatstat.sparse_3.1-0  bitops_1.0-7          
+  [4] httr_1.4.7             RColorBrewer_1.1-3     doParallel_1.0.17     
+  [7] tools_4.3.0            sctransform_0.4.1      backports_1.4.1       
+ [10] utf8_1.2.4             R6_2.5.1               lazyeval_0.2.2        
+ [13] uwot_0.1.16            GetoptLong_1.0.5       withr_2.5.2           
+ [16] fdrtool_1.2.17         progressr_0.14.0       textshaping_0.3.7     
+ [19] cli_3.6.2              spatstat.explore_3.3-1 fastDummies_1.7.3     
+ [22] labeling_0.4.3         spatstat.data_3.1-2    randomForest_4.7-1.1  
+ [25] proxy_0.4-27           ggridges_0.5.5         pbapply_1.7-2         
+ [28] systemfonts_1.0.5      foreign_0.8-84         parallelly_1.45.0     
+ [31] readxl_1.4.3           rstudioapi_0.15.0      visNetwork_2.1.2      
+ [34] generics_0.1.3         shape_1.4.6            RApiSerialize_0.1.2   
+ [37] vroom_1.6.5            ica_1.0-3              spatstat.random_3.3-1 
+ [40] car_3.1-2              Matrix_1.6-4           ggbeeswarm_0.7.2      
+ [43] fansi_1.0.6            S4Vectors_0.40.2       abind_1.4-5           
+ [46] lifecycle_1.0.4        yaml_2.3.8             carData_3.0-5         
+ [49] recipes_1.0.9          Rtsne_0.17             grid_4.3.0            
+ [52] promises_1.2.1         crayon_1.5.2           miniUI_0.1.1.1        
+ [55] lattice_0.21-8         cowplot_1.1.2          pillar_1.9.0          
+ [58] knitr_1.45             ComplexHeatmap_2.18.0  rjson_0.2.21          
+ [61] future.apply_1.11.1    codetools_0.2-19       leiden_0.4.3.1        
+ [64] glue_1.6.2             spatstat.univar_3.0-0  data.table_1.14.10    
+ [67] vctrs_0.6.5            png_0.1-8              spam_2.10-0           
+ [70] cellranger_1.1.0       gtable_0.3.4           gower_1.0.1           
+ [73] xfun_0.41              mime_0.12              prodlim_2023.08.28    
+ [76] survival_3.5-5         timeDate_4032.109      iterators_1.0.14      
+ [79] hardhat_1.3.0          lava_1.7.3             DiagrammeR_1.0.10     
+ [82] ellipsis_0.3.2         fitdistrplus_1.1-11    ROCR_1.0-11           
+ [85] ipred_0.9-14           nlme_3.1-162           bit64_4.0.5           
+ [88] RcppAnnoy_0.0.21       irlba_2.3.5.1          vipor_0.4.7           
+ [91] KernSmooth_2.23-20     rpart_4.1.19           colorspace_2.1-0      
+ [94] BiocGenerics_0.48.1    Hmisc_5.1-1            nnet_7.3-18           
+ [97] tidyselect_1.2.0       bit_4.0.5              compiler_4.3.0        
+[100] extrafontdb_1.0        htmlTable_2.4.2        plotly_4.10.3         
+[103] stringfish_0.16.0      shadowtext_0.1.2       checkmate_2.3.1       
+[106] scales_1.3.0           caTools_1.18.2         lmtest_0.9-40         
+[109] digest_0.6.33          goftest_1.2-3          spatstat.utils_3.0-5  
+[112] rmarkdown_2.25         htmltools_0.5.7        pkgconfig_2.0.3       
+[115] base64enc_0.1-3        extrafont_0.19         fastmap_1.1.1         
+[118] rlang_1.1.2            GlobalOptions_0.1.2    htmlwidgets_1.6.4     
+[121] shiny_1.8.0            farver_2.1.1           zoo_1.8-12            
+[124] jsonlite_1.8.8         ModelMetrics_1.2.2.2   magrittr_2.0.3        
+[127] Formula_1.2-5          dotCall64_1.1-1        munsell_0.5.0         
+[130] Rcpp_1.0.11            ggnewscale_0.4.9       reticulate_1.34.0     
+[133] stringi_1.8.4          pROC_1.18.5            MASS_7.3-58.4         
+[136] plyr_1.8.9             parallel_4.3.0         listenv_0.9.0         
+[139] ggrepel_0.9.4          deldir_2.0-2           splines_4.3.0         
+[142] tensor_1.5             hms_1.1.3              circlize_0.4.15       
+[145] igraph_2.0.3           ggpubr_0.6.0           spatstat.geom_3.3-2   
+[148] ggsignif_0.6.4         RcppHNSW_0.5.0         reshape2_1.4.4        
+[151] stats4_4.3.0           evaluate_0.23          RcppParallel_5.1.7    
+[154] tzdb_0.4.0             foreach_1.5.2          tweenr_2.0.2          
+[157] httpuv_1.6.13          Rttf2pt1_1.3.12        RANN_2.6.1            
+[160] polyclip_1.10-6        qs_0.25.7              clue_0.3-65           
+[163] scattermore_1.2        ggforce_0.4.1          broom_1.0.5           
+[166] xtable_1.8-4           e1071_1.7-14           RSpectra_0.16-1       
+[169] rstatix_0.7.2          later_1.3.2            ragg_1.2.7            
+[172] viridisLite_0.4.2      class_7.3-21           beeswarm_0.4.0        
+[175] IRanges_2.36.0         cluster_2.1.4          timechange_0.2.0      
+[178] globals_0.18.0         caret_6.0-94          </code></pre>
 </div>
 </div>
 </section></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
