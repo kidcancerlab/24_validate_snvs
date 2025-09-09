@@ -25,6 +25,12 @@ for (this_sample in transgene_samples) {
         qs::qread(paste0("output/seurat_objects/individual/", this_sample, "_mouse.qs")) %>%
         PercentageFeatureSet(pattern = "^tumor", col.name = "tumor_marker_pct")
 
+    sobj_list[[this_sample]]$cell_group <- paste0(
+        sobj_list[[this_sample]]$cluster_label,
+        "_c",
+        sobj_list[[this_sample]]$individ_clusters
+    )
+
     tumor_markers <-
         grep(
             "^tumor",
@@ -32,25 +38,88 @@ for (this_sample in transgene_samples) {
             value = TRUE
         )
 
-    sobj_list[[this_sample]]$tumor_marker_count <-
-        FetchData(
-            sobj_list[[this_sample]],
-            vars = tumor_markers,
-            layer = "counts"
-        ) %>%
-        rowSums()
+    if (length(tumor_markers) > 0) {
+        sobj_list[[this_sample]]$tumor_marker_count <-
+            FetchData(
+                sobj_list[[this_sample]],
+                vars = tumor_markers,
+                layer = "counts"
+            ) %>%
+            rowSums()
 
-    sobj_list[[this_sample]]$tumor_cell <-
-        if_else(
-            sobj_list[[this_sample]]$tumor_marker_count > 0,
-            TRUE,
-            FALSE
+        sobj_list[[this_sample]]$tumor_cell <-
+            if_else(
+                sobj_list[[this_sample]]$tumor_marker_count > 0,
+                TRUE,
+                FALSE
+            )
+
+        this_plot <-
+            ((
+                DimPlot(
+                    sobj_list[[this_sample]],
+                    group.by = c("tumor_cell"),
+                    pt.size = 1.5,
+                    label = TRUE,
+                    label.box = TRUE,
+                    repel = TRUE
+                ) +
+                    NoLegend() +
+                    coord_fixed()
+            ) +
+                (
+                    DimPlot(
+                        sobj_list[[this_sample]],
+                        group.by = c("cell_group"),
+                        pt.size = 1.5,
+                        label = TRUE,
+                        label.box = TRUE,
+                        repel = TRUE
+                    ) +
+                        NoLegend() +
+                        coord_fixed()
+                )) /
+                (
+                    FeaturePlot(
+                        sobj_list[[this_sample]],
+                        features = "tumor_marker_count",
+                        order = TRUE,
+                        pt.size = 1.5
+                    ) +
+                        coord_fixed()
+                )
+
+        ggsave(
+            paste0("output/figures/transgene/", this_sample, "_plots.pdf"),
+            plot = this_plot,
+            width = 15,
+            height = 15
         )
-
-    print(paste(this_sample, ":", mean(sobj_list[[this_sample]]$tumor_marker_pct)))
-    print(grep("^tumor", rownames(sobj_list[[this_sample]]), value = TRUE))
-    print(table(sobj_list[[this_sample]]$tumor_cell, sobj_list[[this_sample]]$seurat_clusters) %>% prop.table(margin = 2))
+    } else {
+        sobj_list[[this_sample]] <- NULL
+    }
 }
+
+merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
+    as_tibble() %>%
+    select(Sample_ID, tumor_cell, individ_clusters, cluster_label) %>%
+    mutate(
+        cell_group =
+            paste0(
+                cluster_label,
+                "_c",
+                individ_clusters
+            )
+    ) %>%
+    select(-individ_clusters, cluster_label) %>%
+    group_by(Sample_ID, cell_group, tumor_cell) %>%
+    summarize(n = n(), .groups = "drop") %>%
+    group_by(Sample_ID, cell_group) %>%
+    mutate(proportion = n / sum(n)) %>%
+    filter(tumor_cell == TRUE) %>%
+    arrange(desc(proportion)) %>%
+    write_tsv("output/snv_processing/transgene/transgene_tumor_clust.txt")
+
 
 VlnPlot(sobj_list[["G0010"]], features = c("tumor_marker_pct", "tumor_marker_count"))
 DimPlot(sobj_list[["G0016"]], group.by = "tumor_cell")
@@ -59,35 +128,62 @@ DimPlot(sobj_list[["G0016"]], group.by = "tumor_cell")
 ## Look at lineage tracing barcodes
 
 ```{r transgene_ltbc}
-stuff <-
-    tenx_load_qc(
-        "/home/gdrobertslab/lab/Counts_2/S0261/filtered_feature_bc_matrix",
-        violin_plot = FALSE
-    ) %>%
-    process_seurat()
+ltbc_samples <- c("S0261", "S0262")
 
-ltbc_table <- gen_cellecta_bc_data(
-    "/home/gdrobertslab/lab/Counts_2/S0260/possorted_genome_bam.bam",
-    samtools_module = "GCC/9.3.0 SAMtools/1.10", verbose = TRUE
-)
+for (this_sample in ltbc_samples) {
+    sobj <-
+        qs::qread(paste0(
+            "output/seurat_objects/individual/",
+            this_sample,
+            "_mouse.qs"
+        ))
 
-ltbc_sub <-
-    ltbc_table %>%
-    mutate(
-        cid = paste0(cid, "-1"),
-        barcode = paste0(lt_14, "_", lt_30),
-        has_barcode = TRUE
-    ) %>%
-    select(-lt_14, -lt_30) %>%
-    group_by(cid) %>%
-    slice_head(n = 1) %>%
-    column_to_rownames("cid")
-
-stuff <-
-    AddMetaData(
-        stuff,
-        ltbc_sub
+    ltbc_table <- gen_cellecta_bc_data(
+        paste0(
+            "/home/gdrobertslab/lab/Counts_2/",
+            this_sample,
+            "/possorted_genome_bam.bam"
+        ),
+        samtools_module = "GCC/9.3.0 SAMtools/1.10", verbose = TRUE
     )
+
+    ltbc_sub <-
+        ltbc_table %>%
+        mutate(
+            cid = paste0(cid, "-1"),
+            barcode = paste0(lt_14, "_", lt_30),
+            has_barcode = TRUE
+        ) %>%
+        select(-lt_14, -lt_30) %>%
+        group_by(cid) %>%
+        slice_head(n = 1) %>%
+        column_to_rownames("cid")
+
+    sobj <-
+        AddMetaData(
+            stuff,
+            ltbc_sub
+        )
+
+    # replace data missing from ltbc_table with values
+
+    sobj$tumor_marker_count <-
+        FetchData(
+            sobj,
+            vars = tumor_markers,
+            layer = "counts"
+        ) %>%
+        rowSums()
+
+    sobj$tumor_cell <-
+        if_else(
+            sobj$tumor_marker_count > 0,
+            TRUE,
+            FALSE
+        )
+}
+
+
 
 DimPlot(
     stuff,
