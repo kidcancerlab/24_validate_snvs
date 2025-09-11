@@ -422,6 +422,7 @@ shared_sites <-
 
 shared_sites %>%
     filter(sample == "G0001" & cutoff == 1) %>%
+    mutate(shared_sites = as.integer(shared_sites)) %>%
     select(cell_1, cell_2, shared_sites) %>%
     pivot_wider(
         names_from = cell_2,
@@ -431,6 +432,9 @@ shared_sites %>%
     column_to_rownames("cell_1") %>%
     pheatmap::pheatmap(
         silent = TRUE,
+        display_numbers = TRUE,
+        fontsize_number = 3,
+        number_format =  "%.0f",
         fontsize = 5,
         filename = "output/figures/shared_sites_G0001_c1.pdf",
         width = 10,
@@ -439,6 +443,7 @@ shared_sites %>%
 
 shared_sites_histograms <-
     shared_sites %>%
+    filter(cutoff != "1") %>%
     ggplot(
         aes(
             x = shared_sites,
@@ -454,7 +459,7 @@ shared_sites_histograms <-
     ) +
     labs(
         title = "Distribution of Number of Genomic Positions With Shared Variant\nInformation Between Two Cells",
-        subtitle = "For sites where any cell has a non-reference variant call",
+        subtitle = "For sites where either cell has a non-reference variant call",
         x = "Shared covered genomic positions",
         y = "Count",
         fill = "Minimum read depth\nto call variants"
@@ -469,6 +474,7 @@ ggsave(
 
 shared_sites %>%
     group_by(cutoff) %>%
+    filter(cutoff != "1") %>%
     summarize(
         mean_shared_sites = mean(shared_sites),
         median_shared_sites = median(shared_sites)
