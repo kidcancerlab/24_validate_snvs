@@ -1,14 +1,7 @@
 import argparse
 import sys
-# import multiprocessing
-# from itertools import repeat, chain
 from pysam import VariantFile
 import numpy as np
-# from scipy.cluster.hierarchy import linkage, dendrogram
-# from scipy.spatial.distance import squareform
-# import matplotlib
-# import matplotlib.pyplot as plt
-# matplotlib.use('pdf')
 
 ################################################################################
 ### Code
@@ -57,10 +50,10 @@ def main():
 def get_n_shared_pos_from_bcf(bcf_file,
                               max_prop_missing,
                               threads):
-    dist_key_dict = {'00':            0.5,
-                     '01':            0.5,
-                     '10':            0.5,
-                     '11':            0.5,
+    dist_key_dict = {'00':            1,
+                     '01':            2,
+                     '10':            4,
+                     '11':            8,
                      '(None, None)':  0}
     ### Check if bcf index exists
     bcf_in = VariantFile(bcf_file, threads = threads)
@@ -76,19 +69,31 @@ def get_n_shared_pos_from_bcf(bcf_file,
     ])
 
     # Convert genotype tuples to strings and look up in dist_key_dict
+    # Rows are sites and columns are samples
     genotype_matrix = np.array([
         [dist_key_dict.get(''.join(map(str, gt)), np.nan) for gt in sample_genotypes]
         for sample_genotypes in genotype_tuples
     ])
 
     # Filter out variant positions seen in less than x% of samples
-    percent_missing = np.sum(np.isnan(genotype_matrix), axis=1) / len(samples)
-    genotype_matrix = genotype_matrix[percent_missing <= max_prop_missing]
+    #!!! I don't think I want to do this since the question I'm asking is how
+    #!!! many variant positions have shared data between cells
+    #percent_missing = np.sum(np.isnan(genotype_matrix), axis=1) / len(samples)
+    #genotype_matrix = genotype_matrix[percent_missing <= max_prop_missing]
 
-    differences = np.abs(genotype_matrix[:, :, np.newaxis]
-                         + genotype_matrix[:, np.newaxis, :])
+    sum_per_site = \
+        genotype_matrix[:, :, np.newaxis] + \
+        genotype_matrix[:, np.newaxis, :]
 
-    n_shared_pos = np.apply_along_axis(np.nansum, 0, differences)
+    # This is getting rid of sites where both samples are reference and not informative
+    sum_per_site[sum_per_site == 2] = np.nan
+
+    # This makes it so that when we sum up across sites, we get the number of shared sites
+    sum_per_site[sum_per_site > 2] = 1
+
+    # The upper triangle is a matrix of sum where rows and columns are samples
+    # The diagonal is the number of sites per sample
+    n_shared_pos = np.apply_along_axis(np.nansum, 0, sum_per_site)
 
     return n_shared_pos, samples
 
