@@ -419,27 +419,36 @@ shared_sites <-
     ) %>%
     bind_rows()
 
-
-shared_sites %>%
-    filter(sample == "G0001" & cutoff == 1) %>%
-    mutate(shared_sites = as.integer(shared_sites)) %>%
-    select(cell_1, cell_2, shared_sites) %>%
-    pivot_wider(
-        names_from = cell_2,
-        values_from = shared_sites,
-        values_fill = NA
-    ) %>%
-    column_to_rownames("cell_1") %>%
-    pheatmap::pheatmap(
-        silent = TRUE,
-        display_numbers = TRUE,
-        fontsize_number = 3,
-        number_format =  "%.0f",
-        fontsize = 5,
-        filename = "output/figures/shared_sites_G0001_c1.pdf",
-        width = 10,
-        height = 10
-    )
+for (this_sample in unique(shared_sites$sample)) {
+    shared_sites %>%
+        filter(sample == this_sample & cutoff == 1) %>%
+        mutate(shared_sites = as.integer(shared_sites)) %>%
+        select(cell_1, cell_2, shared_sites) %>%
+        pivot_wider(
+            names_from = cell_2,
+            values_from = shared_sites,
+            values_fill = NA
+        ) %>%
+        column_to_rownames("cell_1") %>%
+        pheatmap::pheatmap(
+            silent = TRUE,
+            display_numbers = TRUE,
+            fontsize_number = 2,
+            number_format =  "%.0f",
+            fontsize = 5,
+            filename = paste0(
+                "output/figures/shared_sites/shared_sites_",
+                this_sample,
+                "_c1.pdf"
+            ),
+            width = 10,
+            height = 10,
+            main = paste0(
+                "Number of Sites Shared Between Individual Cells for Sample ",
+                this_sample
+            )
+        )
+}
 
 shared_sites_histograms <-
     shared_sites %>%
@@ -463,13 +472,16 @@ shared_sites_histograms <-
         x = "Shared covered genomic positions",
         y = "Count",
         fill = "Minimum read depth\nto call variants"
+    ) +
+    theme(
+        legend.position = "none"
     )
 
 ggsave(
-    "output/figures/shared_sites_histograms.pdf",
+    "output/figures/shared_sites/shared_sites_histograms.pdf",
     plot = shared_sites_histograms,
     width = 8,
-    height = 8
+    height = 5
 )
 
 shared_sites %>%

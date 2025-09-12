@@ -59,6 +59,7 @@ for directoryName in \
     output/figures \
     output/figures/qc_cutoffs \
     output/figures/transgene \
+    output/figures/shared_sites \
     output/seurat_objects/individual \
     output/seurat_objects/merged \
     output/downsample/scanbit_out \

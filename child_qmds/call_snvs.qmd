@@ -216,7 +216,7 @@ snp_tree <-
     )
 ```
 
-## Prep the mouse samples with GFP/RFP from GEO
+## Prep the mouse samples with GFP/RFP
 ```{r scanbit_prep_mouse_gfp_rfp}
 #| dependson: [read_raw_mouse_geo]
 transgene_samples <-
@@ -228,13 +228,22 @@ transgene_samples <-
     pull(Sample_ID) %>%
     unique()
 
+roberts_transgene_samples <-
+    read_tsv(
+        "misc/mouse_samples_Roberts_realign_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    pull(Sample_ID)
+
+transgene_samples <- c(transgene_samples, roberts_transgene_samples)
+
 samples_worked <-
     parallel::mclapply(
         transgene_samples,
         mc.cores = 5,
         mc.preschedule = FALSE,
         function(this_sample) {
-            samples_worked[[this_sample]] <- scanbit_one_sample(
+            scanbit_one_sample(
                 this_sample = this_sample,
                 species = "mouse",
                 ploidy = "mm10",
@@ -267,7 +276,7 @@ samples_worked <-
         mc.cores = 5,
         mc.preschedule = FALSE,
         function(this_sample) {
-            samples_worked[[this_sample]] <- scanbit_one_sample(
+            scanbit_one_sample(
                 this_sample = this_sample,
                 species = "human",
                 ploidy = "GRCh38",

@@ -1,6 +1,6 @@
 ## Read in datasets and count the tumor transgene markers
 ```{r transgene_read}
-#| dependson: []
+#| dependson: [scanbit_prep_mouse_gfp_rfp]
 transgene_samples <-
     read_tsv(
         "misc/validation_geo_metadata.tsv",
@@ -22,7 +22,11 @@ transgene_samples <- c(transgene_samples, roberts_transgene_samples)
 sobj_list <- list()
 for (this_sample in transgene_samples) {
     sobj_list[[this_sample]] <-
-        qs::qread(paste0("output/seurat_objects/individual/", this_sample, "_mouse.qs")) %>%
+        qs::qread(paste0(
+            "output/seurat_objects/individual/",
+            this_sample,
+            "_mouse.qs"
+        )) %>%
         PercentageFeatureSet(pattern = "^tumor", col.name = "tumor_marker_pct")
 
     sobj_list[[this_sample]]$cell_group <- paste0(
@@ -30,6 +34,24 @@ for (this_sample in transgene_samples) {
         "_c",
         sobj_list[[this_sample]]$individ_clusters
     )
+
+    for (this_cutoff in c(5, 10, 20, 30)) {
+        sobj_list[[this_sample]] <- add_snv_group_to_sobj(
+            sobj_list[[this_sample]],
+            snv_group_file = paste0(
+                "output/snv/transgene/snvs_",
+                this_sample,
+                "_",
+                this_cutoff,
+                "_groups.txt"
+            ),
+            new_columns = paste0(
+                c("snv_group_", "snv_top_lvl_group_"),
+                this_cutoff
+            ),
+            cell_group = "cell_group"
+        )
+    }
 
     tumor_markers <-
         grep(
@@ -58,7 +80,7 @@ for (this_sample in transgene_samples) {
             ((
                 DimPlot(
                     sobj_list[[this_sample]],
-                    group.by = c("tumor_cell"),
+                    group.by = c("cell_group"),
                     pt.size = 1.5,
                     label = TRUE,
                     label.box = TRUE,
@@ -70,7 +92,7 @@ for (this_sample in transgene_samples) {
                 (
                     DimPlot(
                         sobj_list[[this_sample]],
-                        group.by = c("cell_group"),
+                        group.by = c("tumor_cell"),
                         pt.size = 1.5,
                         label = TRUE,
                         label.box = TRUE,
@@ -79,6 +101,18 @@ for (this_sample in transgene_samples) {
                         NoLegend() +
                         coord_fixed()
                 )) /
+                ((
+                    DimPlot(
+                        sobj_list[[this_sample]],
+                        group.by = c("snv_top_lvl_group_10"),
+                        pt.size = 1.5,
+                        label = TRUE,
+                        label.box = TRUE,
+                        repel = TRUE
+                    ) +
+                        NoLegend() +
+                        coord_fixed()
+                ) +
                 (
                     FeaturePlot(
                         sobj_list[[this_sample]],
@@ -87,7 +121,7 @@ for (this_sample in transgene_samples) {
                         pt.size = 1.5
                     ) +
                         coord_fixed()
-                )
+                ))
 
         ggsave(
             paste0("output/figures/transgene/", this_sample, "_plots.pdf"),
