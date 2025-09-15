@@ -162,6 +162,7 @@ DimPlot(sobj_list[["G0016"]], group.by = "tumor_cell")
 ## Look at lineage tracing barcodes
 
 ```{r transgene_ltbc}
+#| eval: FALSE
 ltbc_samples <- c("S0261", "S0262")
 
 for (this_sample in ltbc_samples) {
@@ -195,7 +196,7 @@ for (this_sample in ltbc_samples) {
 
     sobj <-
         AddMetaData(
-            stuff,
+            sobj,
             ltbc_sub
         )
 
@@ -220,7 +221,7 @@ for (this_sample in ltbc_samples) {
 
 
 DimPlot(
-    stuff,
+    sobj,
     group.by = "has_barcode"
 )
 ```
