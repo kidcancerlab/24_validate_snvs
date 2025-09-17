@@ -60,6 +60,30 @@ output <-
 sbatch sbatchCmds/geo_bcf_depths.sh
 ```
 
+## Calculate stats on nCount_RNA for single cell data
+```{r readdepth_ncount_rna_stats}
+#| dependson: [readdepth_scanbit]
+
+list.files(
+    path = "output/read_depth/scanbit_out/geo_samples",
+    pattern = "cell_barcode_table_.+_1_cells.txt",
+    recursive = TRUE,
+    full.names = TRUE
+) %>%
+    read_tsv(
+        id = "sample",
+        show_col_types = FALSE
+    ) %>%
+    summarize(
+        mean_ncount = mean(nCount_RNA),
+        median_ncount = median(nCount_RNA),
+        min_ncount = min(nCount_RNA),
+        max_ncount = max(nCount_RNA)
+    ) %>%
+    write_tsv("output/read_depth/ncount_summary.tsv")
+
+```
+
 ## Calculate the # of positions covered where any cell has a variant
 ```{r readdepth_var_positions}
 #| cache.vars: [var_depths, ave_var_depths]
@@ -99,12 +123,18 @@ ave_var_depths <-
     group_by(depth) %>%
     summarize(
         mean_count_var = mean(count),
+        median_count_var = median(count),
         se_count = sd(count) / sqrt(n()),
         .groups = "drop",
     ) %>%
     mutate(depth = as.numeric(depth)) %>%
     arrange(depth) %>%
     slice_head(n = 30)
+
+write_tsv(
+    ave_var_depths,
+    "output/read_depth/n_var_count_summary.tsv"
+)
 ```
 
 ## Compile all single-cell variant call depths
@@ -131,6 +161,7 @@ all_depths <-
 
 ave_depths <-
     all_depths %>%
+    filter(depth != 1) %>%
     pivot_wider(
         names_from = "depth",
         values_from = "count",
@@ -144,15 +175,22 @@ ave_depths <-
     group_by(depth) %>%
     summarize(
         mean_count = mean(count),
+        median_count_var = median(count),
         se_count = sd(count) / sqrt(n()),
         .groups = "drop"
     ) %>%
     mutate(depth = as.numeric(depth)) %>%
     arrange(depth) %>%
-    slice_head(n = 50)
+    slice_head(n = 30)
+
+write_tsv(
+    ave_depths,
+    "output/read_depth/n_covered_count_summary.tsv"
+)
 ```
 
 ```{r readdepth_plot_coverage}
+
 site_covered_plot <-
     ggplot() +
     geom_point(
@@ -168,21 +206,22 @@ site_covered_plot <-
     scale_y_log10(labels = scales::label_comma()) +
     labs(
         title = "Mean Sites Covered to a Given Depth",
-        subtitle = "In Variant Call Data on Single Cells",
+        subtitle = "Red: mean variable sites; Black: mean total sites",
         x = "Depth",
         y = "Average number of positions covered"
     )
 
 ggsave(
-    "output/figures/mean_coverage_1_cell.png",
+    "output/figures/mean_coverage_1_cell.pdf",
     site_covered_plot,
     width = 6,
     height = 4
 )
 
+set.seed(1337) # For jitter
 jitter_coverage_plot <-
     rbind(all_depths, var_depths) %>%
-    filter(depth <= 20) %>%
+    filter(depth <= 20 & depth != 1) %>%
     pivot_wider(
         names_from = "depth",
         values_from = "count",
@@ -224,7 +263,7 @@ ggsave(
     height = 6
 )
 
-rm(all_depths, var_depths, ave_depths, ave_var_depths)
+rm(all_depths, var_depths, ave_var_depths)
 ```
 
 ## Calculate expected number of mistakes for each depth
@@ -245,7 +284,14 @@ expected_errors_plot <-
     head(n = 100) %>%
     ggplot() +
     geom_point(aes(x = depth, y = mean_count), color = "black") +
-    geom_point(aes(x = depth, y = exp_bad_variants), color = "red", size = 2) +
+    geom_point(
+        aes(
+            x = depth,
+            y = exp_bad_variants
+        ),
+        color = "red",
+        size = 2
+    ) +
     scale_y_log10(labels = scales::label_comma())
 
 ggsave(
@@ -290,7 +336,7 @@ average_num_calls <-
 
 n_vars_plot <-
     average_num_calls %>%
-    head(n = 50) %>%
+    filter(depth <= 30) %>%
     ggplot() +
     geom_point(aes(x = depth, y = mean_n_vars), color = "black") +
     labs(
@@ -301,15 +347,15 @@ n_vars_plot <-
     )
 
 ggsave(
-    "output/figures/average_vars_1_cell.png",
+    "output/figures/average_vars_1_cell.pdf",
     n_vars_plot,
     width = 6,
     height = 4
 )
 
 calls_table <-
-    full_join(expected_mis_calls, average_num_calls, by = "depth")
-
+    full_join(expected_mis_calls, average_num_calls, by = "depth") %>%
+    filter(depth != 1)
 
 calls_summary_plot <-
     calls_table %>%
@@ -323,7 +369,7 @@ calls_summary_plot <-
         var_type = str_replace(var_type, "_", " ") %>%
             str_to_title()
     ) %>%
-    filter(depth <= 50) %>%
+    filter(depth <= 30) %>%
     ggplot(aes(x = depth, y = count, group = depth)) +
     geom_line() +
     geom_point(aes(color = var_type, shape = var_type), size = 2) +
@@ -331,6 +377,7 @@ calls_summary_plot <-
     scale_shape_manual(values = c(19, 4), name = NULL) +
     labs(
         title = "Total and Inaccurate Variant Calls",
+        subtitle = "For pseudobulked osteosarcoma and bone samples",
         x = "Depth",
         y = "Number of variant calls"
     ) +
@@ -340,17 +387,25 @@ calls_summary_plot <-
     )
 
 ggsave(
-    "output/figures/wrong_vs_called_nvars_1_cell.png",
+    "output/figures/wrong_vs_called_nvars_1_cell.pdf",
     calls_summary_plot,
     width = 6,
     height = 4
 )
 
-percent_wrong_plot <-
+percent_wrong_table <-
     calls_table %>%
-    filter(depth <= 50) %>%
+    filter(depth <= 30 & depth != 1) %>%
     rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
-    mutate(perc_wrong = wrong_variants / called_variants) %>%
+    mutate(perc_wrong = wrong_variants / called_variants)
+
+write_tsv(
+    percent_wrong_table,
+    file = "output/read_depth/percent_wrong_table.tsv"
+)
+
+percent_wrong_plot <-
+    percent_wrong_table %>%
     ggplot(
         aes(
             x = depth,
@@ -363,10 +418,11 @@ percent_wrong_plot <-
         title = "Percent of Inaccurate Variant Calls by Depth",
         x = "Depth",
         y = "Percent inaccurate variant calls"
-    )
+    ) +
+    theme_bw()
 
 ggsave(
-    "output/figures/percent_wrong_1_cell.png",
+    "output/figures/percent_wrong_1_cell.pdf",
     percent_wrong_plot,
     width = 6,
     height = 4
@@ -397,8 +453,7 @@ parse_shared <- function(file_name) {
     ) |>
         mutate(
             dataset = str_remove(dataset, ".+shared_") |>
-                str_remove(".txt")#,
-            #cell_1 = str_replace(cell_1, "-", ".")
+                str_remove(".txt")
         ) |>
         pivot_longer(
             cols = starts_with("clust"),
