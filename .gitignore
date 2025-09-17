@@ -1,5 +1,6 @@
 #Folders that will be recreated by running code
 output
+output_old
 input
 custom_ref
 counts
@@ -21,3 +22,4 @@ small_fastq_alignment
 slurmOut
 .vscode
 24_validate_snvs_cache
+24_validate_snvs_files
