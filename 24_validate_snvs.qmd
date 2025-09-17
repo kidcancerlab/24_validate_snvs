@@ -26,6 +26,7 @@ lightbox: true
 
 ```{r setup}
 #| include: FALSE
+#| cache: FALSE
 library(rrrSingleCellUtils)
 library(Seurat)
 library(tidyverse)
@@ -76,6 +77,8 @@ for directoryName in \
     output/snv/transgene/ \
     output/snv_processing/norm_mouse/ \
     output/snv_processing/transgene \
+    output/snv_processing/F420_K7M2 \
+    output/flex/var_counts_d1 \
     input \
     input/fastqs \
     custom_ref
@@ -156,13 +159,6 @@ Note that in the sample_metadata, for samples with multiple references, the cuto
 
 {{< include child_qmds/read_depth_analysis.qmd >}}
 
-# Downsample each sample to a range of cells per cluster
-This is to test the minimum number of cells/reads needed to accurately identify genetically distinct populations.
-
-Also, I will use the data where I downsample to one cell to calculate coverage provided by one cell on average
-
-{{< include child_qmds/downsample_analysis.qmd >}}
-
 # Look at how well scanBit works to distinguish B6 from Balbc
 
 {{< include child_qmds/test_mouse_strains.qmd >}}
@@ -172,11 +168,16 @@ This is more similar to the situation found in patients where the tumor cells de
 
 {{< include child_qmds/F420_K7M2_analysis.qmd >}}
 
-# Test scanBit on prostate cancer
-This is a tumor type with low mutational burden
+# Downsample each sample to a range of cells per cluster
+This is to test the minimum number of cells/reads needed to accurately identify genetically distinct populations.
 
-##{{< #include child_qmds/prostate_cancer.qmd >}}
+Also, I will use the data where I downsample to one cell to calculate coverage provided by one cell on average
 
+{{< include child_qmds/downsample_analysis.qmd >}}
+
+# Look at samples from tumors with transgene markers
+
+{{< include child_qmds/evaluate_tumor_markers.qmd >}}
 
 
 # Session info
