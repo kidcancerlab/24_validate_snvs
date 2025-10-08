@@ -63,7 +63,6 @@ sbatch sbatchCmds/geo_bcf_depths.sh
 ## Calculate stats on nCount_RNA for single cell data
 ```{r readdepth_ncount_rna_stats}
 #| dependson: [readdepth_scanbit]
-
 list.files(
     path = "output/read_depth/scanbit_out/geo_samples",
     pattern = "cell_barcode_table_.+_1_cells.txt",
@@ -81,7 +80,6 @@ list.files(
         max_ncount = max(nCount_RNA)
     ) %>%
     write_tsv("output/read_depth/ncount_summary.tsv")
-
 ```
 
 ## Calculate the # of positions covered where any cell has a variant
@@ -128,8 +126,9 @@ ave_var_depths <-
         .groups = "drop",
     ) %>%
     mutate(depth = as.numeric(depth)) %>%
-    arrange(depth) %>%
-    slice_head(n = 30)
+    arrange(desc(depth)) %>%
+    mutate(cum_count_var = cumsum(mean_count_var)) %>%
+    arrange(depth)
 
 write_tsv(
     ave_var_depths,
@@ -180,8 +179,9 @@ ave_depths <-
         .groups = "drop"
     ) %>%
     mutate(depth = as.numeric(depth)) %>%
-    arrange(depth) %>%
-    slice_head(n = 30)
+    arrange(desc(depth)) %>%
+    mutate(cum_count_var = cumsum(mean_count)) %>%
+    arrange(depth)
 
 write_tsv(
     ave_depths,
@@ -190,16 +190,15 @@ write_tsv(
 ```
 
 ```{r readdepth_plot_coverage}
-
 site_covered_plot <-
     ggplot() +
     geom_point(
-        data = ave_depths,
+        data = ave_depths %>% filter(depth <= 30),
         aes(x = depth, y = mean_count),
         color = "black"
     ) +
     geom_point(
-        data = ave_var_depths,
+        data = ave_var_depths %>% filter(depth <= 30),
         aes(x = depth, y = mean_count_var),
         color = "red"
     ) +
@@ -221,10 +220,16 @@ ggsave(
 set.seed(1337) # For jitter
 jitter_coverage_plot <-
     rbind(all_depths, var_depths) %>%
+    group_by(group, cell_sample) %>%
+    arrange(desc(depth), .by_group = TRUE) %>%
+    mutate(cum_count = cumsum(count)) %>%
+    arrange(depth, .by_group = TRUE) %>%
+    ungroup() %>%
     filter(depth <= 20 & depth != 1) %>%
+    select(-count) %>%
     pivot_wider(
         names_from = "depth",
-        values_from = "count",
+        values_from = "cum_count",
         values_fill = 0
     ) %>%
     pivot_longer(
@@ -247,9 +252,9 @@ jitter_coverage_plot <-
     scale_y_log10(labels = scales::label_comma()) +
     scale_color_manual(values = plot_cols[1:2]) +
     labs(
-        title = "Number of Total and Non-reference Sites Covered by Single Cells at Varying Depths",
-        x = "Read depth of variant call",
-        y = "Number of sites covered at each depth",
+        title = "Number of Total and Non-reference Sites Covered by Single Cells Using Varying Cutoffs",
+        x = "Read depth cutoff",
+        y = "Number of sites covered when using read-depth cutoff of X",
         color = NULL
     ) +
     theme(
@@ -395,9 +400,18 @@ ggsave(
 
 percent_wrong_table <-
     calls_table %>%
-    filter(depth <= 30 & depth != 1) %>%
     rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
-    mutate(perc_wrong = wrong_variants / called_variants)
+    mutate(perc_wrong = wrong_variants / called_variants) %>%
+    arrange(desc(depth)) %>%
+    mutate(
+        mean_count = replace_na(mean_count, 0),
+        called_variants = replace_na(called_variants, 0),
+        wrong_variants = replace_na(wrong_variants, 0),
+        cum_sites_cov = cumsum(mean_count),
+        cum_var_sites = cumsum(called_variants),
+        cum_wrong_vars = cumsum(wrong_variants)
+    ) %>%
+    arrange(depth)
 
 write_tsv(
     percent_wrong_table,
@@ -406,6 +420,7 @@ write_tsv(
 
 percent_wrong_plot <-
     percent_wrong_table %>%
+    filter(depth <= 30) %>%
     ggplot(
         aes(
             x = depth,
