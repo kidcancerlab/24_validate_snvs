@@ -94,6 +94,7 @@ snp_tree <-
         min_snvs_per_cluster = 5,
         n_bootstraps = 10000,
         max_prop_missing_at_site = 0.9,
+        tree_image_type = "pdf",
         cleanup = FALSE,
         other_job_header_options = c(
             "--time=8:00:00",
@@ -203,6 +204,7 @@ snp_tree <-
         min_snvs_per_cluster = 200,
         n_bootstraps = 10000,
         max_prop_missing_at_site = 0.9,
+        tree_image_type = "pdf",
         cleanup = TRUE,
         other_job_header_options = c(
             "--time=8:00:00",
