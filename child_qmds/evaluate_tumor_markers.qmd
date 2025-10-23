@@ -17,7 +17,15 @@ roberts_transgene_samples <-
     ) %>%
     pull(Sample_ID)
 
-transgene_samples <- c(transgene_samples, roberts_transgene_samples)
+ltbc_transgene_samples <- c("S0260", "S0261")
+
+transgene_samples <- c(
+    transgene_samples,
+    roberts_transgene_samples,
+    ltbc_transgene_samples
+)
+
+plot_point_size <- 0.5
 
 sobj_list <- list()
 for (this_sample in transgene_samples) {
@@ -72,8 +80,8 @@ for (this_sample in transgene_samples) {
         sobj_list[[this_sample]]$tumor_cell <-
             if_else(
                 sobj_list[[this_sample]]$tumor_marker_count > 0,
-                TRUE,
-                FALSE
+                "Has transgene",
+                "No transgene"
             )
 
         this_plot <-
@@ -81,7 +89,7 @@ for (this_sample in transgene_samples) {
                 DimPlot(
                     sobj_list[[this_sample]],
                     group.by = c("cell_group"),
-                    pt.size = 1.5,
+                    pt.size = plot_point_size,
                     label = TRUE,
                     label.box = TRUE,
                     repel = TRUE
@@ -93,7 +101,7 @@ for (this_sample in transgene_samples) {
                     DimPlot(
                         sobj_list[[this_sample]],
                         group.by = c("tumor_cell"),
-                        pt.size = 1.5,
+                        pt.size = plot_point_size,
                         label = TRUE,
                         label.box = TRUE,
                         repel = TRUE
@@ -105,7 +113,7 @@ for (this_sample in transgene_samples) {
                     DimPlot(
                         sobj_list[[this_sample]],
                         group.by = c("snv_top_lvl_group_10"),
-                        pt.size = 1.5,
+                        pt.size = plot_point_size,
                         label = TRUE,
                         label.box = TRUE,
                         repel = TRUE
@@ -113,15 +121,15 @@ for (this_sample in transgene_samples) {
                         NoLegend() +
                         coord_fixed()
                 ) +
-                (
-                    FeaturePlot(
-                        sobj_list[[this_sample]],
-                        features = "tumor_marker_count",
-                        order = TRUE,
-                        pt.size = 1.5
-                    ) +
-                        coord_fixed()
-                ))
+                    (
+                        FeaturePlot(
+                            sobj_list[[this_sample]],
+                            features = "tumor_marker_count",
+                            order = TRUE,
+                            pt.size = plot_point_size
+                        ) +
+                            coord_fixed()
+                    ))
 
         ggsave(
             paste0("output/figures/transgene/", this_sample, "_plots.pdf"),
@@ -150,7 +158,7 @@ merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
     summarize(n = n(), .groups = "drop") %>%
     group_by(Sample_ID, cell_group) %>%
     mutate(proportion = n / sum(n)) %>%
-    filter(tumor_cell == TRUE) %>%
+    filter(tumor_cell == "Has transgene") %>%
     arrange(desc(proportion)) %>%
     write_tsv("output/snv_processing/transgene/transgene_tumor_clust.txt")
 
@@ -163,65 +171,189 @@ DimPlot(sobj_list[["G0016"]], group.by = "tumor_cell")
 
 ```{r transgene_ltbc}
 #| eval: FALSE
-ltbc_samples <- c("S0261", "S0262")
+ltbc_samples <- c("S0260", "S0261")
 
-for (this_sample in ltbc_samples) {
-    sobj <-
-        qs::qread(paste0(
-            "output/seurat_objects/individual/",
-            this_sample,
-            "_mouse.qs"
-        ))
+marker_table <-
+    parallel::mclapply(
+        ltbc_samples,
+        mc.cores = 2,
+        function(this_sample) {
+            sobj <-
+                qs::qread(paste0(
+                    "output/seurat_objects/individual/",
+                    this_sample,
+                    "_mouse.qs"
+                ))
 
-    ltbc_table <- gen_cellecta_bc_data(
-        paste0(
-            "/home/gdrobertslab/lab/Counts_2/",
-            this_sample,
-            "/possorted_genome_bam.bam"
-        ),
-        samtools_module = "GCC/9.3.0 SAMtools/1.10", verbose = TRUE
-    )
+            ltbc_table <- gen_cellecta_bc_data(
+                paste0(
+                    "/home/gdrobertslab/lab/Counts_2/",
+                    this_sample,
+                    "/possorted_genome_bam.bam"
+                ),
+                samtools_module = "GCC/9.3.0 SAMtools/1.10", verbose = TRUE
+            )
 
-    ltbc_sub <-
-        ltbc_table %>%
-        mutate(
-            cid = paste0(cid, "-1"),
-            barcode = paste0(lt_14, "_", lt_30),
-            has_barcode = TRUE
-        ) %>%
-        select(-lt_14, -lt_30) %>%
-        group_by(cid) %>%
-        slice_head(n = 1) %>%
-        column_to_rownames("cid")
+            ltbc_sub <-
+                ltbc_table %>%
+                mutate(
+                    cid = paste0(cid, "-1"),
+                    barcode = paste0(lt_14, "_", lt_30),
+                    has_barcode = TRUE
+                ) %>%
+                select(-lt_14, -lt_30) %>%
+                group_by(cid) %>%
+                mutate(tumor_marker_count = n()) %>%
+                slice_head(n = 1) %>%
+                column_to_rownames("cid")
 
-    sobj <-
-        AddMetaData(
-            sobj,
-            ltbc_sub
-        )
+            sobj <-
+                AddMetaData(
+                    sobj,
+                    ltbc_sub
+                )
 
-    # replace data missing from ltbc_table with values
+            # replace data missing from ltbc_table with values
+            sobj$tumor_marker_count <-
+                if_else(
+                    is.na(sobj$tumor_marker_count),
+                    0,
+                    sobj$tumor_marker_count
+                )
 
-    sobj$tumor_marker_count <-
-        FetchData(
-            sobj,
-            vars = tumor_markers,
-            layer = "counts"
-        ) %>%
-        rowSums()
+            sobj$has_barcode <-
+                if_else(
+                    is.na(sobj$has_barcode),
+                    FALSE,
+                    sobj$has_barcode
+                )
 
-    sobj$tumor_cell <-
-        if_else(
-            sobj$tumor_marker_count > 0,
-            TRUE,
-            FALSE
-        )
-}
+            sobj$tumor_cell <-
+                if_else(
+                    sobj$tumor_marker_count > 0,
+                    "Has transgene",
+                    "No transgene"
+                )
 
+            marker_table <-
+                sobj@meta.data %>%
+                as_tibble() %>%
+                select(
+                    Sample_ID,
+                    tumor_cell,
+                    individ_clusters,
+                    cluster_label
+                ) %>%
+                mutate(
+                    cell_group =
+                        paste0(
+                            cluster_label,
+                            "_c",
+                            individ_clusters
+                        )
+                ) %>%
+                select(-individ_clusters, cluster_label) %>%
+                group_by(Sample_ID, cell_group, tumor_cell) %>%
+                summarize(n = n(), .groups = "drop") %>%
+                group_by(Sample_ID, cell_group) %>%
+                mutate(proportion = n / sum(n)) %>%
+                filter(tumor_cell == "Has transgene") %>%
+                arrange(desc(proportion))
 
+            return(marker_table)
+        }
+    ) %>%
+    bind_rows()
 
-DimPlot(
-    sobj,
-    group.by = "has_barcode"
+write_tsv(
+    marker_table,
+    "output/snv_processing/transgene/transgene_tumor_clust_ltbc.txt"
 )
 ```
+
+```{r transgene_match}
+snv_groups <-
+    list.files(
+        path = "output/snv/transgene",
+        pattern = "10_groups.txt",
+        full.names = TRUE
+    ) %>%
+    read_tsv(
+        show_col_types = FALSE,
+        id = "sample",
+        col_names = c(
+            "cell_group",
+            "group",
+            "top_lvl_group"
+        )
+    ) %>%
+    mutate(
+        Sample_ID = str_remove(sample, ".+/snvs_") %>%
+            str_remove("_10_groups.txt")
+    ) %>%
+    select(-sample) %>%
+    group_by(Sample_ID) %>%
+    mutate(n_groups = length(unique(top_lvl_group))) %>%
+    ungroup() %>%
+    mutate(
+        top_lvl_group = if_else(
+            n_groups == 1,
+            NA,
+            top_lvl_group
+        )
+    )
+
+min_transgene_prop <- 0.2
+
+transgene_groups <-
+    read_tsv(
+        c(
+            "output/snv_processing/transgene/transgene_tumor_clust.txt",
+            "output/snv_processing/transgene/transgene_tumor_clust_ltbc.txt"
+        ),
+        show_col_types = FALSE
+    ) # %>%
+# filter(proportion > min_transgene_prop)
+
+transgene_plot <-
+    full_join(snv_groups, transgene_groups) %>%
+    filter(Sample_ID != "S0123") %>% # this sample had no detected transgene
+    mutate(
+        top_lvl_group = if_else(
+            is.na(top_lvl_group),
+            "No SNV groups",
+            if_else(
+                top_lvl_group == "top_lvl_group0",
+                "Tumor by SNV",
+                "Non-tumor by SNV"
+            )
+        ),
+        proportion = replace_na(proportion, 0)
+    ) %>%
+    ggplot(
+        aes(
+            color = top_lvl_group,
+            x = proportion,
+            y = Sample_ID
+        )
+    ) +
+    ggbeeswarm::geom_beeswarm(cex = 1, size = 2) +
+    labs(
+        x = "Proportion of cells in cluster with transgene",
+        y = "Samples",
+        title = "Concordance Between SNV Tumor Identification and Truthset",
+        color = NULL
+    ) +
+    theme(
+        legend.position = "inside",
+        legend.position.inside = c(0.88, 0.9)
+    )
+
+ggsave(
+    "output/figures/transgene_beeswarm_plot.pdf",
+    transgene_plot,
+    width = 8,
+    height = 6
+)
+```
+

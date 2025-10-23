@@ -237,7 +237,13 @@ roberts_transgene_samples <-
     ) %>%
     pull(Sample_ID)
 
-transgene_samples <- c(transgene_samples, roberts_transgene_samples)
+ltbc_transgene_samples <- c("S0260", "S0261")
+
+transgene_samples <- c(
+    transgene_samples,
+    roberts_transgene_samples,
+    ltbc_transgene_samples
+)
 
 samples_worked <-
     parallel::mclapply(
