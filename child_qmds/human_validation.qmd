@@ -1,0 +1,67 @@
+## Plot bootstraps from human sample validation
+```{r human_val_bootstraps}
+bootstrap_pointplot <-
+    read_tsv(
+        "output/human_bootstraps.txt",
+        show_col_types = FALSE
+    ) %>%
+    pivot_longer(
+        cols = -sample,
+        names_to = "cutoff",
+        values_to = "bootstrap"
+    ) %>%
+    mutate(
+        cutoff = str_remove(cutoff, "c") %>%
+            factor(levels = c("5", "10", "20", "30"))
+    ) %>%
+    left_join(
+        read_tsv(
+            "misc/validation_geo_metadata.tsv",
+            show_col_types = FALSE
+        ) %>%
+            select("Sample_ID", "tumor_type", "sample_group") %>%
+            distinct() %>%
+            filter(
+                sample_group %in%
+                    c("tumor validation", "healthy samples")
+            ) %>%
+            rename(sample = "Sample_ID") %>%
+            mutate(
+                sample_group = str_remove(sample_group, " .+") %>%
+                    str_to_sentence(),
+                tumor_type = str_replace(tumor_type, "healthy", "Healthy"),
+            ),
+        by = "sample"
+    ) %>%
+    ggplot(
+        aes(
+            x = cutoff,
+            y = bootstrap,
+            color = tumor_type,
+            shape = sample_group
+        )
+    ) +
+    ggbeeswarm::geom_beeswarm(cex = 3, size = 4) +
+    scale_shape_manual(values = c(18, 16)) +
+    scale_color_manual(values = c(
+        "#fecc5c",
+        "blue",
+        "#fd8d3c",
+        "#bd0026"
+    )) +
+    labs(
+        x = "Minimum read depth cutoff",
+        y = "Top node bootstrap value",
+        color = "Tumor type",
+        shape = "Tumor or healthy",
+        title = "Top Node Bootstrap Value of Human Tumor and Normal Samples"
+    )
+
+ggsave(
+    "output/figures/human_bootstrap_beeswarm.pdf",
+    bootstrap_pointplot,
+    width = 8,
+    height = 6
+)
+```
+
