@@ -24,7 +24,8 @@ norm_mouse_dimplot <-
         group.by = "cell_group",
         label = TRUE,
         label.box = TRUE,
-        repel = TRUE
+        repel = TRUE,
+        pt.size = 0.75
     ) +
     NoLegend()
 
