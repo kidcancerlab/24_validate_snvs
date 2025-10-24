@@ -1,4 +1,64 @@
 ## Read in datasets and count the tumor transgene markers
+```{r transgene_panel_plot}
+transgene_panel_plot <- function(sobj, sample_name, plot_point_size = 0.5) {
+    panel_plot <-
+        ((
+            DimPlot(
+                sobj,
+                group.by = "cell_group",
+                pt.size = plot_point_size,
+                label = TRUE,
+                label.box = TRUE,
+                repel = TRUE
+            ) +
+                NoLegend() +
+                coord_fixed()
+        ) +
+            (
+                DimPlot(
+                    sobj,
+                    group.by = "tumor_cell",
+                    pt.size = plot_point_size,
+                    label = TRUE,
+                    label.box = TRUE,
+                    repel = TRUE
+                ) +
+                    NoLegend() +
+                    coord_fixed()
+            )) /
+            ((
+                DimPlot(
+                    sobj,
+                    group.by = "snv_top_lvl_group_10",
+                    pt.size = plot_point_size,
+                    label = TRUE,
+                    label.box = TRUE,
+                    repel = TRUE
+                ) +
+                    NoLegend() +
+                    coord_fixed()
+            ) +
+                (
+                    FeaturePlot(
+                        sobj,
+                        features = "tumor_marker_count",
+                        order = TRUE,
+                        pt.size = plot_point_size
+                    ) +
+                        coord_fixed()
+                ))
+
+    ggplot2::ggsave(
+        paste0("output/figures/transgene/", sample_name, "_plots.pdf"),
+        plot = panel_plot,
+        width = 15,
+        height = 15
+    )
+
+    return()
+}
+```
+
 ```{r transgene_read}
 #| dependson: [scanbit_prep_mouse_gfp_rfp]
 transgene_samples <-
@@ -17,12 +77,12 @@ roberts_transgene_samples <-
     ) %>%
     pull(Sample_ID)
 
-ltbc_transgene_samples <- c("S0260", "S0261")
+# ltbc_transgene_samples <- c("S0260", "S0261")
 
 transgene_samples <- c(
     transgene_samples,
-    roberts_transgene_samples,
-    ltbc_transgene_samples
+    roberts_transgene_samples # ,
+    # ltbc_transgene_samples
 )
 
 plot_point_size <- 0.5
@@ -84,58 +144,10 @@ for (this_sample in transgene_samples) {
                 "No transgene"
             )
 
-        this_plot <-
-            ((
-                DimPlot(
-                    sobj_list[[this_sample]],
-                    group.by = c("cell_group"),
-                    pt.size = plot_point_size,
-                    label = TRUE,
-                    label.box = TRUE,
-                    repel = TRUE
-                ) +
-                    NoLegend() +
-                    coord_fixed()
-            ) +
-                (
-                    DimPlot(
-                        sobj_list[[this_sample]],
-                        group.by = c("tumor_cell"),
-                        pt.size = plot_point_size,
-                        label = TRUE,
-                        label.box = TRUE,
-                        repel = TRUE
-                    ) +
-                        NoLegend() +
-                        coord_fixed()
-                )) /
-                ((
-                    DimPlot(
-                        sobj_list[[this_sample]],
-                        group.by = c("snv_top_lvl_group_10"),
-                        pt.size = plot_point_size,
-                        label = TRUE,
-                        label.box = TRUE,
-                        repel = TRUE
-                    ) +
-                        NoLegend() +
-                        coord_fixed()
-                ) +
-                    (
-                        FeaturePlot(
-                            sobj_list[[this_sample]],
-                            features = "tumor_marker_count",
-                            order = TRUE,
-                            pt.size = plot_point_size
-                        ) +
-                            coord_fixed()
-                    ))
-
-        ggsave(
-            paste0("output/figures/transgene/", this_sample, "_plots.pdf"),
-            plot = this_plot,
-            width = 15,
-            height = 15
+        transgene_panel_plot(
+            sobj_list[[this_sample]],
+            this_sample,
+            plot_point_size
         )
     } else {
         sobj_list[[this_sample]] <- NULL
@@ -163,7 +175,10 @@ merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
     write_tsv("output/snv_processing/transgene/transgene_tumor_clust.txt")
 
 
-VlnPlot(sobj_list[["G0010"]], features = c("tumor_marker_pct", "tumor_marker_count"))
+VlnPlot(
+    sobj_list[["G0010"]],
+    features = c("tumor_marker_pct", "tumor_marker_count")
+)
 DimPlot(sobj_list[["G0016"]], group.by = "tumor_cell")
 ```
 
@@ -172,6 +187,8 @@ DimPlot(sobj_list[["G0016"]], group.by = "tumor_cell")
 ```{r transgene_ltbc}
 #| eval: FALSE
 ltbc_samples <- c("S0260", "S0261")
+
+plot_point_size <- 0.5
 
 marker_table <-
     parallel::mclapply(
@@ -230,10 +247,40 @@ marker_table <-
 
             sobj$tumor_cell <-
                 if_else(
-                    sobj$tumor_marker_count > 0,
+                    sobj$has_barcode == TRUE,
                     "Has transgene",
                     "No transgene"
                 )
+
+            sobj$cell_group <- paste0(
+                sobj$cluster_label,
+                "_c",
+                sobj$individ_clusters
+            )
+
+            for (this_cutoff in c(5, 10, 20, 30)) {
+                sobj <- add_snv_group_to_sobj(
+                    sobj,
+                    snv_group_file = paste0(
+                        "output/snv/transgene/snvs_",
+                        this_sample,
+                        "_",
+                        this_cutoff,
+                        "_groups.txt"
+                    ),
+                    new_columns = paste0(
+                        c("snv_group_", "snv_top_lvl_group_"),
+                        this_cutoff
+                    ),
+                    cell_group = "cell_group"
+                )
+            }
+
+            transgene_panel_plot(
+                sobj,
+                this_sample,
+                plot_point_size
+            )
 
             marker_table <-
                 sobj@meta.data %>%
@@ -353,6 +400,45 @@ ggsave(
     "output/figures/transgene_beeswarm_plot.pdf",
     transgene_plot,
     width = 8,
+    height = 6
+)
+
+transgene_boxplot <-
+    full_join(snv_groups, transgene_groups) %>%
+    filter(Sample_ID != "S0123") %>% # this sample had no detected transgene
+    mutate(
+        top_lvl_group = if_else(
+            is.na(top_lvl_group),
+            "No SNV groups",
+            if_else(
+                top_lvl_group == "top_lvl_group0",
+                "Tumor by SNV",
+                "Non-tumor by SNV"
+            )
+        ),
+        proportion = replace_na(proportion, 0)
+    ) %>%
+    ggplot(
+        aes(
+            x = top_lvl_group,
+            y = proportion
+        )
+    ) +
+    ggbeeswarm::geom_beeswarm(cex = 1.2) +
+    facet_grid(~ Sample_ID == "S0122", scales = "free_x", space = "free_x") +
+    labs(
+        x = "Group determined by SNVs",
+        y = "Proportion of cells in cluster expressing transgene",
+        title = "Fidelity of SNV Tumor Calls Compared to Ground Truth"
+    ) +
+    theme(
+        legend.position = "none"
+    )
+
+ggsave(
+    "output/figures/transgene_boxplot_facet.pdf",
+    transgene_boxplot,
+    width = 6,
     height = 6
 )
 ```
