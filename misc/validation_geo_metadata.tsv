@@ -68,3 +68,86 @@ GSE237579	SRR25308531	G0037	scRNA-seq PMBC healthy donor 6	healthy samples	healt
 GSE237579	SRR25308533	G0037	scRNA-seq PMBC healthy donor 6	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	20000	20	PBMC_pt_1
 GSE237579	SRR25308532	G0038	scRNA-seq PMBC healthy donor 7	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	15000	20	PBMC_pt_2
 GSE237579	SRR25308535	G0038	scRNA-seq PMBC healthy donor 7	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	15000	20	PBMC_pt_2
+GSE184880	SRR16093329	G0039	Normal ovarian tissue	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	20	Ovary_pt_1
+GSE184880	SRR16093330	G0039	Normal ovarian tissue	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	20	Ovary_pt_1
+GSE184880	SRR16093331	G0039	Normal ovarian tissue	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	20	Ovary_pt_1
+GSE184880	SRR16093332	G0039	Normal ovarian tissue	healthy samples	healthy	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	20	Ovary_pt_1
+GSE184880	SRR16093333	G0040	Normal ovarian tissue	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20	Ovary_pt_2
+GSE184880	SRR16093334	G0040	Normal ovarian tissue	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20	Ovary_pt_2
+GSE184880	SRR16093335	G0040	Normal ovarian tissue	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20	Ovary_pt_2
+GSE184880	SRR16093336	G0040	Normal ovarian tissue	healthy samples	healthy	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20	Ovary_pt_2
+GSE184880	SRR16093337	G0041	Normal ovarian tissue	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	30	Ovary_pt_3
+GSE184880	SRR16093338	G0041	Normal ovarian tissue	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	30	Ovary_pt_3
+GSE184880	SRR16093339	G0041	Normal ovarian tissue	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	30	Ovary_pt_3
+GSE184880	SRR16093340	G0041	Normal ovarian tissue	healthy samples	healthy	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	30	Ovary_pt_3
+GSE184880	SRR16093341	G0042	Normal ovarian tissue	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	30	Ovary_pt_4
+GSE184880	SRR16093342	G0042	Normal ovarian tissue	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	30	Ovary_pt_4
+GSE184880	SRR16093343	G0042	Normal ovarian tissue	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	30	Ovary_pt_4
+GSE184880	SRR16093344	G0042	Normal ovarian tissue	healthy samples	healthy	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	30	Ovary_pt_4
+GSE184880	SRR16093345	G0043	Normal ovarian tissue	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	30	Ovary_pt_5
+GSE184880	SRR16093346	G0043	Normal ovarian tissue	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	30	Ovary_pt_5
+GSE184880	SRR16093347	G0043	Normal ovarian tissue	healthy samples	healthy	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	30	Ovary_pt_5
+GSE184880	SRR16093348	G0043	Normal ovarian tissue	healthy samples	healthy	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	30	Ovary_pt_5
+GSE184880	SRR16093349	G0044	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_1
+GSE184880	SRR16093350	G0044	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_1
+GSE184880	SRR16093351	G0044	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_1
+GSE184880	SRR16093352	G0044	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_1
+GSE184880	SRR16093353	G0044	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	5	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_1
+GSE184880	SRR16093354	G0044	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	6	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_1
+GSE184880	SRR16093355	G0044	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	7	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_1
+GSE184880	SRR16093356	G0044	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	8	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_1
+GSE184880	SRR16093357	G0045	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_2
+GSE184880	SRR16093358	G0045	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_2
+GSE184880	SRR16093359	G0045	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_2
+GSE184880	SRR16093360	G0045	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_2
+GSE184880	SRR16093361	G0046	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_3
+GSE184880	SRR16093362	G0046	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_3
+GSE184880	SRR16093363	G0046	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_3
+GSE184880	SRR16093364	G0046	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_3
+GSE184880	SRR16093365	G0047	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	50	OvCanc_pt_4
+GSE184880	SRR16093366	G0047	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	50	OvCanc_pt_4
+GSE184880	SRR16093367	G0047	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	50	OvCanc_pt_4
+GSE184880	SRR16093368	G0047	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	50	OvCanc_pt_4
+GSE184880	SRR16093369	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093370	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093371	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093372	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093373	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	5	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093374	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	6	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093375	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	7	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093376	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	8	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093377	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	9	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093378	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	10	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093379	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	11	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093380	G0048	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	12	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	OvCanc_pt_5
+GSE184880	SRR16093381	G0049	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_6
+GSE184880	SRR16093382	G0049	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_6
+GSE184880	SRR16093383	G0049	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_6
+GSE184880	SRR16093384	G0049	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	150000	40	OvCanc_pt_6
+GSE184880	SRR16093385	G0050	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40	OvCanc_pt_7
+GSE184880	SRR16093386	G0050	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40	OvCanc_pt_7
+GSE184880	SRR16093387	G0050	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40	OvCanc_pt_7
+GSE184880	SRR16093388	G0050	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40	OvCanc_pt_7
+GSE306201	SRR35094270	G0051	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	30	BrCanc_pt_1
+GSE306201	SRR35094269	G0052	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	20	BrCanc_pt_2
+GSE306201	SRR35094266	G0053	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	30000	20	BrCanc_pt_3
+GSE306201	SRR35094265	G0054	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20	BrCanc_pt_4
+GSE306201	SRR35094263	G0055	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	25000	20	BrCanc_pt_5
+GSE306201	SRR35094268	G0056	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	20	BrCanc_pt_6
+GSE306201	SRR35094264	G0057	Breast cancer Lymph Node Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	90000	30	BrCanc_pt_7
+GSE306201	SRR35094267	G0058	Breast cancer Mediastinum Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	30000	25	BrCanc_pt_8
+GSE306201	SRR35094250	G0059	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	30	BrCanc_pt_9
+GSE306201	SRR35094252	G0059	Breast cancer Liver Metastasis	tumor validation	Breast cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	30	BrCanc_pt_9
+GSE306201	SRR35094251	G0060	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	30000	20	BrCanc_pt_10
+GSE306201	SRR35094257	G0061	Breast cancer Lymph Node Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	20	BrCanc_pt_11
+GSE306201	SRR35094255	G0062	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	25000	20	BrCanc_pt_12
+GSE306201	SRR35094259	G0062	Breast cancer Liver Metastasis	tumor validation	Breast cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	25000	20	BrCanc_pt_12
+GSE306201	SRR35094260	G0062	Breast cancer Liver Metastasis	tumor validation	Breast cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	25000	20	BrCanc_pt_12
+GSE306201	SRR35094261	G0062	Breast cancer Liver Metastasis	tumor validation	Breast cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	25000	20	BrCanc_pt_12
+GSE306201	SRR35094258	G0063	Breast cancer Adrenal Gland Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	20	BrCanc_pt_13
+GSE306201	SRR35094256	G0064	Breast cancer Bone Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	BrCanc_pt_14
+GSE306201	SRR35094262	G0065	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	20	BrCanc_pt_15
+GSE306201	SRR35094253	G0066	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000		20	BrCanc_pt_16
+GSE261693	SRR28353274	G0067	Ewing2_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg39	1000	40000	35	Ewing_pt_1
+GSE261693	SRR28353275	G0068	Ewing1_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg40	1000	75000	30	Ewing_pt_2
+GSE261693	SRR34316856	G0069	Ewing3_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg41	1000	50000	20	Ewing_pt_3

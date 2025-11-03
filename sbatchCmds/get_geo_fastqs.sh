@@ -10,11 +10,11 @@
 
 set -e
 
-sras_dl=($(cut -f 2 misc/validation_geo_metadata.txt | grep -v sra_number))
+sras_dl=($(cut -f 2 misc/validation_geo_metadata2.tsv | grep -v sra_number))
 
-sample_array=($(cut -f 3 misc/validation_geo_metadata.txt | grep -v sample_id))
+sample_array=($(cut -f 3 misc/validation_geo_metadata2.tsv | grep -v Sample_ID))
 
-lane_array=($(cut -f 7 misc/validation_geo_metadata.txt | grep -v fake_lane))
+lane_array=($(cut -f 7 misc/validation_geo_metadata2.tsv | grep -v fake_lane))
 
 this_sra=${sras_dl[${SLURM_ARRAY_TASK_ID}]}
 this_sample=${sample_array[${SLURM_ARRAY_TASK_ID}]}
@@ -51,7 +51,17 @@ pigz -p 4 input/othertumors/fastqs/${this_sample}/${this_sra}*.fastq
 # [Sample Name]_S1_L00[Lane Number]_[Read Type]_001.fastq.gz
 # make lane number according to the order of SRR entries
 
-if [ -f input/othertumors/fastqs/${this_sample}/${this_sra}_3.fastq.gz ]
+if [ -f input/othertumors/fastqs/${this_sample}/${this_sra}_4.fastq.gz ]
+then
+    echo _1 is index, _2 is index, _3 is R1 _4 is R2
+    mv \
+        input/othertumors/fastqs/${this_sample}/${this_sra}_3.fastq.gz \
+        input/othertumors/fastqs/${this_sample}/${this_sample}_S1_L00${this_lane}_R1_001.fastq.gz
+
+    mv \
+        input/othertumors/fastqs/${this_sample}/${this_sra}_4.fastq.gz \
+        input/othertumors/fastqs/${this_sample}/${this_sample}_S1_L00${this_lane}_R2_001.fastq.gz
+elif [ -f input/othertumors/fastqs/${this_sample}/${this_sra}_3.fastq.gz ]
 then
     echo _1 is index, _2 is R1 _3 is R2
     mv \

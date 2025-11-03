@@ -4,7 +4,7 @@
 #SBATCH --job-name=geo_count
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1 #10
+#SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
 #SBATCH --wait
 
@@ -13,14 +13,14 @@ set -e
 sample_array=($( \
     cut -f 3,8 misc/validation_geo_metadata.tsv \
     | uniq \
-    | grep -v sample_id \
+    | grep -v Sample_ID \
     | cut -f 1\
 ))
 
 ref_array=($( \
     cut -f 3,8 misc/validation_geo_metadata.tsv \
     | uniq \
-    | grep -v sample_id \
+    | grep -v Sample_ID \
     | cut -f 2
 ))
 
