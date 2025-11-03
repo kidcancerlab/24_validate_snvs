@@ -65,3 +65,46 @@ ggsave(
 )
 ```
 
+## FeaturePlots for figure 4
+```{r human_val_featureplots}
+g0027 <- qs::qread("output/seurat_objects/individual/G0027_human.qs")
+
+g0027$cluster_label <-
+    paste0(g0027$cluster_label, "_c", g0027$individ_clusters)
+
+g27_vlnplot <-
+    VlnPlot(
+        g0027,
+        features = c("RUNX2", "SATB2", "COL1A1", "COL1A2"),
+        ncol = 1,
+        group.by = "cluster_label",
+        alpha = 0,
+        pt.size = 0
+    )
+
+ggsave(
+    "output/figures/g27_vlnplot.pdf",
+    g27_vlnplot,
+    width = 6,
+    height = 15
+)
+
+g27_cluster_dimplot <-
+    DimPlot(
+        g0027,
+        group.by = "cluster_label",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE
+    ) +
+        NoLegend() +
+        coord_fixed()
+
+ggsave(
+    "output/figures/g27_cluster_dimplot.pdf",
+    g27_cluster_dimplot,
+    width = 6,
+    height = 6
+)
+```
+
