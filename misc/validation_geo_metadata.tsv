@@ -147,7 +147,7 @@ GSE306201	SRR35094261	G0062	Breast cancer Liver Metastasis	tumor validation	Brea
 GSE306201	SRR35094258	G0063	Breast cancer Adrenal Gland Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	20	BrCanc_pt_13
 GSE306201	SRR35094256	G0064	Breast cancer Bone Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	BrCanc_pt_14
 GSE306201	SRR35094262	G0065	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	20	BrCanc_pt_15
-GSE306201	SRR35094253	G0066	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000		20	BrCanc_pt_16
+GSE306201	SRR35094253	G0066	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	40	BrCanc_pt_16
 GSE261693	SRR28353274	G0067	Ewing2_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg39	1000	40000	35	Ewing_pt_1
 GSE261693	SRR28353275	G0068	Ewing1_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg40	1000	75000	30	Ewing_pt_2
 GSE261693	SRR34316856	G0069	Ewing3_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg41	1000	50000	20	Ewing_pt_3
