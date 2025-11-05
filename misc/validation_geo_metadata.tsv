@@ -3,8 +3,8 @@ GSE210358	SRR20761355	G0001	HMP11_A	tumor validation	Prostate cancer	1	/home/gdr
 GSE210358	SRR20761356	G0001	HMP11_A	tumor validation	Prostate cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	25	Prostate_pt_1
 GSE210358	SRR20761353	G0002	HMP11_B	tumor validation	Prostate cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	25	Prostate_pt_2
 GSE210358	SRR20761354	G0002	HMP11_B	tumor validation	Prostate cancer	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	25	Prostate_pt_2
-GSE222703	SRR23063397	G0003	ccRCC tumor - patient 1	tumor validation	Clear cell renal cell carcinoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30	RCC_pt_1
-GSE222703	SRR23063398	G0003	ccRCC tumor - patient 1	tumor validation	Clear cell renal cell carcinoma	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30	RCC_pt_1
+GSE222703	SRR23063397	G0003	ccRCC tumor - patient 1	tumor validation	Clear cell carcinoma of the kidney	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30	RCC_pt_1
+GSE222703	SRR23063398	G0003	ccRCC tumor - patient 1	tumor validation	Clear cell carcinoma of the kidney	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30	RCC_pt_1
 GSE222703	SRR23063395	G0004	adjacent kidney tissue - patient 1	healthy samples	healthy	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30	RCC_pt_2
 GSE222703	SRR23063396	G0004	adjacent kidney tissue - patient 1	healthy samples	healthy	2	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30	RCC_pt_2
 GSE247228	SRR26705626	G0009	YUMM3_3-ActA_GFP_1	truthset validation	Melanoma	1	custom_ref/gfp_rfp_mm10	1000	75000	30	GFP_melanoma_1

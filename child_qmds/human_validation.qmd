@@ -41,13 +41,16 @@ bootstrap_pointplot <-
             shape = sample_group
         )
     ) +
-    ggbeeswarm::geom_beeswarm(cex = 3, size = 4) +
+    ggbeeswarm::geom_beeswarm(cex = 1, size = 4) +
     scale_shape_manual(values = c(18, 16)) +
     scale_color_manual(values = c(
-        "#fecc5c",
+        "#D43F3AFF",
+        "#EEA236FF",
+        "#3E7E3EFF",
         "blue",
-        "#fd8d3c",
-        "#bd0026"
+        "#5CB85CFF",
+        "#46B8DAFF",
+        "#9632B8FF"
     )) +
     labs(
         x = "Minimum read depth cutoff",
@@ -57,11 +60,91 @@ bootstrap_pointplot <-
         title = "Top Node Bootstrap Value of Human Tumor and Normal Samples"
     )
 
+# Size points by median nCount to show quality
+# Maybe violin
+
 ggsave(
     "output/figures/human_bootstrap_beeswarm.pdf",
     bootstrap_pointplot,
     width = 8,
     height = 6
+)
+
+dodge_width <- 1
+
+bootstrap_boxplot <-
+    read_tsv(
+        "output/human_bootstraps.txt",
+        show_col_types = FALSE
+    ) %>%
+    filter(!sample %in% c("G0052", "G0056", "G0065", "G0069")) %>%
+    pivot_longer(
+        cols = -sample,
+        names_to = "cutoff",
+        values_to = "bootstrap"
+    ) %>%
+    mutate(
+        cutoff = str_remove(cutoff, "c") %>%
+            factor(levels = c("5", "10", "20", "30"))
+    ) %>%
+    left_join(
+        read_tsv(
+            "misc/validation_geo_metadata.tsv",
+            show_col_types = FALSE
+        ) %>%
+            select("Sample_ID", "tumor_type", "sample_group") %>%
+            distinct() %>%
+            filter(
+                sample_group %in%
+                    c("tumor validation", "healthy samples")
+            ) %>%
+            rename(sample = "Sample_ID") %>%
+            mutate(
+                sample_group = str_remove(sample_group, " .+") %>%
+                    str_to_sentence(),
+                tumor_type = str_replace(tumor_type, "healthy", "Healthy") %>%
+                    as.factor() %>%
+                    fct_relevel("Healthy"),
+            ),
+        by = "sample"
+    ) %>%
+    # left_join(
+    #     read_tsv("output/counts/human_geo_cell_counts.txt") %>%
+    #         select(sample_name, median_ncount, mean_ncount) %>%
+    #         rename(sample = sample_name)
+    # ) %>%
+    ggplot(
+        aes(
+            x = cutoff,
+            y = bootstrap,
+            fill = tumor_type
+        )
+    ) +
+    # geom_violin(scale = "width")
+    geom_boxplot(
+        position = position_dodge(width = dodge_width),
+        outlier.alpha = 0
+    ) +
+    geom_point(
+        aes(
+            group = tumor_type,
+            #size = median_ncount
+        ),
+        color = "black",
+        position = ggbeeswarm::position_beeswarm(
+            dodge.width = dodge_width,
+            cex = 0.1
+        ),
+        # size = 1.5,
+        alpha = 0.5
+    ) +
+    scale_size_continuous(range = c(0.2, 4))
+
+ggsave(
+    "output/figures/human_bootstrap_boxplot.pdf",
+    bootstrap_boxplot,
+    width = 10,
+    height = 4
 )
 ```
 
@@ -97,8 +180,8 @@ g27_cluster_dimplot <-
         label.box = TRUE,
         repel = TRUE
     ) +
-        NoLegend() +
-        coord_fixed()
+    NoLegend() +
+    coord_fixed()
 
 ggsave(
     "output/figures/g27_cluster_dimplot.pdf",
@@ -108,3 +191,173 @@ ggsave(
 )
 ```
 
+cluster 7 in G0041 had low XIST and a bit high for ZP3 - maybe oocytes?
+```{r human_val_g41}
+calc_variant_variability(
+    merged_bcf_file = "output/snv/human/mergedsnvs_G0041_c10.bcf",
+    log_base = "output/G41_log",
+    # temp_dir = "output/temp",
+    output_file = "output/snv/human/mergedsnvs_G0041_variable_variants.tsv",
+    group_1 = "Ovary_pt_3_c7", # Group_1 is tumor
+    group_2 = paste(
+        "Ovary_pt_3_c0",
+        "Ovary_pt_3_c1",
+        "Ovary_pt_3_c2",
+        "Ovary_pt_3_c3",
+        "Ovary_pt_3_c4",
+        "Ovary_pt_3_c5",
+        "Ovary_pt_3_c6",
+        "Ovary_pt_3_c8",
+        "Ovary_pt_3_c9",
+        sep = ","
+    ),
+    other_job_header_options = c("--time=05:00:00"),
+    other_batch_options = c(
+        "module purge",
+        "module load miniforge3",
+        'eval "$(conda shell.bash hook)"'
+    ),
+    job_scheduler = "slurm"
+)
+
+g41 <- qs::qread("output/seurat_objects/individual/G0041_human.qs")
+g41_cell_barcodes <-
+    g41 %>%
+    colnames() %>%
+    paste(collapse = " ")
+
+# I should filter variable_variants_file before I give it to call_variants_single_cell
+
+call_variants_single_cell(
+    bam_to_use = "output/cellranger_out/G0041/possorted_genome_bam.bam",
+    variable_variants_file = "output/snv/human/mergedsnvs_G0041_variable_variants.tsv",
+    cell_barcodes = g41_cell_barcodes,
+    output_file = "cell_variant_calls_g41.tsv",
+    min_depth = 3,
+    variant_diff_cutoff = 1,
+    ploidy = "GRCh38",
+    ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+    job_base = "cell_vars",
+    log_base = "slurm_cell_vars",
+    # temp_dir = "output/temp/cell_vars_59",
+    submit = TRUE,
+    other_job_header_options = c("--time=12:00:00"),
+    other_batch_options = c( # Just here as examples of things you might put
+        "module purge",
+        "module load miniforge3",
+        'eval "$(conda shell.bash hook)"'
+    )
+)
+
+count_to_call <-
+    c(
+        "0" = "0/0",
+        "1" = "0/1",
+        "2" = "1/1"
+    )
+
+genotype_info <-
+    read_tsv(
+        "output/snv/human/mergedsnvs_G0041_variable_variants.tsv",
+        show_col_types = FALSE
+    ) %>%
+    filter(cross_minus_within_dist >= 1) %>%
+    select(
+        -group_1_within_dist,
+        -group_2_within_dist,
+        -cross_group_dist,
+        -within_groups_mean_dist,
+        -cross_minus_within_dist
+    ) %>%
+    mutate(
+        mean_group_1_alts = round(mean_group_1_alts),
+        mean_group_2_alts = round(mean_group_2_alts),
+        group_1_genotype = count_to_call[as.character(mean_group_1_alts)],
+        group_2_genotype = count_to_call[as.character(mean_group_2_alts)],
+        pos = paste(chr, pos, sep = "_")
+    )
+
+tumor_genotype_profile <-
+    genotype_info %>%
+    pull(group_1_genotype, name = pos)
+
+normal_genotype_profile <-
+    genotype_info %>%
+    pull(group_2_genotype, name = pos)
+
+single_call_meta <-
+    read_tsv(
+        "cell_variant_calls_g41.tsv",
+        show_col_types = FALSE
+    ) %>%
+    mutate(
+        pos = paste(chr, pos, sep = "_"),
+        tumor_genotype = tumor_genotype_profile[pos],
+        normal_genotype = normal_genotype_profile[pos],
+        call = if_else(
+            call == 1,
+            "0/1",
+            call
+        )
+    ) %>%
+    mutate(
+        call = if_else(
+            call == 0,
+            "0/0",
+            call
+        )
+    ) %>%
+    select(-chr, -ref, -alt) %>%
+    select(-tumor_genotype, -normal_genotype) %>%
+    pivot_wider( # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!This is making a tibble with a bunch of lists for columns
+        id_cols = c(cell_barcode),
+        names_from = pos,
+        values_from = call
+    ) %>%
+    column_to_rownames("cell_barcode")
+
+single_call_meta <- single_call_meta[colnames(g41), ]
+
+
+g41$test <- single_call_meta$chrM_13071
+g412 <- AddMetaData(g41, single_call_meta[, 1:10])
+g41$has_calls <- !is.na(g41$prop_tumor_call)
+g41$prop_tumor_call[!g41$has_calls] <- 0.1
+```
+
+```{r human_val_ncount_clust}
+sample_names <-
+    read_tsv(
+        "output/human_bootstraps.txt",
+        show_col_types = FALSE
+    ) %>%
+    pull(sample)
+
+cluster_ncounts <-
+    parallel::mclapply(
+        sample_names,
+        mc.preschedule = FALSE,
+        mc.cores = 5,
+        function(x) {
+            qs::qread(paste0(
+                "output/seurat_objects/individual/",
+                x,
+                "_human.qs"
+            ))@meta.data %>%
+                group_by(Sample_ID, individ_clusters) %>%
+                summarize(
+                    mean_ncount = mean(nCount_RNA),
+                    median_ncount = median(nCount_RNA),
+                    sum_ncount = sum(nCount_RNA),
+                    .groups = "drop"
+                )
+        }
+    ) %>%
+    bind_rows()
+```
+
+
+BRCA markers:
+https://www.nature.com/articles/s41523-025-00808-w
+
+BRCA zenodo: https://zenodo.org/records/13743374

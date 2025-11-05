@@ -186,6 +186,13 @@ read_raw <- function(i,
             )
         }
     }
+
+    counts$median_ncount <-
+        median(sobj$nCount_RNA)
+
+    counts$mean_ncount <-
+        mean(sobj$nCount_RNA)
+
     return(counts)
 }
 
@@ -254,6 +261,7 @@ pull_species_cutoff <- function(from_sample_tsv,
 #| cache.vars: read_raw_from_table
 read_raw_from_table <- function(sample_table,
                                 h5_folder,
+                                min_n_cells = 1000,
                                 organism,
                                 annotate_species,
                                 count_table_file,
@@ -268,6 +276,7 @@ read_raw_from_table <- function(sample_table,
             read_raw(
                 i = i,
                 h5_folder = h5_folder,
+                min_n_cells = min_n_cells,
                 sample_table,
                 organism = organism,
                 annotate_species = annotate_species,
