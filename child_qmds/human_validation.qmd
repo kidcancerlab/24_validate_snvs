@@ -70,14 +70,14 @@ ggsave(
     height = 6
 )
 
-dodge_width <- 1
+dodge_width <- 0.75
 
 bootstrap_boxplot <-
     read_tsv(
         "output/human_bootstraps.txt",
         show_col_types = FALSE
     ) %>%
-    filter(!sample %in% c("G0052", "G0056", "G0065", "G0069")) %>%
+    #filter(!sample %in% c("G0052", "G0056", "G0065", "G0069")) %>% # low quality samples
     pivot_longer(
         cols = -sample,
         names_to = "cutoff",
@@ -108,11 +108,6 @@ bootstrap_boxplot <-
             ),
         by = "sample"
     ) %>%
-    # left_join(
-    #     read_tsv("output/counts/human_geo_cell_counts.txt") %>%
-    #         select(sample_name, median_ncount, mean_ncount) %>%
-    #         rename(sample = sample_name)
-    # ) %>%
     ggplot(
         aes(
             x = cutoff,
@@ -120,30 +115,34 @@ bootstrap_boxplot <-
             fill = tumor_type
         )
     ) +
-    # geom_violin(scale = "width")
+    geom_hline(yintercept = 85, linetype = "dashed", color = "red") +
     geom_boxplot(
         position = position_dodge(width = dodge_width),
-        outlier.alpha = 0
+        outlier.alpha = 0,
+        alpha = 0.5
     ) +
     geom_point(
         aes(
             group = tumor_type,
-            #size = median_ncount
+            color = tumor_type
         ),
-        color = "black",
         position = ggbeeswarm::position_beeswarm(
             dodge.width = dodge_width,
             cex = 0.1
         ),
-        # size = 1.5,
-        alpha = 0.5
+        alpha = 1
     ) +
-    scale_size_continuous(range = c(0.2, 4))
+    labs(
+        x = "Minimum read depth cutoff",
+        y = "Top node bootstrap value",
+        title = "Top Node Bootstrap Value of Human Tumor and Normal Samples",
+        color = "Tumor type"
+    )
 
 ggsave(
     "output/figures/human_bootstrap_boxplot.pdf",
     bootstrap_boxplot,
-    width = 10,
+    width = 8,
     height = 4
 )
 ```
@@ -192,6 +191,27 @@ ggsave(
 ```
 
 cluster 7 in G0041 had low XIST and a bit high for ZP3 - maybe oocytes?
+Cluster 0 in G0042 was distinct
+```{r human_val_oocyte}
+ovary_samples <-
+    merge(
+        qs::qread("output/seurat_objects/individual/G0041_human.qs"),
+        qs::qread("output/seurat_objects/individual/G0042_human.qs")
+    ) %>%
+    process_seurat()
+
+ovary_samples$cluster <-
+    paste(ovary_samples$Sample_ID, ovary_samples$individ_clusters)
+
+DimPlot(
+    ovary_samples,
+    group.by = "cluster",
+    label = TRUE,
+    label.box = TRUE,
+    repel = TRUE
+)
+```
+
 ```{r human_val_g41}
 calc_variant_variability(
     merged_bcf_file = "output/snv/human/mergedsnvs_G0041_c10.bcf",
