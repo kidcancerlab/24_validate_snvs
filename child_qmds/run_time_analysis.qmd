@@ -1,0 +1,70 @@
+```{bash runtime_grep_mpileup}
+grep \
+    "Elapsed seconds" \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_mpileup-*.out \
+    output/snv/mouse/tempdir/slurmOut/*_mpileup-*.out \
+    | perl -pe 's/:Elapsed seconds://' \
+    | cut -f 2 -d " " \
+    | numberStats.pl \
+    > output/counts/mpileup_time.txt
+```
+
+I'm grepping M; here because slurm output double summaries for a couple samples
+```{bash runtime_grep_mpileup}
+grep \
+    "Maximum CPU Memory" \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_mpileup-*.out \
+    output/snv/mouse/tempdir/slurmOut/*_mpileup-*.out \
+    | grep "M;" \
+    | perl -pe 's/.+Maximum CPU Memory://' \
+    | perl -pe 's/M;.+//' \
+    | numberStats.pl \
+    > output/counts/mpileup_ram_M.txt
+```
+
+```{bash runtime_grep_mpileup}
+grep \
+    "Elapsed seconds" \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_merge-*.out \
+    output/snv/mouse/tempdir/slurmOut/*_merge-*.out \
+    | perl -pe 's/:Elapsed seconds://' \
+    | cut -f 2 -d " " \
+    | numberStats.pl \
+    > output/counts/merge_time.txt
+```
+
+I'm grepping M; here because slurm output double summaries for a couple samples
+```{bash runtime_grep_merge}
+grep \
+    "Maximum CPU Memory" \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_merge-*.out \
+    output/snv/mouse/tempdir/slurmOut/*_merge-*.out \
+    | perl -pe 's/.+Maximum CPU Memory://' \
+    | perl -pe 's/M;.+//' \
+    | numberStats.pl \
+    > output/counts/merge_ram_M.txt
+```
+
+
+```{bash runtime_grep_dist}
+grep \
+    "Elapsed seconds" \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*dist-*.out \
+    output/snv/mouse/tempdir/slurmOut/*dist-*.out \
+    | perl -pe 's/:Elapsed seconds://' \
+    | cut -f 2 -d " " \
+    | numberStats.pl \
+    > output/counts/dist_time.txt
+```
+
+I'm grepping M; here because slurm output double summaries for a couple samples
+```{bash runtime_grep_dist}
+grep \
+    "Maximum CPU Memory" \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*dist-*.out \
+    output/snv/mouse/tempdir/slurmOut/*dist-*.out \
+    | perl -pe 's/.+Maximum CPU Memory://' \
+    | perl -pe 's/M;.+//' \
+    | numberStats.pl \
+    > output/counts/dist_ram_M.txt
+```
