@@ -10,11 +10,11 @@
 
 set -e
 
-sras_dl=($(cut -f 2 misc/validation_geo_metadata2.tsv | grep -v sra_number))
+sras_dl=($(cut -f 2 misc/validation_geo_metadata.tsv | grep -v sra_number))
 
-sample_array=($(cut -f 3 misc/validation_geo_metadata2.tsv | grep -v Sample_ID))
+sample_array=($(cut -f 3 misc/validation_geo_metadata.tsv | grep -v Sample_ID))
 
-lane_array=($(cut -f 7 misc/validation_geo_metadata2.tsv | grep -v fake_lane))
+lane_array=($(cut -f 7 misc/validation_geo_metadata.tsv | grep -v fake_lane))
 
 this_sra=${sras_dl[${SLURM_ARRAY_TASK_ID}]}
 this_sample=${sample_array[${SLURM_ARRAY_TASK_ID}]}

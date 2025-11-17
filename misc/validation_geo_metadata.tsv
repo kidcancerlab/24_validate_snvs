@@ -109,11 +109,9 @@ GSE184880	SRR16093386	G0031	High-grade serous ovarian cancer tissue	tumor valida
 GSE184880	SRR16093387	G0031	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	3	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40	OvCanc_pt_7
 GSE184880	SRR16093388	G0031	High-grade serous ovarian cancer tissue	tumor validation	Ovarian cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	40	OvCanc_pt_7
 GSE306201	SRR35094270	G0032	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	30	BrCanc_pt_1
-GSE306201	SRR35094269	G0033	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	20	BrCanc_pt_2
 GSE306201	SRR35094266	G0034	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	30000	20	BrCanc_pt_3
 GSE306201	SRR35094265	G0035	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	100000	20	BrCanc_pt_4
 GSE306201	SRR35094263	G0036	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	25000	20	BrCanc_pt_5
-GSE306201	SRR35094268	G0037	Breast cancer Breast primary	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	20	BrCanc_pt_6
 GSE306201	SRR35094264	G0038	Breast cancer Lymph Node Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	90000	30	BrCanc_pt_7
 GSE306201	SRR35094267	G0039	Breast cancer Mediastinum Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	30000	25	BrCanc_pt_8
 GSE306201	SRR35094250	G0040	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	30	BrCanc_pt_9
@@ -126,8 +124,6 @@ GSE306201	SRR35094260	G0043	Breast cancer Liver Metastasis	tumor validation	Brea
 GSE306201	SRR35094261	G0043	Breast cancer Liver Metastasis	tumor validation	Breast cancer	4	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	25000	20	BrCanc_pt_12
 GSE306201	SRR35094258	G0044	Breast cancer Adrenal Gland Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	60000	20	BrCanc_pt_13
 GSE306201	SRR35094256	G0045	Breast cancer Bone Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	125000	40	BrCanc_pt_14
-GSE306201	SRR35094262	G0046	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	50000	20	BrCanc_pt_15
 GSE306201	SRR35094253	G0047	Breast cancer Liver Metastasis	tumor validation	Breast cancer	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	80000	40	BrCanc_pt_16
-GSE261693	SRR28353274	G0048	Ewing2_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg39	1000	40000	35	Ewing_pt_1
-GSE261693	SRR28353275	G0049	Ewing1_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg40	1000	75000	30	Ewing_pt_2
-GSE261693	SRR34316856	G0050	Ewing3_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg41	1000	50000	20	Ewing_pt_3
+GSE261693	SRR28353274	G0048	Ewing2_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	40000	35	Ewing_pt_1
+GSE261693	SRR28353275	G0049	Ewing1_GEX	tumor validation	Ewing sarcoma	1	/home/gdrobertslab/lab/GenRef/10x-hg38	1000	75000	30	Ewing_pt_2

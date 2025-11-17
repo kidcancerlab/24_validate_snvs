@@ -1,11 +1,11 @@
 ## Get FASTQ Files for GEO samples
 ```{bash get_data_dl_geo}
 #| eval: false
-n_geo_samples=$(grep -v geo_id misc/validation_geo_metadata2.tsv | wc -l)
+n_geo_samples=$(grep -v geo_id misc/validation_geo_metadata.tsv | wc -l)
 
 n_geo_samples=$((n_geo_samples - 1))
 
-sbatch --array=0-${n_geo_samples}%10 sbatchCmds/get_geo_fastqs.sh
+sbatch --array=0-${n_geo_samples}%20 sbatchCmds/get_geo_fastqs.sh
 ```
 
 ## Next, run cellranger count on the raw data from GEO
@@ -13,7 +13,7 @@ sbatch --array=0-${n_geo_samples}%10 sbatchCmds/get_geo_fastqs.sh
 #| dependson: get_data_dl_geo
 #| eval: false
 n_samples=($( \
-    cut -f 3,8 misc/validation_geo_metadata2.tsv \
+    cut -f 3,8 misc/validation_geo_metadata.tsv \
     | uniq \
     | grep -v Sample_ID \
     | wc -l \

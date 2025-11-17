@@ -261,8 +261,9 @@ jitter_coverage_plot <-
         legend.position = c(0.9, 0.9)
     )
 
-ggsave(
-    "output/figures/total_and_nonref_site_coverage.pdf",
+ggsave_wrap(
+    file_stub = "output/figures/total_and_nonref_site_coverage",
+    file_types = c("png", "pdf"),
     jitter_coverage_plot,
     width = 8,
     height = 6

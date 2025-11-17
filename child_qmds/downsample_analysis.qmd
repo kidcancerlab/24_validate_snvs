@@ -36,7 +36,10 @@ output <- scanbit_downsample_loop(
 ```{r downsample_loop_geo}
 #| dependson: [helper_downsample_scanbit, read_raw_human_geo]
 samples_geo <-
-    read_tsv("misc/validation_geo_metadata.tsv", show_col_types = FALSE) %>%
+    read_tsv(
+        "misc/validation_geo_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
     filter(grepl("tumor validation|healthy samples", sample_group)) %>%
     pull(Sample_ID) %>%
     unique()

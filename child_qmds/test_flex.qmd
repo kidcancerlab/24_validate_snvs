@@ -81,11 +81,11 @@ accuracy_plot <-
     ggplot(aes(x = depth, y = mean_perc_wrong / 100)) +
     #geom_smooth(alpha = 0.5) +
     geom_point() +
-    geom_text(
-        data = filter(flex_accuracy, depth <= 10),
-        aes(label = depth),
-        nudge_y = 0.00001
-    ) +
+    # geom_text(
+    #     data = filter(flex_accuracy, depth <= 10),
+    #     aes(label = depth),
+    #     nudge_y = 0.00001
+    # ) +
     scale_y_continuous(labels = scales::label_percent()) +
     labs(
         title = "Percent Inaccurate Calls by Read Depth",
@@ -93,9 +93,10 @@ accuracy_plot <-
         y = "% inaccurate variant calls"
     )
 
-ggsave(
-    "output/figures/flex_accuracy_scatterplot.png",
-    plot = accuracy_plot,
+ggsave_wrap(
+    "output/figures/flex_accuracy_scatterplot",
+    file_type = c("png", "pdf"),
+    plot_variable = accuracy_plot,
     width = 6,
     height = 4
 )
@@ -147,6 +148,27 @@ flex_accuracy <-
         .groups = "drop"
     ) %>%
     filter(depth != 1)
+
+flex_accuracy %>%
+    filter(depth <= 20) %>%
+    gt::gt() %>%
+    gt::cols_label(
+        depth = gt::md("**Read depth**"),
+        mean_total_count = gt::md("**Average covered bases**"),
+        mean_perc_wrong = gt::md("**% inaccurate variant calls**")
+    ) %>%
+    gt::fmt_percent(
+        columns = "mean_perc_wrong",
+        scale_values = FALSE,
+        decimals = 4
+    ) %>%
+    gt::fmt_number(columns = "mean_total_count") %>%
+    gt::cols_align(
+        align = "center"
+    ) %>%
+    gt::gtsave(
+        filename = "output/figures/flex_accuracy_table.html"
+    )
 ```
 
 ## Plot how many sites are covered at each depth

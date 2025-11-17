@@ -706,3 +706,47 @@ scanbit_one_sample <- function(this_sample,
     return(job_worked)
 }
 ```
+
+```{r helpers_ggsave}
+#| cache.vars: [ggsave_wrap]
+#' ggsave_wrap
+#'
+#' A wrapper function for saving a single ggplot object in multiple file formats at once.
+#'
+#' This function simplifies the process of saving a ggplot object by allowing the user
+#' to specify multiple file formats and save the plot in all of them with a single call.
+#'
+#' @param file_stub The base file name (without extension) to use for saving the plot.
+#' @param file_types A character vector of file extensions (e.g., c(".png", ".pdf")).
+#' @param plot_variable The ggplot object to be saved.
+#' @param width The width of the saved plot.
+#' @param height The height of the saved plot.
+#'
+#' @return The function does not return a value but saves the plot to the specified files.
+#'
+#' @examples
+#' # Example usage:
+#' # ggsave_wrap("my_plot", c(".png", ".pdf"), my_plot, width = 6, height = 4)
+#'
+#' @export
+ggsave_wrap <- function(
+    file_stub,
+    file_types,
+    plot_variable,
+    width,
+    height
+) {
+    files_made <-
+        lapply(
+            file_types,
+            function(x) {
+                ggplot2::ggsave(
+                    paste0(file_stub, ".", x),
+                    plot_variable,
+                    width = width,
+                    height = height
+                )
+            }
+        )
+}
+```

@@ -1,5 +1,6 @@
 ## Read in datasets and count the tumor transgene markers
 ```{r transgene_panel_plot}
+#| cache.vars: [transgene_panel_plot]
 transgene_panel_plot <- function(sobj, sample_name, plot_point_size = 0.5) {
     panel_plot <-
         ((
@@ -77,12 +78,12 @@ roberts_transgene_samples <-
     ) %>%
     pull(Sample_ID)
 
-# ltbc_transgene_samples <- c("S0260", "S0261")
+ltbc_transgene_samples <- c("S0260", "S0261")
 
 transgene_samples <- c(
     transgene_samples,
-    roberts_transgene_samples # ,
-    # ltbc_transgene_samples
+    roberts_transgene_samples,
+    ltbc_transgene_samples
 )
 
 plot_point_size <- 0.5
@@ -173,13 +174,6 @@ merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
     filter(tumor_cell == "Has transgene") %>%
     arrange(desc(proportion)) %>%
     write_tsv("output/snv_processing/transgene/transgene_tumor_clust.txt")
-
-
-VlnPlot(
-    sobj_list[["G0010"]],
-    features = c("tumor_marker_pct", "tumor_marker_count")
-)
-DimPlot(sobj_list[["G0016"]], group.by = "tumor_cell")
 ```
 
 ## Look at lineage tracing barcodes

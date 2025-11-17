@@ -77,7 +77,7 @@ bootstrap_boxplot <-
         "output/human_bootstraps.txt",
         show_col_types = FALSE
     ) %>%
-    #filter(!sample %in% c("G0052", "G0056", "G0065", "G0069")) %>% # low quality samples
+    #filter(!sample %in% c("G0039", "G0040", "G0041", "G0042", "G0043")) %>% # low quality samples
     pivot_longer(
         cols = -sample,
         names_to = "cutoff",
@@ -140,7 +140,7 @@ bootstrap_boxplot <-
     )
 
 ggsave(
-    "output/figures/human_bootstrap_boxplot.pdf",
+    "output/figures/human_bootstrap_boxplot2.pdf",
     bootstrap_boxplot,
     width = 8,
     height = 4
