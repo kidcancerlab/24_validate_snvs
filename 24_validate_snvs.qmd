@@ -179,6 +179,13 @@ Also, I will use the data where I downsample to one cell to calculate coverage p
 
 {{< include child_qmds/evaluate_tumor_markers.qmd >}}
 
+# Look at human patient data
+
+{{< include child_qmds/human_validation.qmd >}}
+
+# Quantify average run time and RAM usage
+
+{{< include child_qmds/run_time_analysis.qmd >}}
 
 # Session info
 ```{r session_info}
