@@ -1,4 +1,18 @@
-```{bash runtime_grep_mpileup}
+## Delete failed runs so they don't throw off our average
+```{bash runtime_rm_failed_mpileup}
+del_files=($(grep FAILED \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_mpileup-*.out \
+    output/snv/mouse/tempdir/slurmOut/*_mpileup-*.out \
+    | perl -pe 's/:.+//' \
+    | uniq))
+
+if [ ${#del_files[@]} -gt 0 ]; then
+    rm -- "${del_files[@]}"
+fi
+```
+
+```{bash runtime_grep_mpileup_time}
+#| dependson: [runtime_rm_failed_mpileup]
 grep \
     "Elapsed seconds" \
     /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_mpileup-*.out \
@@ -10,7 +24,8 @@ grep \
 ```
 
 I'm grepping M; here because slurm output double summaries for a couple samples
-```{bash runtime_grep_mpileup}
+```{bash runtime_grep_mpileup_ram}
+#| dependson: [runtime_rm_failed_mpileup]
 grep \
     "Maximum CPU Memory" \
     /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_mpileup-*.out \
@@ -22,7 +37,21 @@ grep \
     > output/counts/mpileup_ram_M.txt
 ```
 
-```{bash runtime_grep_mpileup}
+## Delete failed runs so they don't throw off our average
+```{bash runtime_rm_failed_merge}
+del_files=($(grep FAILED \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_merge-*.out \
+    output/snv/mouse/tempdir/slurmOut/*_merge-*.out \
+    | perl -pe 's/:.+//' \
+    | uniq))
+
+if [ ${#del_files[@]} -gt 0 ]; then
+    rm -- "${del_files[@]}"
+fi
+```
+
+```{bash runtime_grep_merge_time}
+#| dependson: [runtime_rm_failed_merge]
 grep \
     "Elapsed seconds" \
     /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_merge-*.out \
@@ -34,7 +63,8 @@ grep \
 ```
 
 I'm grepping M; here because slurm output double summaries for a couple samples
-```{bash runtime_grep_merge}
+```{bash runtime_grep_merge_ram}
+#| dependson: [runtime_rm_failed_merge]
 grep \
     "Maximum CPU Memory" \
     /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*_merge-*.out \
@@ -45,8 +75,21 @@ grep \
     > output/counts/merge_ram_M.txt
 ```
 
+## Delete failed runs so they don't throw off our average
+```{bash runtime_rm_failed_dist}
+del_files=($(grep FAILED \
+    /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*dist*.out \
+    output/snv/mouse/tempdir/slurmOut/*dist-*.out \
+    | perl -pe 's/:.+//' \
+    | uniq))
 
-```{bash runtime_grep_dist}
+if [ ${#del_files[@]} -gt 0 ]; then
+    rm -- "${del_files[@]}"
+fi
+```
+
+```{bash runtime_grep_dist_time}
+#| dependson: [runtime_rm_failed_dist]
 grep \
     "Elapsed seconds" \
     /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*dist-*.out \
@@ -58,7 +101,8 @@ grep \
 ```
 
 I'm grepping M; here because slurm output double summaries for a couple samples
-```{bash runtime_grep_dist}
+```{bash runtime_grep_dist_ram}
+#| dependson: [runtime_rm_failed_dist]
 grep \
     "Maximum CPU Memory" \
     /gpfs0/scratch/mvc002/scanbit/*/slurmOut/*dist-*.out \
