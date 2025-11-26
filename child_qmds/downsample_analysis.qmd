@@ -97,6 +97,7 @@ output <-
 ## Show how bootstrap values degrade with decreasing cell count and UMI per pseudobulked cluster
 The data were gathered by hand since I don't have a programatic way to pull the top node bootstrap values out of the pdfs
 ```{r downsample_plot}
+#| dependson: [downsample_loop_geo]
 rna_per_run <-
     list.files(
         path = "output/downsample/scanbit_out",

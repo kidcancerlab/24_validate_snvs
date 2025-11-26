@@ -1,4 +1,4 @@
-## Run scanBit on individual cells with min_read_depth of 1 to use for read depth and accuracy Analysis
+## Run scanBit on individual cells with min_read_depth of 1 to use for read depth and accuracy analysis
 For this I'm keeping ten individual cells per cluster, and each cell is assigned to its own cell_group so that I am calculating read depth data for many individual cells.
 ```{r readdepth_scanbit}
 samples_geo <-

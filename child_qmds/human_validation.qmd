@@ -213,6 +213,7 @@ DimPlot(
 ```
 
 ```{r human_val_g41}
+#| eval: FALSE
 calc_variant_variability(
     merged_bcf_file = "output/snv/human/mergedsnvs_G0041_c10.bcf",
     log_base = "output/G41_log",
@@ -346,6 +347,7 @@ g41$prop_tumor_call[!g41$has_calls] <- 0.1
 ```
 
 ```{r human_val_ncount_clust}
+#| eval: FALSE
 sample_names <-
     read_tsv(
         "output/human_bootstraps.txt",
