@@ -179,7 +179,7 @@ merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
 ## Look at lineage tracing barcodes
 
 ```{r transgene_ltbc}
-#| eval: FALSE
+#| eval: TRUE
 ltbc_samples <- c("S0260", "S0261")
 
 plot_point_size <- 0.5
