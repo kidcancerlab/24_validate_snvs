@@ -149,14 +149,14 @@ ggsave(
 
 ## FeaturePlots for figure 4
 ```{r human_val_featureplots}
-g0027 <- qs::qread("output/seurat_objects/individual/G0027_human.qs")
+g0013 <- qs::qread("output/seurat_objects/individual/G0013_human.qs")
 
-g0027$cluster_label <-
-    paste0(g0027$cluster_label, "_c", g0027$individ_clusters)
+g0013$cluster_label <-
+    paste0(g0013$cluster_label, "_c", g0013$individ_clusters)
 
-g27_vlnplot <-
+g13_vlnplot <-
     VlnPlot(
-        g0027,
+        g0013,
         features = c("RUNX2", "SATB2", "COL1A1", "COL1A2"),
         ncol = 1,
         group.by = "cluster_label",
@@ -165,15 +165,15 @@ g27_vlnplot <-
     )
 
 ggsave(
-    "output/figures/g27_vlnplot.pdf",
-    g27_vlnplot,
+    "output/figures/g13_vlnplot.pdf",
+    g13_vlnplot,
     width = 6,
     height = 15
 )
 
-g27_cluster_dimplot <-
+g13_cluster_dimplot <-
     DimPlot(
-        g0027,
+        g0013,
         group.by = "cluster_label",
         label = TRUE,
         label.box = TRUE,
@@ -183,8 +183,8 @@ g27_cluster_dimplot <-
     coord_fixed()
 
 ggsave(
-    "output/figures/g27_cluster_dimplot.pdf",
-    g27_cluster_dimplot,
+    "output/figures/g13_cluster_dimplot.pdf",
+    g13_cluster_dimplot,
     width = 6,
     height = 6
 )
@@ -192,7 +192,9 @@ ggsave(
 
 cluster 7 in G0041 had low XIST and a bit high for ZP3 - maybe oocytes?
 Cluster 0 in G0042 was distinct
+We are no longer doing this since we removed healthy ovary samples
 ```{r human_val_oocyte}
+#| eval: false
 ovary_samples <-
     merge(
         qs::qread("output/seurat_objects/individual/G0041_human.qs"),
