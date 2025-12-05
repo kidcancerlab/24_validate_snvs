@@ -55,7 +55,8 @@ output <-
     )
 ```
 
-## Batch job to count site coverage
+## Batch job to count site coverage of GEO human patient samples
+This includes any site with coverage, not just variant calls
 ```{bash readdepth_count_depth}
 sbatch sbatchCmds/geo_bcf_depths.sh
 ```
@@ -308,11 +309,12 @@ ggsave(
 )
 ```
 
+## Count the number of variant (non-reference) calls made in single cells
 ```{bash readdepth_actual_n_vars}
 sbatch sbatchCmds/count_single_cell_variant_calls.sh
 ```
 
-# Calculate the average number of variants actually called by depth
+## Calculate the average number of variants actually called by depth
 ```{r readdepth_compile_depths_ave}
 all_call_files <-
     list.files(
@@ -331,14 +333,27 @@ all_call_depths <-
         cell_sample = basename(cell_sample) %>%
             str_remove("bcf_calls_depth_") %>%
             str_remove(".txt")
-    )
+    ) %>%
+    select(-alt, -chr)
 
 average_num_calls <-
     all_call_depths %>%
     group_by(depth, cell_sample) %>%
     summarize(n_vars = n(), .groups = "drop") %>%
+    pivot_wider(
+        names_from = "depth",
+        values_from = "n_vars",
+        values_fill = 0
+    ) %>%
+    pivot_longer(
+        cols = c(-cell_sample),
+        names_to = "depth",
+        values_to = "count"
+    ) %>%
     group_by(depth) %>%
-    summarize(mean_n_vars = mean(n_vars))
+    mutate(depth = as.numeric(depth)) %>%
+    summarize(mean_n_vars = mean(count)) %>%
+    arrange(depth)
 
 n_vars_plot <-
     average_num_calls %>%
