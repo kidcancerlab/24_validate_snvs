@@ -123,6 +123,11 @@ rna_per_run <-
     group_by(sample, cells) %>%
     summarize(mean_umi = mean(total_umi), .groups = "drop")
 
+write_tsv(
+    rna_per_run,
+    "output/counts/rna_per_run_downsample.tsv"
+)
+
 bootstrap_downsample_data <-
     readxl::read_xlsx("downsample_bootstrap_values.xlsx") %>%
     mutate(bootstrap_val = replace_na(bootstrap_val, 0)) %>%
@@ -235,4 +240,84 @@ ggsave(
     width = 8,
     height = 7
 )
+```
+
+## Combining trees for supplemental figure
+```{r downsample_merge_plots}
+#| dependson: [downsample_loop_geo]
+tree_table <-
+    tibble(
+        downsample_pdfs =
+            list.files(
+                path = "output/downsample/scanbit_out/geo_samples",
+                pattern = "*_10_tree.pdf",
+                full.names = TRUE,
+                recursive = TRUE
+            )
+    )
+
+tree_table$sample <-
+    tree_table$downsample_pdfs %>%
+    str_remove(".+downsample_") %>%
+    str_remove("_.+")
+
+tree_table$cells <-
+    tree_table$downsample_pdfs %>%
+    str_remove("_10_tree.pdf") %>%
+    str_remove(".+_") %>%
+    as.numeric()
+
+tree_table <-
+    tree_table %>%
+    left_join(
+        read_tsv("output/counts/rna_per_run_downsample.tsv")
+    )
+
+tree_table <-
+    tree_table %>%
+    arrange(sample, desc(cells)) %>%
+    mutate(
+        n_cells_str =
+            if_else(
+                cells == 500000,
+                "all",
+                as.character(cells)
+            )
+    )
+
+pdf(
+    "output/figures/combined_downsample_trees.pdf",
+    width = 8,
+    height = 10
+)
+
+for (i in seq_len(nrow(tree_table))) {
+    print(
+        ggplot2::ggplot() +
+            ggpubr::background_image(
+                magick::image_read(tree_table$downsample_pdfs[i], density = 300)
+            ) +
+            ggplot2::coord_fixed() +
+            ggplot2::labs(
+                title = paste0(
+                    "Sample: ",
+                    tree_table$sample[i],
+                    " with ",
+                    tree_table$n_cells_str[i],
+                    " cells per cluster"
+                ),
+                subtitle = paste(
+                    "Min. read depth: 10, ",
+                    "Mean UMIs per cluster: ",
+                    format(
+                        round(tree_table$mean_umi[i]),
+                        big.mark = ",",
+                        scientific = FALSE
+                    )
+                )
+            )
+    )
+}
+
+dev.off()
 ```
