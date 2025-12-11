@@ -579,3 +579,34 @@ shared_sites %>%
     ) %>%
     write_tsv("output/read_depth/shared_sites_stats.tsv")
 ```
+
+## Merge shared site heatmaps into one big pdf
+```{r readdepth_merge_heatmaps}
+#| dependson: [readdepth_shared_sites]
+heatmap_pdfs <-
+    list.files(
+        path = "output/figures/shared_sites",
+        pattern = "*_c1.pdf",
+        full.names = TRUE,
+        recursive = TRUE
+    )
+
+pdf(
+    "output/figures/shared_sites/combined_shared_heatmaps.pdf",
+    width = 10,
+    height = 10
+)
+
+for (i in seq_len(length(heatmap_pdfs))) {
+    message(heatmap_pdfs[i])
+    print(
+        ggplot2::ggplot() +
+            ggpubr::background_image(
+                magick::image_read(heatmap_pdfs[i], density = 600)
+            ) +
+            ggplot2::coord_fixed()
+    )
+}
+
+dev.off()
+```
