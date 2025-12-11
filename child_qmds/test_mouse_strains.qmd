@@ -58,7 +58,7 @@ This is so the figures and downstream analyses only have B6 and BALB/c
 #| dependson: [mouse_strain_make_sobj]
 min_snvs_per_cluster <- 250
 n_bootstraps <- 10000
-bootstrap_cutoff <- 0.95
+bootstrap_cutoff <- 0.85
 
 dist_worked <-
     parallel::mclapply(

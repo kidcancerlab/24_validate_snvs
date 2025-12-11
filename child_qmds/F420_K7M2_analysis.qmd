@@ -74,7 +74,7 @@ done
 #| dependson: [f420_k7m2_filter_f420_bcfs]
 min_snvs_per_cluster <- 250
 n_bootstraps <- 10000
-bootstrap_cutoff <- 0.95
+bootstrap_cutoff <- 0.85
 
 dist_worked <-
     parallel::mclapply(
@@ -200,7 +200,7 @@ done
 #| dependson: [f420_k7m2_filter_k7m2_bcfs]
 min_snvs_per_cluster <- 250
 n_bootstraps <- 10000
-bootstrap_cutoff <- 0.95
+bootstrap_cutoff <- 0.85
 
 dist_worked <-
     parallel::mclapply(
