@@ -1,16 +1,31 @@
->Template for single cell analysis
->
->Replace the information in misc/sample_metadata.tsv with the metadata for your samples. You can pull this directly from sc_sequencing_log.xlsx and copy/paste the whole row in along with the column headers.
->
->You'll also want to replace the information in de_comps from the degs_gseaplots.qmd document with the comparisons you want to make.
->
->I set this up using a project that had pdx data, but if you only have a single species in your data you can remove the unnecessary code and use a normal format for the cutoff values in the metadata file.
+# Validation of the scanBit tool
 
-# Title of the project
+ScanBit is a tool designed to identify genetically distinct populations of cells within scRNAseq datasets. This repository is dedicated to validating the performance and accuracy of the scanBit tool through various tests and benchmarks. This is the data supporting the scanBit publication: "SCANBIT facilitates identification of tumor cell populations in scRNAseq data using pseudobulked SNV calls".
 
-## Brief description of the project
+## Validation tests
 
-## Brief description of the samples used
+- **Variant Calling on 10x Flex Data**:
+  - Quantify sequencing error rates at varying read depths using 10x Genomics datasets.
 
-## Brief description of the analysis
+- **Mouse Strain Clustering**:
+  - Validate clustering accuracy for genetically distinct mouse strains (e.g., B6 vs. Balb/c).
 
+- **Tumor Marker Validation**:
+  - Assess accuracy of tumor cell identification using known markers (e.g., GFP, RFP, LTBC).
+
+- **Host-Tumor Genetic Divergence**:
+  - Simulate patient-like scenarios where tumor cells derive from the host mouse strain.
+
+- **Human Patient Tumor Samples**:
+  - Assess scanBit results on human tumor datasets from GEO.
+
+- **Downsampling Analysis**:
+  - Test the minimum number of cells/reads needed for accurate identification of distinct populations.
+  - Quantify read depth coverage for single-cell downsampling.
+
+- **Run Time and RAM Usage**:
+  - Quantify average computational resource usage for the pipeline.
+
+## Data availability
+
+The data used in this repository comes from a variety of publicly available and internally generated sources including 10x Genomics datasets, GEO and internal experiments. Scripts to download the data are provided in the sbatchCmds/ folder.
