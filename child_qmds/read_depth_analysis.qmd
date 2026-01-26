@@ -270,9 +270,83 @@ ggsave_wrap(
     height = 6
 )
 
-rm(all_depths, var_depths, ave_var_depths)
+#rm(all_depths, var_depths, ave_var_depths)
 ```
 
+## Make a plot of the percentage of calls that are variant vs depth
+```{r readdepth_perc_variant_plot}
+all_depth_data <-
+    full_join(
+        all_depths %>%
+            rename(total_depth = count) %>%
+            select(-group) %>%
+            filter(depth != 1),
+        var_depths %>%
+            rename(variant_depth = count) %>%
+            select(-group)
+    ) %>%
+    mutate(
+        variant_depth = replace_na(variant_depth, 0),
+        perc_variant = variant_depth / total_depth,
+        depth_fct = as.factor(depth) %>% fct_reorder(depth)
+    ) %>%
+    filter(depth <= 30)
+
+all_depth_data %>%
+    group_by(depth) %>%
+    summarize(
+        mean_perc_variant = mean(perc_variant) * 100,
+        pct_no_variants = mean(variant_depth == 0) * 100,
+        .groups = "drop"
+    ) %>%
+    arrange(depth) %>%
+    write_tsv("output/read_depth/perc_variant_summary.tsv")
+
+perc_variant_plot <-
+    all_depth_data %>%
+    ggplot(
+        aes(
+            x = depth_fct,
+            y = perc_variant
+        )
+    ) +
+    geom_jitter(alpha = 0.8, size = 0.5) +
+    scale_y_log10(labels = scales::label_percent()) +
+    labs(
+        title = "Percent of Variant Calls by Read Depth",
+        x = "Read Depth",
+        y = "Percent of Calls That Are Variant"
+    )
+ggsave(
+    "output/figures/percent_variant_calls_1_cell.pdf",
+    perc_variant_plot,
+    width = 6,
+    height = 4
+)
+
+perc_no_variants_plot <-
+    all_depth_data %>%
+    group_by(depth_fct) %>%
+    summarize(pct_no_variants = mean(variant_depth == 0), .groups = "drop") %>%
+    ggplot(
+        aes(
+            x = depth_fct,
+            y = pct_no_variants
+        )
+    ) +
+    geom_col() +
+    scale_y_continuous(labels = scales::label_percent()) +
+    labs(
+        title = "Percent of Cells With No Variant Calls by Read Depth",
+        x = "Read Depth",
+        y = "Percent of Cells With No Variant Calls"
+    )
+ggsave(
+    "output/figures/percent_no_variant_calls_1_cell.pdf",
+    width = 6,
+    height = 4
+)
+```
 ## Calculate expected number of mistakes for each depth
 Based on flex accuracy calculations
 ```{r readdepth_accuracy_calc}
@@ -398,7 +472,7 @@ calls_summary_plot <-
     scale_shape_manual(values = c(19, 4), name = NULL) +
     labs(
         title = "Total and Inaccurate Variant Calls",
-        subtitle = "For pseudobulked osteosarcoma and bone samples",
+        subtitle = "For single cells from osteosarcoma and bone samples",
         x = "Depth",
         y = "Number of variant calls"
     ) +
