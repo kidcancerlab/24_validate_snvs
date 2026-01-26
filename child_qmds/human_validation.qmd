@@ -380,8 +380,84 @@ cluster_ncounts <-
     bind_rows()
 ```
 
+## Make a pdf for supplemental figure showing all human validation trees
+```{r human_val_trees_pdf}
+tree_table <-
+    tibble(
+        downsample_pdfs =
+            list.files(
+                path = "output/snv/human",
+                pattern = "*_10_tree.pdf",
+                full.names = TRUE
+            )
+    )
 
-BRCA markers:
-https://www.nature.com/articles/s41523-025-00808-w
+tree_table$sample <-
+    tree_table$downsample_pdfs %>%
+    str_remove(".+snvs_") %>%
+    str_remove("_.+")
 
-BRCA zenodo: https://zenodo.org/records/13743374
+pdf(
+    "output/figures/combined_human_validation_trees.pdf",
+    width = 6,
+    height = 15
+)
+
+for (i in seq_len(nrow(tree_table))) {
+    sobj <-
+        qs::qread(paste0(
+            "output/seurat_objects/individual/",
+            tree_table$sample[i],
+            "_human.qs"
+        ))
+    tree <-
+        ggplot2::ggplot() +
+        ggpubr::background_image(
+            magick::image_read(tree_table$downsample_pdfs[i], density = 300)
+        ) +
+        ggplot2::coord_fixed() +
+        ggplot2::labs(
+            title = paste0(
+                "Sample: ",
+                tree_table$sample[i]
+            )
+        ) +
+        theme(plot.margin = margin(10, 0, 10, 0, "pt"))
+
+    dimplot_clusters <-
+        DimPlot(
+            sobj,
+            group.by = "individ_clusters",
+            label = TRUE,
+            label.box = TRUE,
+            repel = TRUE,
+            label.size = 1.5
+        ) +
+        NoLegend() +
+        labs(title = "Transcriptional Clusters") +
+        theme(plot.margin = margin(10, 10, 10, 10, "pt"))
+
+    dimplot_celltypes <-
+        DimPlot(
+            sobj,
+            group.by = "cell_type",
+            label = TRUE,
+            label.box = TRUE,
+            repel = TRUE,
+            label.size = 1.5
+        ) +
+        NoLegend() +
+        labs(title = "Cell Type Annotations") +
+        theme(plot.margin = margin(10, 10, 10, 10, "pt"))
+
+    # Merge the three plots
+    print(
+        gridExtra::grid.arrange(
+            grobs = list(tree, dimplot_clusters, dimplot_celltypes)
+        )
+    )
+    rm(sobj, tree, dimplot_clusters, dimplot_celltypes)
+}
+
+dev.off()
+```
