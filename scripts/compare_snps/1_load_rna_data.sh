@@ -14,10 +14,10 @@ path_to_rna_input=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/r
 
 # SRX accessions
 rna_accessions=(
-    SRX10005729 # F420 cell line rna
-    SRX10005730 # K7M2 cell line rna
-    SRX23462632 # Balbc rna
-    SRX23462631 # B6 rna
+    SRR22515680 # F420 cell line rna
+    SRR22515682 # K7M2 cell line rna
+    xx # Balbc rna
+    xx # B6 rna
 )
 
 rna_accession=${rna_accessions[$SLURM_ARRAY_TASK_ID]}

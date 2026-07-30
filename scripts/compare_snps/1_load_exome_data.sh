@@ -29,7 +29,3 @@ prefetch $exome_accession -O $path_to_exome_input
 for sra_file in $path_to_exome_input/${exome_accession}*/*.sra; do
     fasterq-dump "$sra_file" -O "$path_to_exome_input" --split-files -e 8
 done
-# F420 cell line RNA
-    # K7M2 cell line RNA
-    # Balbc RNA
-    # B6 RNA
