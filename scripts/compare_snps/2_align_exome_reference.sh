@@ -19,7 +19,7 @@ sample=(
 
 # first align to reference mm10, BL6
 bwa mem -M -t 2 \
-    /input/reference/XXXXX \
+    /input/reference/mm10.fa \
     /input/exome/${sample}_1.fastq /input/exome/${sample}_2.fastq \
     2> /output/bwa/logs/bwa_${sample}.err \
 # correct any flaw in read-pairing introduced from aligner
