@@ -8,6 +8,8 @@
 #SBATCH --partition=himem,general
 #SBATCH --time=2-00:00:00
 
+set -euo pipefail
+
 module load bwa-mem2/2.2.1 SAMtools/1.15
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
@@ -39,7 +41,7 @@ bwa-mem2 mem -M -t 2 \
     $wd_path/input/exome/${sample}_1.fastq $wd_path/input/exome/${sample}_2.fastq \
     | samtools fixmate -m -@ 2 - - \
     | samtools sort -@ 2 -m 2G -T $wd_path/output/bwa/tmp_${sample} - \
-    | samtools markdup -@ 2 --write-index -o $wd_path/output/bwa/${sample}_markdup.bam - \
+    | samtools markdup -@ 2 --write-index - $wd_path/output/bwa/${sample}_markdup.bam
 
 samtools flagstat -@ 2 $wd_path/output/bwa/${sample}_markdup.bam \
     > $wd_path/output/bwa/${sample}_flagstat.txt
