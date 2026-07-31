@@ -6,11 +6,11 @@
 #SBATCH --array=0-3
 #SBATCH --cpus-per-task=20
 #SBATCH --partition=himem,general
-#SBATCH --time=05:00:00
+#SBATCH --time=2-00:00:00
 
 module load bwa-mem2/2.2.1 SAMtools/1.15
 
-wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/
+wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
 
 sample=(
@@ -21,8 +21,19 @@ sample=(
 )
 
 # first align to reference mm10, BL6
+## ran bwa-mem2 index on the mm10.fa separately; this makes the bwa-mem2 index files
+
 # then, correct any flaw in read-pairing introduced from aligner
+## with samtools fixmate
+
 # then, sort to genome chromosome and coordinate
+## with samtools sort
+
+# then, mark PCR or read duplicates
+## with samtools markdup
+
+# then, get stats!
+
 bwa-mem2 mem -M -t 2 \
     $wd_path/input/reference/reference \
     $wd_path/input/exome/${sample}_1.fastq $wd_path/input/exome/${sample}_2.fastq \
@@ -33,5 +44,5 @@ bwa-mem2 mem -M -t 2 \
 samtools flagstat -@ 2 $wd_path/output/bwa/${sample}_markdup.bam \
     > $wd_path/output/bwa/${sample}_flagstat.txt
 
-samtools stats -@ 2 $wd_path/output/bwa${sample}_markdup.bam \
+samtools stats -@ 2 $wd_path/output/bwa/${sample}_markdup.bam \
     > $wd_path/output/bwa/${sample}_stats.txt
