@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
-#SBATCH --job-name=load_exome
+#SBATCH --job-name=align_exome
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/bwa/logs/aligning_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/bwa/logs/aligning_%A_%a.txt
 #SBATCH --array=0-3
@@ -58,6 +58,8 @@ echo "Processing $sample_type ($accession)"
 ## with samtools markdup
 
 # then, get stats!
+
+mkdir -p $wd_path/output/bwa/${sample_type}/${accession}
 
 input_path=$wd_path/input/exome/${sample_type}/${accession}
 output_path=$wd_path/output/bwa/${sample_type}/${accession}
