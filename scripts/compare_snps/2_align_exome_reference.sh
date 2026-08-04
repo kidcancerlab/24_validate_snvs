@@ -4,13 +4,14 @@
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/bwa/logs/aligning_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/bwa/logs/aligning_%A_%a.txt
 #SBATCH --array=0-3
-#SBATCH --cpus-per-task=20
+#SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
 #SBATCH --time=2-00:00:00
 
 set -euo pipefail
 
-module load bwa-mem2/2.2.1 SAMtools/1.15
+module load bwa-mem2/2.2.1 \
+    SAMtools/1.15
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
@@ -34,7 +35,7 @@ mapfile \
     SRR_IDs \
     < \
     <(cut \
-        -f2 \
+        -f1 \
         $wd_path/misc/compare_snps_samples.tsv \
         | tail -n +2
     )
@@ -58,7 +59,7 @@ echo "Processing $sample_type ($accession)"
 
 # then, get stats!
 
-input_path=$wd_path/input/exome/${accession}
+input_path=$wd_path/input/exome/${sample_type}/${accession}
 output_path=$wd_path/output/bwa/${sample_type}/${accession}
 
 bwa-mem2 mem \

@@ -8,6 +8,8 @@
 #SBATCH --partition=himem,general
 #SBATCH --time=1-00:00:00
 
+set -euo pipefail
+
 module load SRAToolkit/3.0.1
 
 path_to_rna_input=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/rna
@@ -29,7 +31,3 @@ prefetch $rna_accession -O $path_to_rna_input
 for sra_file in $path_to_rna_input/${rna_accession}*/*.sra; do
     fasterq-dump "$sra_file" -O "$path_to_rna_input" --split-files -e 8
 done
-# F420 cell line RNA
-    # K7M2 cell line RNA
-    # Balbc RNA
-    # B6 RNA

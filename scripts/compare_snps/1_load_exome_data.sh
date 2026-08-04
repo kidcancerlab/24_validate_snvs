@@ -4,9 +4,11 @@
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/logs/exome_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/logs/exome_%A_%a.txt
 #SBATCH --array=0-3
-#SBATCH --cpus-per-task=20
+#SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
 #SBATCH --time=1-00:00:00
+
+set -euo pipefail
 
 module load SRAToolkit/3.0.1
 
@@ -32,7 +34,7 @@ mapfile \
     SRR_IDs \
     < \
     <(cut \
-        -f2 \
+        -f1 \
         $wd_path/misc/compare_snps_samples.tsv \
         | tail -n +2
     )
@@ -42,10 +44,10 @@ accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 
 echo "Processing $sample_type ($accession)"
 
-mkdir -p $wd_path/${sample_type}/${accession}
+mkdir -p $wd_path/input/exome/${sample_type}/${accession}
 
-prefetch $accession -O $wd_path/${sample_type}/${accession}
+prefetch $accession -O $wd_path/input/exome/${sample_type}
 
-for sra_file in $wd_path/${sample_type}/${accession}/${accession}*/*.sra; do
-    fasterq-dump "$sra_file" -O "$wd_path/${sample_type}/${accession}" --split-files -e 8
+for sra_file in $wd_path/input/exome/${sample_type}/${accession}*/*.sra; do
+    fasterq-dump "$sra_file" -O "$wd_path/input/exome/${sample_type}/${accession}" --split-files -e 8
 done
