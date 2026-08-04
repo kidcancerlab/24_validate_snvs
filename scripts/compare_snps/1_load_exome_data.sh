@@ -10,22 +10,42 @@
 
 module load SRAToolkit/3.0.1
 
-path_to_exome_input=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/exome
+wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
-# SRX accessions
-exome_accessions=(
-    SRR13611861 # F420 cell line exome
-    SRR13611860 # K7M2 cell line exome
-    SRR27799014 # Balbc exome
-    SRR27799015 # B6 exome
-)
+# read samples from sample tsv
+## -t => skips trailing newline character as it reads each line
+## <() => process substitution; runs command inside () as if it were file
+## cut => extract columns from tsv
+## -f1 => field 1 or first column
+mapfile \
+    -t \
+    sample_types \
+    < \
+    <(cut \
+        -f2 \
+        $wd_path/misc/compare_snps_samples.tsv \
+        | tail -n +2
+    )
 
-exome_accession=${exome_accessions[$SLURM_ARRAY_TASK_ID]}
+mapfile \
+    -t \
+    SRR_IDs \
+    < \
+    <(cut \
+        -f2 \
+        $wd_path/misc/compare_snps_samples.tsv \
+        | tail -n +2
+    )
 
-mkdir -p $path_to_exome_input/$exome_accession
+sample_type=${sample_types[$SLURM_ARRAY_TASK_ID]}
+accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 
-prefetch $exome_accession -O $path_to_exome_input
+echo "Processing $sample_type ($accession)"
 
-for sra_file in $path_to_exome_input/${exome_accession}*/*.sra; do
-    fasterq-dump "$sra_file" -O "$path_to_exome_input" --split-files -e 8
+mkdir -p $wd_path/${sample_type}/${accession}
+
+prefetch $accession -O $wd_path/${sample_type}/${accession}
+
+for sra_file in $wd_path/${sample_type}/${accession}/${accession}*/*.sra; do
+    fasterq-dump "$sra_file" -O "$wd_path/${sample_type}/${accession}" --split-files -e 8
 done
