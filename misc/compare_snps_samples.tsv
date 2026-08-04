@@ -1,0 +1,5 @@
+SRR_ID	sample_type	tissue	biosample_description	experiment	design
+SRR13611861	F420	osteosarcoma tumor		exome	DNA was extracted from tumor and prepared for exome sequencing using Agilent SureSelectXT Mouse All Exon library kit per manufacturer's protocol.
+SRR13611860	K7M2	osteosarcoma tumor		exome	DNA was extracted from tumor and prepared for exome sequencing using Agilent SureSelectXT Mouse All Exon library kit per manufacturer's protocol.
+SRR27799014	BALB/c	tail	normal	whole_exome	KAPA Hyper, SinglePlex Mouse Exome from Twist (mouse)
+SRR27799015	C57BL/6	cell line	treated (DMBA)	whole_exome	KAPA Hyper, SinglePlex Mouse Exome from Twist (mouse)
