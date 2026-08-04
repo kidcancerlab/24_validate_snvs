@@ -10,7 +10,12 @@
 
 set -euo pipefail
 
-module load BCFtools/1.11 \
+ml purge
+
+module load \
+    GCC/9.3.0 \
+    GCCcore/9.3.0 \
+    BCFtools/1.11 \
     SAMtools/1.15
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
@@ -41,3 +46,32 @@ accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 
 echo "Processing $sample_type ($accession)"
 
+bcftools mpileup \
+    --threads 3 \
+    --max-depth 2000 \
+    -O u \
+    -f ~/../../../../reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/BWAIndex/genome.fa \
+    $wd_path/output/bwa/${sample_type}/${accession}/${accession}.bam | \
+bcftools call \
+    --threads 3 \
+    -m \
+    -O u | \
+bcftools filter \
+    --threads 3 \
+    -g 10 \
+    -s LowQual \
+    -e "QUAL<20 | DP<20" \
+    -O u | \
+bcftools view \
+    --threads 3 \
+    --exclude-types indels \
+    -O z \
+    -o output/vcfs/${sample_type}/${accession}.vcf.gz
+
+bcftools concat \
+    --threads 10 \
+    --output output/vcfs/${sample_type}/${sample_type}.vcf.gz \
+    -O z \
+    output/vcfs/${sample_type}/*.vcf.gz
+
+rm output/vcfs/${sample_type}/*SRR*.vcf.gz
