@@ -8,4 +8,8 @@
 #SBATCH --cpus-per-task=4
 
 module load bwa-mem2/2.2.1
-bwa-mem2 index -p /home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/reference ~/../../../../reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/BWAIndex/genome.fa
+
+bwa-mem2 index \
+    -p \
+    /home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/reference \
+    ~/../../../../reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/BWAIndex/genome.fa
