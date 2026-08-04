@@ -58,11 +58,14 @@ echo "Processing $sample_type ($accession)"
 
 # then, get stats!
 
+input_path=$wd_path/input/exome/${accession}
+output_path=$wd_path/output/bwa/${sample_type}/${accession}
+
 bwa-mem2 mem \
         -M -t 10 \
     $wd_path/input/reference/reference \
-    $wd_path/input/exome/${accession}_1.fastq \
-    $wd_path/input/exome/${accession}_2.fastq \
+    $input_path/${accession}_1.fastq \
+    $input_path/${accession}_2.fastq \
     | samtools fixmate \
         -m \
         -@ 5 - - \
@@ -70,15 +73,15 @@ bwa-mem2 mem \
         -@ 5 \
         -m 2G \
         -T \
-        $wd_path/output/bwa/tmp_${accession} - \
+        $output_path/tmp_${accession} - \
     | samtools markdup \
         -@ 5 \
         --write-index \
         - \
-        $wd_path/output/bwa/${accession}_markdup.bam
+        $output_path/${accession}_markdup.bam
 
-samtools flagstat -@ 2 $wd_path/output/bwa/${accession}_markdup.bam \
-    > $wd_path/output/bwa/${accession}_flagstat.txt
+samtools flagstat -@ 2 $output_path/${accession}_markdup.bam \
+    > $output_path/${accession}_flagstat.txt
 
-samtools stats -@ 2 $wd_path/output/bwa/${accession}_markdup.bam \
-    > $wd_path/output/bwa/${accession}_stats.txt
+samtools stats -@ 2 $output_path/${accession}_markdup.bam \
+    > $output_path/${accession}_stats.txt
