@@ -90,7 +90,7 @@ samtools index -@ 2 $output_path/${accession}_markdup.bam
 
 # split N cigar reads
 gatk SplitNCigarReads \
-    -R $wd_path/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
+    -R $wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
     -I $output_path/${accession}_markdup.bam \
     -O $output_path/${accession}_split.bam
 
