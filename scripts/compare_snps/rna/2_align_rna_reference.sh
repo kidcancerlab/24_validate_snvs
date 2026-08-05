@@ -44,7 +44,7 @@ mapfile \
 sample_type=${sample_types[$SLURM_ARRAY_TASK_ID]}
 accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 
-echo "Processing $sample_type ($accession)"
+echo "**Processing $sample_type ($accession)"
 
 # first align to reference mm10, BL6
 ## ran bwa-mem2 index on the mm10.fa separately; this makes the bwa-mem2 index files
@@ -80,6 +80,8 @@ STAR --genomeDir /reference/mus_musculus/GRCm38/ensembl/release-86/Sequence/STAR
 --outSAMunmapped Within \
 --outSAMattributes NH HI AS nM NM MD
 
+echo "**Finished aligning, marking duplicates"
+
 # mark duplicates
 gatk MarkDuplicates \
     -I $output_path/${accession}_Aligned.sortedByCoord.out.bam \
@@ -88,11 +90,15 @@ gatk MarkDuplicates \
 
 samtools index -@ 2 $output_path/${accession}_markdup.bam
 
+echo "**Finished marking duplicates, splitting CIGAR string"
+
 # split N cigar reads
 gatk SplitNCigarReads \
     -R $wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
     -I $output_path/${accession}_markdup.bam \
     -O $output_path/${accession}_split.bam
+
+echo "**Finally, running stats"
 
 samtools index -@ 2 $output_path/${accession}_split.bam
 
