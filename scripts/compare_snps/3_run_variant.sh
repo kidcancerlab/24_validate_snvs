@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --job-name=call_variant
-#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/logs/variant_call/variant_%A_%a.txt
-#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/input/logs/variant_call/variant_%A_%a.txt
+#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/vcfs/logs/variant_%A_%a.txt
+#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/vcfs/logs/variant_%A_%a.txt
 #SBATCH --array=0-3
-#SBATCH --cpus-per-task=20
+#SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
 #SBATCH --time=1-00:00:00
 
@@ -51,7 +51,7 @@ bcftools mpileup \
     --max-depth 2000 \
     -O u \
     -f ~/../../../../reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/BWAIndex/genome.fa \
-    $wd_path/output/bwa/${sample_type}/${accession}/${accession}.bam | \
+    $wd_path/output/bwa/${sample_type}/${accession}/${accession}_markdup.bam | \
 bcftools call \
     --threads 3 \
     -m \
