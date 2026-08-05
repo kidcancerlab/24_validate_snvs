@@ -81,7 +81,7 @@ STAR --genomeDir /reference/mus_musculus/GRCm38/ensembl/release-86/Sequence/STAR
 --outSAMattributes NH HI AS nM NM MD
 
 # mark duplicates
-java -jar picard.jar MarkDuplicates \
+gatk MarkDuplicates \
     -I $output_path/${accession}_Aligned.sortedByCoord.out.bam \
     -O $output_path/${accession}_markdup.bam \
     -M $output_path/${accession}_markdup_metrics.txt
