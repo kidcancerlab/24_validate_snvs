@@ -15,6 +15,10 @@ GSE*
 #Stuff generated during mkref
 *.mro
 
+#Stuff generated during aligning RNA
+*.out
+*.sam
+
 #folders used for testing alignment to GFP genome
 junk_fastq
 just_gfp_counts
