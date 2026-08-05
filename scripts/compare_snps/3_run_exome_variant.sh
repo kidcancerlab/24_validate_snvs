@@ -46,11 +46,13 @@ accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 
 echo "Processing $sample_type ($accession)"
 
+mkdir -p $wd_path/output/vcfs/${sample_type}/${accession}
+
 bcftools mpileup \
     --threads 3 \
     --max-depth 2000 \
     -O u \
-    -f ~/../../../../reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/BWAIndex/genome.fa \
+    -f $wd_path/input/reference/mm10.fa \
     $wd_path/output/bwa/${sample_type}/${accession}/${accession}_markdup.bam | \
 bcftools call \
     --threads 3 \
