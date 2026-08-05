@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-module load bwa-mem2/2.2.1 \
+module load STAR/2.7.9a \
     SAMtools/1.15
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
@@ -59,8 +59,6 @@ echo "Processing $sample_type ($accession)"
 
 # then, get stats!
 
-mkdir -p $wd_path/output/rna/bwa/${sample_type}/${accession}
-
 input_path=$wd_path/input/rna/${sample_type}/${accession}
 output_path=$wd_path/output/rna/bwa/${sample_type}/${accession}
 
@@ -69,27 +67,32 @@ if [ ! -f "$input_path/${accession}_1.fastq" ]; then
     exit 0
 fi
 
-bwa-mem2 mem \
-        -M -t 10 \
-    $wd_path/input/reference/reference \
-    $input_path/${accession}_1.fastq \
-    $input_path/${accession}_2.fastq \
-    | samtools fixmate \
-        -m \
-        -@ 5 - - \
-    | samtools sort \
-        -@ 5 \
-        -m 2G \
-        -T \
-        $output_path/tmp_${accession} - \
-    | samtools markdup \
-        -@ 5 \
-        --write-index \
-        - \
-        $output_path/${accession}_markdup.bam
+mkdir -p $wd_path/output/rna/bwa/${sample_type}/${accession}
 
-samtools flagstat -@ 2 $output_path/${accession}_markdup.bam \
-    > $output_path/${accession}_flagstat.txt
+# run alignment on human genome with STAR
+STAR --genomeDir /reference/mus_musculus/GRCm38/ensembl/release-86/Sequence/STARIndex_2.7.9a \
+--runThreadN 6 \
+--readFilesIn $input_path/${accession}_1.fastq $input_path/${accession}_2.fastq \
+--outFileNamePrefix $output_path/${accession}_ \
+--outSAMtype BAM SortedByCoordinate \
+--twopassMode Basic \
+--outSAMunmapped Within \
+--outSAMattributes NH HI AS nM NM MD
 
-samtools stats -@ 2 $output_path/${accession}_markdup.bam \
-    > $output_path/${accession}_stats.txt
+# mark duplicates
+java -jar picard.jar MarkDuplicates \
+    -I $output_path/${accession}_Aligned.sortedByCoord.out.bam \
+    -O $output_path/${accession}_markdup.bam \
+    -M $output_path/${accession}_markdup_metrics.txt
+
+# split N cigar reads
+
+
+
+samtools index -@ 2 $output_path/${accession}_Aligned.sortedByCoord.out.bam
+
+samtools flagstat -@ 2 $output_path/${accession}_Aligned.sortedByCoord.out.bam \
+    > "$output_path/${accession}_flagstat.txt"
+
+samtools stats -@ 2 $output_path/${accession}_Aligned.sortedByCoord.out.bam \
+    > "$output_path/${accession}_stats.txt"
