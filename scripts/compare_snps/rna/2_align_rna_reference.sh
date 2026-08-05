@@ -11,7 +11,8 @@
 set -euo pipefail
 
 module load STAR/2.7.9a \
-    SAMtools/1.15
+    SAMtools/1.15 \
+    GATK/4.5.0.0-Java-17.0.2
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
@@ -85,14 +86,18 @@ java -jar picard.jar MarkDuplicates \
     -O $output_path/${accession}_markdup.bam \
     -M $output_path/${accession}_markdup_metrics.txt
 
+samtools index -@ 2 $output_path/${accession}_markdup.bam
+
 # split N cigar reads
+gatk SplitNCigarReads \
+    -R $wd_path/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
+    -I $output_path/${accession}_markdup.bam \
+    -O $output_path/${accession}_split.bam
 
+samtools index -@ 2 $output_path/${accession}_split.bam
 
-
-samtools index -@ 2 $output_path/${accession}_Aligned.sortedByCoord.out.bam
-
-samtools flagstat -@ 2 $output_path/${accession}_Aligned.sortedByCoord.out.bam \
+samtools flagstat -@ 2 $output_path/${accession}_split.bam \
     > "$output_path/${accession}_flagstat.txt"
 
-samtools stats -@ 2 $output_path/${accession}_Aligned.sortedByCoord.out.bam \
+samtools stats -@ 2 $output_path/${accession}_split.bam \
     > "$output_path/${accession}_stats.txt"
