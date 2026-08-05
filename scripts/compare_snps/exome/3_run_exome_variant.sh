@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --job-name=call_variant
-#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/vcfs/logs/variant_%A_%a.txt
-#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/vcfs/logs/variant_%A_%a.txt
+#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/exome/vcfs/logs/variant_%A_%a.txt
+#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/exome/vcfs/logs/variant_%A_%a.txt
 #SBATCH --array=0-3
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
@@ -46,14 +46,19 @@ accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 
 echo "Processing $sample_type ($accession)"
 
-mkdir -p $wd_path/output/vcfs/${sample_type}/${accession}
+mkdir -p $wd_path/output/exome/vcfs/${sample_type}/${accession}
+
+if [ ! -f "$wd_path/output/exome/bwa/${sample_type}/${accession}/${accession}_markdup.bam" ]; then
+    echo "Input file not found for sample ${sample_type} (${accession}). Skipping." >&2
+    exit 0
+fi
 
 bcftools mpileup \
     --threads 3 \
     --max-depth 2000 \
     -O u \
     -f $wd_path/input/reference/mm10.fa \
-    $wd_path/output/bwa/${sample_type}/${accession}/${accession}_markdup.bam | \
+    $wd_path/output/exome/bwa/${sample_type}/${accession}/${accession}_markdup.bam | \
 bcftools call \
     --threads 3 \
     -m \
@@ -68,12 +73,12 @@ bcftools view \
     --threads 3 \
     --exclude-types indels \
     -O z \
-    -o output/vcfs/${sample_type}/${accession}.vcf.gz
+    -o output/exome/vcfs/${sample_type}/${accession}.vcf.gz
 
 bcftools concat \
     --threads 10 \
-    --output output/vcfs/${sample_type}/${sample_type}.vcf.gz \
+    --output output/exome/vcfs/${sample_type}/${sample_type}.vcf.gz \
     -O z \
-    output/vcfs/${sample_type}/*.vcf.gz
+    output/exome/vcfs/${sample_type}/*.vcf.gz
 
-rm output/vcfs/${sample_type}/*SRR*.vcf.gz
+rm output/exome/vcfs/${sample_type}/*SRR*.vcf.gz

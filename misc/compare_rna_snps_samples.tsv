@@ -1,0 +1,59 @@
+SRR_ID	sample_type	tissue	biosample_description	experiment	design
+SRR37381208	K7M2	K7M2 Tumor		scRNAseq	TIGIT- NK cells isolated from the TME of K7M2 tumor in BALB/c mice
+SRR37381209	K7M2	K7M2 Tumor		scRNAseq	TIGIT+ NK cells isolated from the TME of K7M2 tumor in BALB/c mice
+SRR37381210	K7M2	Spleen		scRNAseq	NK cells isolated from the spleen of subcutaneous K7M2 bearing BALB/c mice
+SRR25779122	K7M2	lung		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 3
+SRR25779123	K7M2	lung		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 2
+SRR25779124	K7M2	lung		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 1
+SRR18218812	K7M2	Osteosarcoma primary tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218813	K7M2	Osteosarcoma primary tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218814	K7M2	Osteosarcoma primary tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218815	K7M2	Osteosarcoma primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218816	K7M2	Osteosarcoma primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218817	K7M2	Osteosarcoma primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218818	K7M2	Osteosarcoma primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218819	K7M2	Osteosarcoma primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR30345422	F420	lung tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345423	F420	lung tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345295	F420	lung tumor		snRNAseq	F420 lung met: control; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345296	F420	lung tumor		snRNAseq	F420 lung met: control; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345297	F420	lung tumor		snRNAseq	F420 lung met: nintedanib, on day 1; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345298	F420	lung tumor		snRNAseq	F420 lung met: nintedanib, on day 1; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345299	F420	lung tumor		snRNAseq	F420 lung met: nintedanib, on day 28; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345300	F420	lung tumor		snRNAseq	F420 lung met: nintedanib, on day 28; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR13644107	F420	osteosarcoma		RNAseq	F420; Mus musculus; RNA-Seq -- F420 tumors were established by subcutaneously injecting cells into flanks of C57BL6 mice
+SRR39712798	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
+SRR39712799	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
+SRR39712800	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
+SRR39712801	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
+SRR39660984	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660988	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660989	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660990	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660991	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660992	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660993	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660994	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660995	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660996	BALBc	colon tissue		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39878108	C57BL6	colon		scRNAseq	scRNA-seq on colonic tissues from LCA-gavaged mice post-Salmonella Typhimurium infection to elucidate LCA-induced immune reprogramming.
+SRR39866516	C57BL6	colon		scRNAseq	scRNA-seq on colonic tissues from LCA-gavaged mice post-Salmonella Typhimurium infection to elucidate LCA-induced immune reprogramming.
+SRR39866517	C57BL6	colon		scRNAseq	scRNA-seq on colonic tissues from LCA-gavaged mice post-Salmonella Typhimurium infection to elucidate LCA-induced immune reprogramming.
+SRR39394558	C57BL6	liver		RNAseq	Total RNA was extracted from hepatocellular carcinoma (HCC) tissue of mice with hydrodynamic-induced liver cancer using TRIzol reagent.
+SRR39394566	C57BL6	liver		RNAseq	Total RNA was extracted from mouse liver tissue using TRIzol reagent.
+SRR39394559	C57BL6	liver		RNAseq	Total RNA was extracted from mouse liver tissue using TRIzol reagent.
+SRR39394560	C57BL6	liver		RNAseq	Total RNA was extracted from mouse liver tissue using TRIzol reagent.
+SRR39394569	C57BL6	placenta		RNAseq	Total RNA was extracted from mouse placental tissue using TRIzol reagent.
+SRR39394561	C57BL6	placenta		RNAseq	Total RNA was extracted from mouse placental tissue using TRIzol reagent. 
+SRR39394562	C57BL6	placenta		RNAseq	Total RNA was extracted from mouse placental tissue using TRIzol reagent.
+SRR39394563	C57BL6	fetus		RNAseq	Total RNA was extracted from mouse fetal tissue using TRIzol reagent.
+SRR39394574	C57BL6	fetus		RNAseq	Total RNA was extracted from mouse fetal tissue using TRIzol reagent.
+SRR39394575	C57BL6	fetus		RNAseq	Total RNA was extracted from mouse fetal tissue using TRIzol reagent.
+SRR36722024	C57BL6	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_4, mRNA-seq; Mus musculus; RNA-Seq
+SRR36722025	C57BL6	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_3, mRNA-seq; Mus musculus; RNA-Seq
+SRR36722028	C57BL6	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_2, mRNA-seq; Mus musculus; RNA-Seq
+SRR36722043	C57BL6	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_1, mRNA-seq; Mus musculus; RNA-Seq
+SRR36707628	C57BL6	lung		RNAseq	uninfected, negative; G1m4_4; Mus musculus; RNA-Seq
+SRR36707629	C57BL6	lung		RNAseq	uninfected, negative; G1m3_4; Mus musculus; RNA-Seq
+SRR36707630	C57BL6	lung		RNAseq	uninfected, negative; G1m2_4; Mus musculus; RNA-Seq
+SRR36707631	C57BL6	lung		RNAseq	uninfected, negative; G1m1_4; Mus musculus; RNA-Seq 

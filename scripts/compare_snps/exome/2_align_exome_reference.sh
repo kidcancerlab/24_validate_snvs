@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --job-name=align_exome
-#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/bwa/logs/aligning_%A_%a.txt
-#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/bwa/logs/aligning_%A_%a.txt
+#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/exome/bwa/logs/aligning_%A_%a.txt
+#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/exome/bwa/logs/aligning_%A_%a.txt
 #SBATCH --array=0-3
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
@@ -59,10 +59,10 @@ echo "Processing $sample_type ($accession)"
 
 # then, get stats!
 
-mkdir -p $wd_path/output/bwa/${sample_type}/${accession}
+mkdir -p $wd_path/output/exome/bwa/${sample_type}/${accession}
 
 input_path=$wd_path/input/exome/${sample_type}/${accession}
-output_path=$wd_path/output/bwa/${sample_type}/${accession}
+output_path=$wd_path/output/exome/bwa/${sample_type}/${accession}
 
 bwa-mem2 mem \
         -M -t 10 \
