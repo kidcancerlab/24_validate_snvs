@@ -3,10 +3,10 @@
 #SBATCH --job-name=call_variant
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant_%A_%a.txt
-#SBATCH --array=0-3
+#SBATCH --array=0-57
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
-#SBATCH --time=1-00:00:00
+#SBATCH --time=2-00:00:00
 
 set -euo pipefail
 
@@ -57,7 +57,7 @@ bcftools mpileup \
     --threads 3 \
     --max-depth 2000 \
     -O u \
-    -f $wd_path/input/reference/mm10.fa \
+    -f $wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
     $wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam | \
 bcftools call \
     --threads 3 \
