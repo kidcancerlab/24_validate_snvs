@@ -72,12 +72,6 @@ bcftools filter \
 bcftools view \
     --threads 3 \
     -O z \
-    -o output/rna/vcfs/${sample_type}/${accession}.vcf.gz
+    -o $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
 
-bcftools merge \
-    --threads 10 \
-    --output output/rna/vcfs/${sample_type}/${sample_type}.vcf.gz \
-    -O z \
-    output/rna/vcfs/${sample_type}/*.vcf.gz
-
-# rm output/rna/vcfs/${sample_type}/*SRR*.vcf.gz
+bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
