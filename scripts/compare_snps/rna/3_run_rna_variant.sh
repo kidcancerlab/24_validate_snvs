@@ -46,7 +46,7 @@ accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 
 echo "Processing $sample_type ($accession)"
 
-mkdir -p $wd_path/output/rna/vcfs/${sample_type}/${accession}
+mkdir -p $wd_path/output/rna/vcfs/${sample_type}
 
 if [ ! -f "$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam" ]; then
     echo "Input file not found for sample ${sample_type} (${accession}). Skipping." >&2
