@@ -71,11 +71,10 @@ bcftools filter \
     -O u | \
 bcftools view \
     --threads 3 \
-    --exclude-types indels \
     -O z \
     -o output/rna/vcfs/${sample_type}/${accession}.vcf.gz
 
-bcftools concat \
+bcftools merge \
     --threads 10 \
     --output output/rna/vcfs/${sample_type}/${sample_type}.vcf.gz \
     -O z \
