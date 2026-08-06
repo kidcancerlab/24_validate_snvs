@@ -81,4 +81,4 @@ bcftools concat \
     -O z \
     output/rna/vcfs/${sample_type}/*.vcf.gz
 
-rm output/rna/vcfs/${sample_type}/*SRR*.vcf.gz
+# rm output/rna/vcfs/${sample_type}/*SRR*.vcf.gz
