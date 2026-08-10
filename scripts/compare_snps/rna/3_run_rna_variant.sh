@@ -66,12 +66,13 @@ bcftools call \
 bcftools filter \
     --threads 3 \
     -g 10 \
-    -s LowQual \
-    -e "QUAL<20 | DP<20" \
+    -s LowQual \ 
+    -e "QUAL<20 || DP<20" \
     -O u | \
 bcftools view \
     --threads 3 \
     -O z \
+    -i 'GT[*]="alt"' \
     -o $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
 
 bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
