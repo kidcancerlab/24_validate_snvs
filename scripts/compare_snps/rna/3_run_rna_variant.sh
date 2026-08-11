@@ -82,7 +82,7 @@ bcftools filter \
 bcftools view \
     --threads 3 \
     -O z \
-    -i 'GT[*]="alt"' \
+    -i 'GT[*]="alt" && FILTER="PASS"'\
     -o $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
 
 bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
