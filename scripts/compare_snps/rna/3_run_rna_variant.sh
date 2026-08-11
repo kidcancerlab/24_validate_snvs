@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --job-name=call_variant
-#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant_%A_%a.txt
-#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant_%A_%a.txt
+#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant/variant_%A_%a.txt
+#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant/variant_%A_%a.txt
 #SBATCH --array=0-57
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
@@ -53,6 +53,16 @@ if [ ! -f "$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_mark
     exit 0
 fi
 
+if [ ! -f "$wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa" ]; then
+    echo "Reference file not found. Skipping." >&2
+    exit 0
+fi
+
+if [ ! -f "$wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa" ]; then
+    echo "Reference file not found. Skipping." >&2
+    exit 0
+fi
+
 bcftools mpileup \
     --threads 3 \
     --max-depth 2000 \
@@ -66,7 +76,7 @@ bcftools call \
 bcftools filter \
     --threads 3 \
     -g 10 \
-    -s LowQual \ 
+    -s LowQual \
     -e "QUAL<20 || DP<20" \
     -O u | \
 bcftools view \
