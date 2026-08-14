@@ -8,6 +8,8 @@
 #SBATCH --partition=himem,general
 #SBATCH --time=2-00:00:00
 
+# don't actually need to run this for my workflow
+
 set -euo pipefail
 
 ml purge
@@ -52,5 +54,3 @@ bcftools merge \
 echo "**Finished merging, now indexing..."
 
 bcftools index $wd_path/output/rna/vcfs/${sample_type}.vcf.gz
-
-# rm output/rna/vcfs/${sample_type}/*SRR*.vcf.gz
