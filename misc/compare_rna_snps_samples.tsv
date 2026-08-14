@@ -1,27 +1,27 @@
 SRR_ID	sample_type	tissue	biosample_description	experiment	design
-SRR37381208	K7M2	TIGIT- NK cells		scRNAseq	TIGIT- NK cells isolated from the TME of K7M2 tumor in BALB/c mice
-SRR37381209	K7M2	TIGIT+ NK cells		scRNAseq	TIGIT+ NK cells isolated from the TME of K7M2 tumor in BALB/c mice
+SRR37381208	K7M2	NK_cells		scRNAseq	TIGIT- NK cells isolated from the TME of K7M2 tumor in BALB/c mice
+SRR37381209	K7M2	NK_cells		scRNAseq	TIGIT+ NK cells isolated from the TME of K7M2 tumor in BALB/c mice
 SRR37381210	K7M2	spleen		scRNAseq	NK cells isolated from the spleen of subcutaneous K7M2 bearing BALB/c mice
-SRR25779122	K7M2	lung tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 3
-SRR25779123	K7M2	lung tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 2
-SRR25779124	K7M2	lung tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 1
-SRR18218812	K7M2	primary tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218813	K7M2	primary tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218814	K7M2	primary tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218815	K7M2	primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218816	K7M2	primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218817	K7M2	primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218818	K7M2	primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218819	K7M2	primary tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR30345422	F420	lung tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345423	F420	lung tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345295	F420	lung tumor		snRNAseq	F420 lung met: control; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345296	F420	lung tumor		snRNAseq	F420 lung met: control; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345297	F420	lung tumor		snRNAseq	F420 lung met: nintedanib, on day 1; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345298	F420	lung tumor		snRNAseq	F420 lung met: nintedanib, on day 1; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345299	F420	lung tumor		snRNAseq	F420 lung met: nintedanib, on day 28; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345300	F420	lung tumor		snRNAseq	F420 lung met: nintedanib, on day 28; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR13644107	F420	osteosarcoma		RNAseq	F420; Mus musculus; RNA-Seq -- F420 tumors were established by subcutaneously injecting cells into flanks of C57BL6 mice
+SRR25779122	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 3
+SRR25779123	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 2
+SRR25779124	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 1
+SRR18218812	K7M2	primary_tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218813	K7M2	primary_tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218814	K7M2	primary_tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218815	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218816	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218817	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218818	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR18218819	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
+SRR30345422	F420	lung_tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345423	F420	lung_tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345295	F420	lung_tumor		snRNAseq	F420 lung met: control; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345296	F420	lung_tumor		snRNAseq	F420 lung met: control; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345297	F420	lung_tumor		snRNAseq	F420 lung met: nintedanib, on day 1; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345298	F420	lung_tumor		snRNAseq	F420 lung met: nintedanib, on day 1; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345299	F420	lung_tumor		snRNAseq	F420 lung met: nintedanib, on day 28; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR30345300	F420	lung_tumor		snRNAseq	F420 lung met: nintedanib, on day 28; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
+SRR13644107	F420	flank_tumor		RNAseq	F420; Mus musculus; RNA-Seq -- F420 tumors were established by subcutaneously injecting cells into flanks of C57BL6 mice
 SRR39712798	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
 SRR39712799	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
 SRR39712800	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
