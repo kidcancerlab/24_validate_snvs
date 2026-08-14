@@ -51,3 +51,6 @@ prefetch $accession -O $wd_path/input/rna/${sample_type}
 for sra_file in $wd_path/input/rna/${sample_type}/${accession}*/*.sra; do
     fasterq-dump "$sra_file" -O "$wd_path/input/rna/${sample_type}/${accession}" --split-files -e 8
 done
+
+gzip "$wd_path/input/rna/${sample_type}/${accession}/${accession}_1.fastq"
+gzip "$wd_path/input/rna/${sample_type}/${accession}/${accession}_2.fastq"
