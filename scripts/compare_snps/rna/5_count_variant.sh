@@ -57,11 +57,14 @@ vcf=$wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
 
 mkdir -p $wd_path/output/rna/count
 
-# covered Mb (depth >=10)
+# covered bases (depth (third column) >=10)
 covered_bases=$(samtools depth -a "$bam" | awk '$3>=10' | wc -l)
+# covered Mb (in scientific notation, keeps six numbers behind decimals) & convert to Mb
 covered_mb=$(echo "scale=6; $covered_bases / 1000000" | bc)
 
-# PASS SNV count
+# keep only files that PASS in the quality filter
+# keep snps
+# wc -l = count them
 variant_count=$(bcftools view -H -f PASS -v snps "$vcf" | wc -l)
 
 # mutations per Mb (guard against divide-by-zero)
