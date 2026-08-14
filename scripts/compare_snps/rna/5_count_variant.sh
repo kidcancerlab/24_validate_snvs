@@ -72,6 +72,6 @@ else
 fi
 
 # write this sample's row to its own file
-printf "%s\t%s\t%s\t%s\t%s\n" \
+printf "%s\t%s\t%s\t%s\t%s\t%s\n" \
     "$accession" "$sample_type" "$location" "$variant_count" "$covered_mb" "$mut_per_mb" \
     > $wd_path/output/rna/count/${sample_type}/${accession}_count.tsv
