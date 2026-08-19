@@ -1,12 +1,11 @@
 #!/bin/bash
-#SBATCH --account=gdrobertslab
 #SBATCH --job-name=merge_variant
+#SBATCH --partition=himem
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/merge/merge_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/merge/merge_%A_%a.txt
-#SBATCH --array=0-3
-#SBATCH --cpus-per-task=10
-#SBATCH --partition=himem,general
-#SBATCH --time=2-00:00:00
+#SBATCH --mem=100G
+#SBATCH --time=6:00:00
+#SBATCH --cpus-per-task=4
 
 # don't actually need to run this for my workflow
 
@@ -22,35 +21,12 @@ module load \
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
-# read samples from sample tsv
-mapfile \
-    -t \
-    sample_types \
-    < \
-    <(cut \
-        -f2 \
-        $wd_path/misc/compare_rna_snps_samples.tsv \
-        | tail -n +2 \
-        | uniq
-    )
-
-
-sample_types=($(cut \
-        -f2 \
-        $wd_path/misc/compare_rna_snps_samples.tsv \
-        | tail -n +2 \
-        | uniq))
-
-sample_type=${sample_types[$SLURM_ARRAY_TASK_ID]}
-
-echo "**Processing $sample_type"
-
 bcftools merge \
     --threads 10 \
-    --output $wd_path/output/rna/vcfs/${sample_type}.vcf.gz \
+    --output $wd_path/output/rna/vcfs/all_sample_types.vcf.gz \
     -O z \
-    $wd_path/output/rna/vcfs/${sample_type}/*.vcf.gz
+    $wd_path/output/rna/vcfs/*/*.vcf.gz
 
 echo "**Finished merging, now indexing..."
 
-bcftools index $wd_path/output/rna/vcfs/${sample_type}.vcf.gz
+bcftools index $wd_path/output/rna/vcfs/all_sample_types.vcf.gz
