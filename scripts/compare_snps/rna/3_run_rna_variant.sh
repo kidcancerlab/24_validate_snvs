@@ -72,17 +72,23 @@ bcftools mpileup \
 bcftools call \
     --threads 3 \
     -m \
+    # --ploidy *give a ploidy file* (but this will mess up the mitochondrial)
     -O u | \
 bcftools filter \
     --threads 3 \
-    -g 10 \
+    -g 10 \ 
+    # don't call snps on any snp that is within 10 bases of an indel
     -s LowQual \
-    -e "QUAL<20 || DP<20" \
-    -O u | \
-bcftools view \
-    --threads 3 \
+    -e "QUAL<20 || DP<10" \
     -O z \
-    -i 'GT[*]="alt" && FILTER="PASS"'\
     -o $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
+
+# convert to bcf?
+# then index bcf
+
+# bcftools view \
+#     --threads 3 \
+#     -O z \
+#     -i 'GT[*]="alt" && FILTER="PASS"'\
 
 bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
