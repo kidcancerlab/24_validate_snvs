@@ -19,6 +19,11 @@ GSE*
 *.out
 *.sam
 
+#Stuff generated during variant calling
+*.vcf.gz
+*.vcf
+*.bcf
+
 #folders used for testing alignment to GFP genome
 junk_fastq
 just_gfp_counts
