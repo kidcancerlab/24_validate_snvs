@@ -72,7 +72,7 @@ bcftools mpileup \
 bcftools call \
     --threads 3 \
     -m \
-    --ploidy $wd_path/misc/mm10_ploidy.txt \
+    --ploidy-file $wd_path/misc/mm10_ploidy.txt \
     -O u | \
 bcftools filter \
     --threads 3 \
