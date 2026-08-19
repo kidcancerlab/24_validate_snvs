@@ -72,7 +72,7 @@ bcftools mpileup \
 bcftools call \
     --threads 3 \
     -m \
-    --ploidy /home/gdrobertslab/lab/Analysis/Katie/26_scanBit/inst/extdata/mm10_ploidy.txt \
+    --ploidy $wd_path/misc/mm10_ploidy.txt \
     -O u | \
 bcftools filter \
     --threads 3 \
