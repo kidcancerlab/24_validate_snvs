@@ -4,8 +4,8 @@
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/merge/merge_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/merge/merge_%A_%a.txt
 #SBATCH --mem=100G
-#SBATCH --time=6:00:00
-#SBATCH --cpus-per-task=4
+#SBATCH --time=2-00:00:00
+#SBATCH --cpus-per-task=5
 
 # don't actually need to run this for my workflow
 
@@ -24,7 +24,7 @@ wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 echo "**Merging all samples."
 
 bcftools merge \
-    --threads 10 \
+    --threads 5 \
     --output $wd_path/output/rna/vcfs/merged.vcf.gz \
     -O z \
     $wd_path/output/rna/vcfs/*/*.vcf.gz
