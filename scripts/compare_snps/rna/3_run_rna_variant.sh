@@ -58,11 +58,6 @@ if [ ! -f "$wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assem
     exit 0
 fi
 
-if [ ! -f "$wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa" ]; then
-    echo "Reference file not found. Skipping." >&2
-    exit 0
-fi
-
 bcftools mpileup \
     --threads 3 \
     --max-depth 2000 \
@@ -77,15 +72,15 @@ bcftools call \
 bcftools filter \
     --threads 3 \
     -g 10 \
-    -s LowQual \
     -e "QUAL<20 || DP<10" \
-    -O z \
-    -o $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
-
-bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
-
-bcftools view $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz \
+    -O u \
+ | bcftools view $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz \
     -O b \
     -o $wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
+
+#-o $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz \
+#-s LowQual \
+
+#bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
 
 bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
