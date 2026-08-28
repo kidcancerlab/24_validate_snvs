@@ -58,6 +58,8 @@ if [ ! -f "$wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assem
     exit 0
 fi
 
+echo "**Starting bcftools mpileup"
+
 bcftools mpileup \
     --threads 3 \
     --max-depth 2000 \
@@ -74,13 +76,17 @@ bcftools filter \
     -g 10 \
     -e "QUAL<20 || DP<10" \
     -O u \
- | bcftools view $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz \
+ | bcftools view \
     -O b \
     -o $wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
+
+echo "**Finished bcftools mpileup, call, & filter -- now indexing"
+
+bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
+
+echo "**Finished bcftools index"
 
 #-o $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz \
 #-s LowQual \
 
 #bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
-
-bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
