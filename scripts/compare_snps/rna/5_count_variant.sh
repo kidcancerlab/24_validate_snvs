@@ -26,13 +26,11 @@ sample_types=($(cut \
         $wd_path/misc/compare_rna_snps_samples.tsv \
         | tail -n +2 \
         ))
-
 SRR_IDs=($(cut \
         -f1 \
         $wd_path/misc/compare_rna_snps_samples.tsv \
         | tail -n +2 \
         ))
-
 locations=($(cut \
         -f3 \
         $wd_path/misc/compare_rna_snps_samples.tsv \

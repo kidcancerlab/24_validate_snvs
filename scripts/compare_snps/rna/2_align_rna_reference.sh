@@ -22,24 +22,16 @@ wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 ## cut => extract columns from tsv
 ## -f1 => field 1 or first column
 mapfile \
-    -t \
-    sample_types \
-    < \
-    <(cut \
+sample_types=($(cut \
         -f2 \
         $wd_path/misc/compare_rna_snps_samples.tsv \
-        | tail -n +2
-    )
-
-mapfile \
-    -t \
-    SRR_IDs \
-    < \
-    <(cut \
+        | tail -n +2 \
+        ))
+SRR_IDs=($(cut \
         -f1 \
         $wd_path/misc/compare_rna_snps_samples.tsv \
-        | tail -n +2
-    )
+        | tail -n +2 \
+        ))
 
 sample_type=${sample_types[$SLURM_ARRAY_TASK_ID]}
 accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
