@@ -25,33 +25,34 @@ echo "**Merging all samples."
 
 bcftools merge \
     --threads 5 \
-    --output $wd_path/output/rna/vcfs/merged.vcf.gz \
-    -O z \
-    $wd_path/output/rna/vcfs/*/*.vcf.gz
+    --output $wd_path/output/rna/vcfs/merged.bcf \
+    -O b \
+    $wd_path/output/rna/vcfs/*/*.bcf
 
 echo "**Finished merging, now indexing..."
 
 echo "**Indexing file."
 
-bcftools index $wd_path/output/rna/vcfs/merged.vcf.gz
+bcftools index $wd_path/output/rna/vcfs/merged.bcf
 
 echo "**Keeping only shared sites from all samples."
 
 # keep only regions that overlap in every sample (missing = ./. at site)
+# F_MISSING<0.75? or just wait to filter on the fly with ScanBit
 bcftools view \
-    -i 'F_MISSING==0' \
-    $wd_path/output/rna/vcfs/merged.vcf.gz \
+    -i 'F_MISSING<0.25' \
+    $wd_path/output/rna/vcfs/merged.bcf \
     -O z \
     -o $wd_path/output/rna/vcfs/merged_shared.vcf.gz
 
 echo "**Indexing file."
 
-bcftools index $wd_path/output/rna/vcfs/merged_shared.vcf.gz
+bcftools index $wd_path/output/rna/vcfs/merged_shared.bcf
 
 # now, keep any regions that has a variant at any of the shared sites, across all samples
 bcftools view \
     -i 'GT[*]="alt"' \
-    $wd_path/output/rna/vcfs/merged_shared.vcf.gz \
+    $wd_path/output/rna/vcfs/merged_shared.bcf \
     -O z \
     -o $wd_path/output/rna/vcfs/merged_shared_variant.vcf.gz
 
