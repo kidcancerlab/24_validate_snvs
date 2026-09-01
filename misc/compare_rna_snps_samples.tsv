@@ -1,7 +1,4 @@
 SRR_ID	sample_type	tissue	biosample_description	experiment	design
-SRR37381208	K7M2	NK_cells		scRNAseq	TIGIT- NK cells isolated from the TME of K7M2 tumor in BALB/c mice
-SRR37381209	K7M2	NK_cells		scRNAseq	TIGIT+ NK cells isolated from the TME of K7M2 tumor in BALB/c mice
-SRR37381210	K7M2	spleen		scRNAseq	NK cells isolated from the spleen of subcutaneous K7M2 bearing BALB/c mice
 SRR25779122	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 3
 SRR25779123	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 2
 SRR25779124	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 1
@@ -15,17 +12,6 @@ SRR18218818	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profi
 SRR18218819	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
 SRR30345422	F420	lung_tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
 SRR30345423	F420	lung_tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345295	F420	lung_tumor		snRNAseq	F420 lung met: control; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345296	F420	lung_tumor		snRNAseq	F420 lung met: control; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345297	F420	lung_tumor		snRNAseq	F420 lung met: nintedanib, on day 1; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345298	F420	lung_tumor		snRNAseq	F420 lung met: nintedanib, on day 1; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345299	F420	lung_tumor		snRNAseq	F420 lung met: nintedanib, on day 28; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345300	F420	lung_tumor		snRNAseq	F420 lung met: nintedanib, on day 28; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR13644107	F420	flank_tumor		RNAseq	F420; Mus musculus; RNA-Seq -- F420 tumors were established by subcutaneously injecting cells into flanks of C57BL6 mice
-SRR39712798	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
-SRR39712799	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
-SRR39712800	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
-SRR39712801	BALBc	lung		scRNAseq	BALBc mouse lung tissue (50% chance exposed to cigarrette smoke, not noted well in design)
 SRR39660984	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
 SRR39660988	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
 SRR39660989	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
@@ -36,9 +22,6 @@ SRR39660993	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR a
 SRR39660994	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
 SRR39660995	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
 SRR39660996	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
-SRR39878108	C57BL6	colon		scRNAseq	scRNA-seq on colonic tissues from LCA-gavaged mice post-Salmonella Typhimurium infection to elucidate LCA-induced immune reprogramming.
-SRR39866516	C57BL6	colon		scRNAseq	scRNA-seq on colonic tissues from LCA-gavaged mice post-Salmonella Typhimurium infection to elucidate LCA-induced immune reprogramming.
-SRR39866517	C57BL6	colon		scRNAseq	scRNA-seq on colonic tissues from LCA-gavaged mice post-Salmonella Typhimurium infection to elucidate LCA-induced immune reprogramming.
 SRR39394558	C57BL6	liver		RNAseq	Total RNA was extracted from hepatocellular carcinoma (HCC) tissue of mice with hydrodynamic-induced liver cancer using TRIzol reagent.
 SRR39394566	C57BL6	liver		RNAseq	Total RNA was extracted from mouse liver tissue using TRIzol reagent.
 SRR39394559	C57BL6	liver		RNAseq	Total RNA was extracted from mouse liver tissue using TRIzol reagent.
