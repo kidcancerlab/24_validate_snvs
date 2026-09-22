@@ -29,3 +29,22 @@ ScanBit is a tool designed to identify genetically distinct populations of cells
 ## Data availability
 
 The data used in this repository comes from a variety of publicly available and internally generated sources including 10x Genomics datasets, GEO and internal experiments. Scripts to download the data are provided in the sbatchCmds/ folder.
+
+## Conda environment
+
+This includes R 4.6.1, compilers and libraries for the analysis. This does not include R packages beyond the base installation.
+```
+ml purge
+source activate_r461.sh
+```
+
+## RV environment
+
+I am using rv (https://a2-ai.github.io/rv-docs/) to manage my R environment and make it reproducible.
+
+On my cluster, I need to load the following modules
+ml purge
+
+Then run rv sync to get the R environment set up. The R environment is defined in rproject.toml.
+
+rv sync
