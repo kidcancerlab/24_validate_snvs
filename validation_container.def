@@ -1,0 +1,173 @@
+Bootstrap: docker
+From: rocker/r-ver:4.4.3
+
+%post
+  # Make the project directory that will be bound
+  mkdir /project
+
+  # Version variables for easy updates
+    RV_VERSION="v0.21.0"
+    QUARTO_VERSION="1.9.37"
+    MINIFORGE_VERSION="26.3.2-2"
+
+  # Remove strict format-security error enforcement from R's default compiler flags
+  sed -i 's/-Werror=format-security//g' /usr/local/lib/R/etc/Makeconf
+
+  # Update and install system dependencies
+  apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    wget \
+    ca-certificates \
+    tar \
+    git \
+    emacs \
+    libuv1-dev \
+    libgdal-dev \
+    libgeos-dev \
+    libproj-dev \
+    sqlite3 \
+    libsqlite3-dev \
+    libcairo2-dev \
+    cmake \
+    libnode-dev \
+    libx11-dev \
+    libglpk-dev \
+    libabsl-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libfribidi-dev \
+    libharfbuzz-dev \
+    libudunits2-dev \
+    libcurl4-openssl-dev \
+    libxml2-dev \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    patch \
+    libhdf5-openmpi-dev \
+    hdf5-tools \
+    libmagick++-dev \
+    less \
+    parallel
+
+  ####### 1. Install rv
+  # Download the release archive and extract it into /opt
+  wget -q https://github.com/A2-ai/rv/releases/download/${RV_VERSION}/rv-${RV_VERSION}-x86_64-unknown-linux-gnu.tar.gz
+
+  mkdir -p /opt/rv/${RV_VERSION}
+  tar xzf \
+    rv-${RV_VERSION}-x86_64-unknown-linux-gnu.tar.gz \
+    -C /opt/rv/${RV_VERSION}
+
+  # Link the binary to /usr/local/bin
+  ln -s \
+    /opt/rv/${RV_VERSION}/rv \
+    /usr/local/bin/rv
+
+  # Clean up
+  rm rv-${RV_VERSION}-x86_64-unknown-linux-gnu.tar.gz
+
+  # Define cache location so that we can bind a host directory to it for caching between runs
+  mkdir -p /cache/rv
+
+  ####### 2. Install Quarto
+  # Download, extract to /opt, and create a symlink to make it available in the PATH
+  wget -q https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.tar.gz
+  
+  mkdir -p /opt/quarto/${QUARTO_VERSION}
+  tar xzf \
+    quarto-${QUARTO_VERSION}-linux-amd64.tar.gz \
+    -C /opt/quarto/${QUARTO_VERSION} \
+    --strip-components=1
+  
+  # Link the binary to a standard PATH location
+  ln -s \
+    /opt/quarto/${QUARTO_VERSION}/bin/quarto \
+    /usr/local/bin/quarto
+
+  # Symlink explicitly to Quarto's bundled pandoc so it can be used natively
+  ln -s \
+    /opt/quarto/"${QUARTO_VERSION}"/bin/tools/x86_64/pandoc \
+    /usr/local/bin/pandoc
+
+  # Clean up
+  rm quarto-${QUARTO_VERSION}-linux-amd64.tar.gz
+
+  ####### 3. Install Miniforge (includes Python and Conda/Mamba)
+  wget -q https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/Miniforge3-${MINIFORGE_VERSION}-Linux-x86_64.sh
+  bash Miniforge3-${MINIFORGE_VERSION}-Linux-x86_64.sh -b -p /opt/miniforge
+  rm Miniforge3-${MINIFORGE_VERSION}-Linux-x86_64.sh
+
+  export PATH=/opt/miniforge/bin:/usr/local/bin:$PATH
+
+  # Install conda dependencies
+  conda install -n base -y -c conda-forge -c bioconda \
+    python=3.11 \
+    setuptools \
+    pandas \
+    scipy \
+    scikit-learn \
+    cellsnp-lite \
+    samtools
+
+  # Clean up APT
+  apt-get clean
+  rm -rf /var/lib/apt/lists/*
+
+  ######## install general R package dependencies
+  Rscript -e 'install.packages("BiocManager", repos = "https://cloud.r-project.org")'
+  Rscript -e 'install.packages("devtools", repos = "https://cloud.r-project.org")'
+  Rscript -e 'install.packages("pak", repos = "https://cloud.r-project.org")'
+  Rscript -e 'install.packages("tidyverse", repos = "https://cloud.r-project.org")'
+  Rscript -e 'install.packages("ggrepel", repos = "https://cloud.r-project.org")'
+  Rscript -e 'pak::pkg_install("hadley/pryr")'
+  Rscript -e 'pak::pkg_install("saeyslab/nichenetr")'
+
+  # ggtree (via scalop) still calls the unexported ggplot2:::check_linewidth(),
+  # which was removed in ggplot2 4.0.0, so pin ggplot2 to the last 3.x release
+  Rscript -e 'pak::pkg_install("ggplot2@3.5.2")'
+
+  ######## Install SCEVAN and its dependencies
+  ## Had to install fork of yaGST due to error in repo
+  Rscript -e "pak::pkg_install('Yunuuuu/yaGST')"
+  Rscript -e "pak::pkg_install('AntonioDeFalco/SCEVAN')"
+
+  ######## Install scatomic and it's dependencies
+  Rscript -e "pak::pkg_install('dlm@1.1.5')"
+  python -m pip install magic-impute
+  Rscript -e "pak::pkg_install('Rmagic@2.0.3')"
+  Rscript -e "pak::pkg_install('inofechm/cutoff.scATOMIC')"
+  Rscript -e "options(timeout=9999999)
+  pak::pkg_install('abelson-lab/scATOMIC')"
+
+  ######## Install inferCNA
+  Rscript -e "Sys.setenv(PKG_CFLAGS = '-Wno-error=format-security'); pak::pkg_install('jlaffy/scalop')"
+  Rscript -e "pak::pkg_install('jlaffy/infercna')"
+
+  ######## Install copyKat
+  Rscript -e "pak::pkg_install('navinlabcode/copykat')"
+
+%environment
+    # Ensure quarto, rv, and conda/python binaries are in the path
+    export LC_ALL=C
+    export PATH=/opt/miniforge/bin:/usr/local/bin:$PATH
+    export RV_CACHE_DIR=/cache/rv
+
+%test
+    # Verify installations
+    R --version
+    rv --version
+    quarto --version
+    pandoc --version
+    python --version
+    conda --version
+    cellsnp-lite --version
+    Rscript -e "Rmagic::pymagic_is_available()"
+
+%help
+    This container includes:
+    - R (4.4.3) # from rocker
+    - rv (v0.21.0)
+    - Quarto (1.9.37)
+    - Miniforge (26.3.2-2)
