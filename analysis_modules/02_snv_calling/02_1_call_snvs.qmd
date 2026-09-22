@@ -11,8 +11,8 @@ flex_sobj_list <-
     lapply(
         flex_samples,
         function(this_sample) {
-            qs::qread(paste0(
-                "output/01_process_raw/rdata/individual",
+            qs_read(paste0(
+                "output/01_process_raw/rdata/individual/",
                 this_sample,
                 "_mouse.qs2"
             ))
@@ -103,7 +103,8 @@ snp_tree <-
         other_batch_options = c(
             "ml purge"
         ),
-        use_apptainer = TRUE
+        use_apptainer = TRUE,
+        allow_chr_mismatch = TRUE # there are some junk contigs in there
     )
 ```
 
@@ -131,8 +132,8 @@ mouse_sobj_list <-
     lapply(
         mouse_samples,
         function(this_sample) {
-            qs::qread(paste0(
-                "output/01_process_raw/rdata/individual",
+            qs_read(paste0(
+                "output/01_process_raw/rdata/individual/",
                 this_sample,
                 "_mouse.qs2"
             ))
@@ -178,7 +179,7 @@ merged_mouse$cell_group <-
         merged_mouse$individ_clusters
     )
 
-qs::qsave(merged_mouse, "output/02_snv_calling/rdata/merged/merged_mouse.qs2")
+qs_save(merged_mouse, "output/02_snv_calling/rdata/merged/merged_mouse.qs2")
 
 mouse_cell_barcode_group_table <-
     merged_mouse@meta.data %>%
@@ -196,7 +197,7 @@ snp_tree <-
         output_dir = "output/02_snv_calling/snv/mouse/",
         temp_dir = "output/02_snv_calling/snv/mouse/tempdir",
         output_base_name = "mouse_snvs",
-        ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+        ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa",
         min_depth = c(5, 10, 20, 30),
         job_base = "mouse_sbatch",
         log_base = "slurmOut/mouse_snv",
@@ -210,9 +211,10 @@ snp_tree <-
             "--partition=himem,general"
         ),
         other_batch_options = c(
-            "ml purge",
+            "ml purge"
         ),
-        use_apptainer = TRUE
+        use_apptainer = TRUE,
+        allow_chr_mismatch = TRUE # the bam has GFP, RFP but we don't want to use those
     )
 ```
 
