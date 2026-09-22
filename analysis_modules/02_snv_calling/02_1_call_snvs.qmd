@@ -12,9 +12,9 @@ flex_sobj_list <-
         flex_samples,
         function(this_sample) {
             qs::qread(paste0(
-                "output/seurat_objects/individual/",
+                "output/01_process_raw/rdata/individual",
                 this_sample,
-                "_mouse.qs"
+                "_mouse.qs2"
             ))
         }
     )
@@ -63,7 +63,7 @@ flex_dimplot <-
         NoLegend())
 
 ggsave(
-    "output/figures/dimplot_flex_cell_type_group.pdf",
+    "output/02_snv_calling/figures/dimplot_flex_cell_type_group.pdf",
     flex_dimplot,
     width = 10,
     height = 20
@@ -84,8 +84,8 @@ snp_tree <-
     get_snp_tree(
         cellid_bam_table = flex_cell_barcode_group_table,
         ploidy = "mm10",
-        output_dir = "output/snv/flex/",
-        temp_dir = "output/snv/flex/tempdir",
+        output_dir = "output/02_snv_calling/snv/flex/",
+        temp_dir = "output/02_snv_calling/snv/flex/tempdir",
         output_base_name = "flex_snvs",
         ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
         min_depth = c(1, 5, 10, 20, 30),
@@ -101,10 +101,9 @@ snp_tree <-
             "--partition=himem,general"
         ),
         other_batch_options = c(
-            "ml purge",
-            "ml miniforge3",
-            'eval "$(conda shell.bash hook)"'
+            "ml purge"
         ),
+        use_apptainer = TRUE
     )
 ```
 
@@ -133,9 +132,9 @@ mouse_sobj_list <-
         mouse_samples,
         function(this_sample) {
             qs::qread(paste0(
-                "output/seurat_objects/individual/",
+                "output/01_process_raw/rdata/individual",
                 this_sample,
-                "_mouse.qs"
+                "_mouse.qs2"
             ))
         }
     )
@@ -179,7 +178,7 @@ merged_mouse$cell_group <-
         merged_mouse$individ_clusters
     )
 
-qs::qsave(merged_mouse, "output/seurat_objects/merged/merged_mouse.qs")
+qs::qsave(merged_mouse, "output/02_snv_calling/rdata/merged/merged_mouse.qs2")
 
 mouse_cell_barcode_group_table <-
     merged_mouse@meta.data %>%
@@ -194,8 +193,8 @@ snp_tree <-
     get_snp_tree(
         cellid_bam_table = mouse_cell_barcode_group_table,
         ploidy = "mm10",
-        output_dir = "output/snv/mouse/",
-        temp_dir = "output/snv/mouse/tempdir",
+        output_dir = "output/02_snv_calling/snv/mouse/",
+        temp_dir = "output/02_snv_calling/snv/mouse/tempdir",
         output_base_name = "mouse_snvs",
         ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
         min_depth = c(5, 10, 20, 30),
@@ -212,9 +211,8 @@ snp_tree <-
         ),
         other_batch_options = c(
             "ml purge",
-            "ml miniforge3",
-            'eval "$(conda shell.bash hook)"'
-        )
+        ),
+        use_apptainer = TRUE
     )
 ```
 
@@ -256,7 +254,7 @@ samples_worked <-
                 species = "mouse",
                 ploidy = "mm10",
                 ref_fasta = "custom_ref/gfp_rfp_mm10/fasta/genome.fa",
-                out_dir = "output/snv/transgene/"
+                out_dir = "output/02_snv_calling/snv/transgene/"
             )
         }
     )
@@ -289,7 +287,7 @@ samples_worked <-
                 species = "human",
                 ploidy = "GRCh38",
                 ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
-                out_dir = "output/snv/human/"
+                out_dir = "output/02_snv_calling/snv/human/"
             )
         }
     )

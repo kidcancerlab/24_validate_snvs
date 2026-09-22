@@ -1,5 +1,10 @@
+```{r}
+source("analysis_modules/general_helper_functions.R")
+source("analysis_modules/01_process_raw/01_helper_functions.R")
+```
+
 ## Read metadata, read data and make prepreocessed seurat objects
-Load in Seurat objects and save individual qs objects off to disk
+Load in Seurat objects and save individual qs2 objects off to disk
 
 ## Read in F420 and K7M2 samples to use as SingleR references
 ```{r read_raw_mouse_references}
@@ -13,7 +18,7 @@ read_raw_from_table(
     h5_folder = "/home/gdrobertslab/lab/Counts_2/",
     organism = "mouse",
     annotate_species = "mouse",
-    count_table_file = "output/counts/mouse_culture_cell_counts.txt",
+    count_table_file = "output/01_process_raw/counts/mouse_culture_cell_counts.txt",
     bam_file = "possorted_genome_bam.bam"
 )
 ```
@@ -21,7 +26,7 @@ read_raw_from_table(
 ### Table of cell culture mouse cell counts per sample
 ```{r read_raw_mouse_culture_cell_count_table}
 #| dependson: read_raw_mouse_references
-DT::datatable(read_tsv("output/counts/mouse_culture_cell_counts.txt"))
+DT::datatable(read_tsv("output/01_process_raw/counts/mouse_culture_cell_counts.txt"))
 ```
 
 ## Prep known tumor cells to add to SingleR ref
@@ -40,10 +45,10 @@ tumor_refs <-
         culture_ref_samples,
         function(x) {
             set.seed(1337)
-            sobj <- qs::qread(paste0(
-                "output/seurat_objects/individual/",
+            sobj <- qs2::qs_read(paste0(
+                "output/01_process_raw/rdata/individual/",
                 x,
-                "_mouse.qs"
+                "_mouse.qs2"
             )) %>%
                 subset(downsample = 500)
 
@@ -56,13 +61,13 @@ tumor_refs <-
         }
     )
 
-qs::qsave(tumor_refs, "output/refs/mouse_tumor_refs.qs")
+qs2::qs_save(tumor_refs, "output/01_process_raw/rdata/merged/mouse_tumor_refs.qs2")
 ```
 
 ## Read in B6, Balbc, F420 and K7M2 samples
 ```{r read_raw_mouse}
 #| dependson: [read_raw_prep_mouse_ref]
-tumor_refs <- qs::qread("output/refs/mouse_tumor_refs.qs")
+tumor_refs <- qs2::qs_read("output/01_process_raw/rdata/merged/mouse_tumor_refs.qs2")
 
 read_raw_from_table(
     sample_table = read_tsv(
@@ -73,7 +78,7 @@ read_raw_from_table(
     h5_folder = "/home/gdrobertslab/lab/Counts_2/",
     organism = "mouse",
     annotate_species = "mouse",
-    count_table_file = "output/counts/mouse_cell_counts.txt",
+    count_table_file = "output/01_process_raw/counts/mouse_cell_counts.txt",
     bam_file = "possorted_genome_bam.bam",
     annotate_additional_ref = lapply(
         tumor_refs,
@@ -89,12 +94,12 @@ read_raw_from_table(
 ### Table of mouse cell counts per sample
 ```{r read_raw_mouse_cell_count_table}
 #| dependson: read_raw_mouse
-DT::datatable(read_tsv("output/counts/mouse_cell_counts.txt"))
+DT::datatable(read_tsv("output/01_process_raw/counts/mouse_cell_counts.txt"))
 ```
 
 ## Read in Robert's lab data that was re-aligned
 ```{r read_raw_realigned}
-tumor_refs <- qs::qread("output/refs/mouse_tumor_refs.qs")
+tumor_refs <- qs2::qs_read("output/01_process_raw/rdata/merged/mouse_tumor_refs.qs2")
 
 read_raw_from_table(
     sample_table = read_tsv(
@@ -104,7 +109,7 @@ read_raw_from_table(
     h5_folder = "output/cellranger_out",
     organism = "mouse",
     annotate_species = "mouse",
-    count_table_file = "output/counts/mouse_cell_counts.txt",
+    count_table_file = "output/01_process_raw/counts/mouse_cell_counts.txt",
     bam_file = "possorted_genome_bam.bam",
     annotate_additional_ref = lapply(
         tumor_refs,
@@ -134,7 +139,7 @@ read_raw_from_table(
     h5_folder = "input/10x_flex",
     organism = "mouse",
     annotate_species = "mouse",
-    count_table_file = "output/counts/mouse_cell_counts_flex.txt",
+    count_table_file = "output/01_process_raw/counts/mouse_cell_counts_flex.txt",
     bam_file = "count_sample_alignments.bam"
 )
 ```
@@ -142,7 +147,7 @@ read_raw_from_table(
 ### Table of 10x flex cell counts per sample
 ```{r read_raw_flex_cell_count_table}
 #| dependson: read_raw_flex
-DT::datatable(read_tsv("output/counts/mouse_cell_counts_flex.txt"))
+DT::datatable(read_tsv("output/01_process_raw/counts/mouse_cell_counts_flex.txt"))
 ```
 
 ## Make Seurat objects from human GEO data
@@ -162,7 +167,7 @@ read_raw_from_table(
     h5_folder = "output/cellranger_out",
     organism = "human",
     annotate_species = "human",
-    count_table_file = "output/counts/human_geo_cell_counts.txt",
+    count_table_file = "output/01_process_raw/counts/human_geo_cell_counts.txt",
     bam_file = "possorted_genome_bam.bam"
 )
 ```
@@ -170,7 +175,7 @@ read_raw_from_table(
 ## Table of GEO human cell counts per sample
 ```{r read_raw_human_geo_count_table}
 #| dependson: read_raw_human_geo
-DT::datatable(read_tsv("output/counts/human_geo_cell_counts.txt"))
+DT::datatable(read_tsv("output/01_process_raw/counts/human_geo_cell_counts.txt"))
 ```
 
 ## Get data from GEO mouse data
@@ -187,7 +192,7 @@ read_raw_from_table(
     h5_folder = "output/cellranger_out",
     organism = "mouse",
     annotate_species = "mouse",
-    count_table_file = "output/counts/mouse_geo_cell_counts_geo.txt",
+    count_table_file = "output/01_process_raw/counts/mouse_geo_cell_counts_geo.txt",
     bam_file = "possorted_genome_bam.bam"
 )
 ```
@@ -195,5 +200,5 @@ read_raw_from_table(
 ### Table of GEO mouse data
 ```{r read_raw_mouse_geo_count_table}
 #| dependson: read_raw_mouse_geo
-DT::datatable(read_tsv("output/counts/mouse_geo_cell_counts_geo.txt"))
+DT::datatable(read_tsv("output/01_process_raw/counts/mouse_geo_cell_counts_geo.txt"))
 ```

@@ -1,3 +1,8 @@
+```{r}
+source("analysis_modules/general_helper_functions.R")
+source("analysis_modules/01_process_raw/01_helper_functions.R")
+```
+
 ## Get FASTQ Files for GEO samples
 ```{bash get_data_dl_geo}
 #| eval: false
