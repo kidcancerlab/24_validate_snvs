@@ -1,0 +1,39 @@
+[project]
+name = "24_validate_snvs"
+r_version = "4.6"
+
+# A list of repositories to fetch packages from. Order matters: we will try to get a package from each repository in order.
+repositories = [
+  { alias = "CRAN", url = "https://cran.rstudio.com/" },
+  { alias = "PPM", url = "https://packagemanager.posit.co/cran/latest" },
+  { alias = "bioconductor", url = "https://bioconductor.org/packages/3.23/bioc" },
+  { alias = "BioCann", url = "https://bioconductor.org/packages/3.23/data/annotation"},
+  { alias = "BioCexp", url = "https://bioconductor.org/packages/3.23/data/experiment" },
+  { alias = "BioCworkflows", url = "https://bioconductor.org/packages/3.23/workflows"},
+]
+
+# A list of packages to install and any additional configuration
+dependencies = [
+  "tidyverse",
+  "ggrepel",
+  "Seurat",
+  "qs2",
+  "hdf5r",
+  "SingleCellExperiment",
+  "rmarkdown",
+  "jsonlite",
+  "patchwork",
+  "ggrepel",
+  "pheatmap",
+  "parallel",
+  "httpgd",
+  "languageserver",
+  "scrapper",
+  { name = "ramTrackR", git = "https://github.com/mvesuviusc/ramTrackR", branch = "main" },
+  { name = "nichenetr", git = "https://github.com/saeyslab/nichenetr", branch = "master" },
+  { name = "rrrSingleCellUtils", git = "https://github.com/kidcancerlab/rrrSingleCellUtils", branch = "detect_hdf5" },
+  { name = "scanBit", git = "https://github.com/kidcancerlab/scanBit", branch = "resub_update" },
+  { name = "DT", git = "https://github.com/rstudio/DT", branch = "main" },
+ ]
+
+  #{ name = "ggrepel", git = "https://github.com/slowkow/ggrepel", tag = "0.9.6"},
