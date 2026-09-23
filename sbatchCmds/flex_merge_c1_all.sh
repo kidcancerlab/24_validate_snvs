@@ -25,15 +25,15 @@ conda activate scanBit_xkcd_1337
 bcftools merge \
         --threads 3 \
         -O u \
-        output/snv/flex/tempdir/split_bcfs_[0-9]*_c1/*.bcf \
+        output/02_snv_calling/snv/flex/tempdir/split_bcfs_[0-9]*_c1/*.bcf \
     | bcftools view \
         -O b \
         -i 'N_ALT<=1' \
-        --output output/snv/flex/mergedflex_snvs_c1_keep_all.bcf
+        --output output/03_test_flex/mergedflex_snvs_c1_keep_all.bcf
 
 bcftools index \
     --threads 3 \
-    output/snv/flex/mergedflex_snvs_c1_keep_all.bcf
+    output/03_test_flex/mergedflex_snvs_c1_keep_all.bcf
 
 end_time=$(date +%s)
 

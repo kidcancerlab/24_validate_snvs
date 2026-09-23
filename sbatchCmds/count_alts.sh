@@ -24,14 +24,14 @@ conda activate scanBit_xkcd_1337
 
 python scripts/count_variant_pos.py \
     --threads 4 \
-    --bcf output/snv/flex/mergedflex_snvs_c1_keep_all.bcf \
+    --bcf output/03_test_flex/mergedflex_snvs_c1_keep_all.bcf \
     --verbose \
-    > output/snv/flex/alt_pos_counts.txt
+    > output/03_test_flex/counts/alt_pos_counts_flex.txt
 
 echo "first count done"
 
 python scripts/count_variant_pos.py \
     --threads 4 \
-    --bcf output/snv/mouse/mergedmouse_ours_c1_keep_all.bcf \
+    --bcf output/02_snv_calling/snv/mouse/mergedmouse_ours_c1_keep_all.bcf \
     --verbose \
-    > output/snv/mouse/alt_pos_counts.txt
+    > output/03_test_flex/counts/mouse/alt_pos_counts_mouse.txt

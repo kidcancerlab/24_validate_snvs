@@ -20,9 +20,15 @@ ml load Miniconda3/4.9.2
 eval "$(conda shell.bash hook)"
 conda activate scanBit_xkcd_1337
 
-bcf_files=($(ls output/snv/flex/tempdir/split_bcfs_*_c1/*.bcf | perl -pe 's/.+\///' | perl -pe 's/.bcf//'))
+bcf_files=($(ls output/02_snv_calling/snv/flex/tempdir/split_bcfs_*_c1/*.bcf | perl -pe 's/.+\///' | perl -pe 's/.bcf//'))
 
 parallel \
     -j 10 \
-    "bcftools view -O u output/snv/flex/tempdir/split_bcfs_*_c1/{}.bcf | bcftools query -f '[%CHROM\t%FIRST_ALT\t%DP\n]' | perlUnique.pl -c | sort -k 3n > output/flex/var_counts_d1/{}.txt" \
+    "bcftools view \
+        -O u output/02_snv_calling/snv/flex/tempdir/split_bcfs_*_c1/{}.bcf \
+      | bcftools query \
+        -f '[%CHROM\t%FIRST_ALT\t%DP\n]' \
+      | perlUnique.pl -c \
+      | sort -k 3n \
+      > output/03_test_flex/counts/flex_var_counts_d1/{}.txt" \
     ::: ${bcf_files[@]}

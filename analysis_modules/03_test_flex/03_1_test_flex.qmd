@@ -8,7 +8,7 @@ This keeps all the positions, not just those with an alt position
 This requires that the `scanbit_run_flex` chunk has cleanup set to FALSE
 ```{bash flex_merge_c1}
 #| dependson: [scanbit_run_flex]
-# sbatch sbatchCmds/flex_merge_c1_all.sh
+sbatch sbatchCmds/flex_merge_c1_all.sh
 ```
 
 ### Count the total number of positions covered by flex data for each cluster
@@ -20,7 +20,7 @@ sbatch sbatchCmds/flex_count_vars.sh
 ### Count the total number of positions that include an alt in flex data
 ```{bash flex_alt_counting}
 #| dependson: [flex_merge_c1]
-# sbatch sbatchCmds/count_alts.sh
+sbatch sbatchCmds/count_alts.sh
 ```
 
 ### Calculate variant calling accuracy in flex data
@@ -29,7 +29,7 @@ Any mutation called in the flex data is almost certainly a PCR/sequencing error 
 #| dependson: [flex_cov_alts, flex_alt_counting]
 all_flex_files <-
     list.files(
-        path = "output/flex/var_counts_d1",
+        path = "output/03_test_flex/counts/flex_var_counts_d1",
         pattern = ".txt",
         full.names = TRUE
     )
@@ -73,7 +73,7 @@ flex_accuracy <-
 
 write_tsv(
     flex_accuracy,
-    "output/flex/flex_accuracy.txt"
+    "output/03_test_flex/counts/flex_accuracy.txt"
 )
 
 accuracy_plot <-
@@ -94,7 +94,7 @@ accuracy_plot <-
     )
 
 ggsave_wrap(
-    "output/figures/flex_accuracy_scatterplot",
+    "output/03_test_flex/figures/flex_accuracy_scatterplot",
     file_type = c("png", "pdf"),
     plot_variable = accuracy_plot,
     width = 6,
@@ -107,7 +107,7 @@ ggsave_wrap(
 #| dependson: [flex_cov_alts, flex_alt_counting]
 all_flex_files <-
     list.files(
-        path = "output/flex/var_counts_d1",
+        path = "output/03_test_flex/counts/flex_var_counts_d1",
         pattern = ".txt",
         full.names = TRUE
     )
@@ -167,7 +167,7 @@ flex_accuracy %>%
         align = "center"
     ) %>%
     gt::gtsave(
-        filename = "output/figures/flex_accuracy_table.html"
+        filename = "output/03_test_flex/figures/flex_accuracy_table.html"
     )
 ```
 
