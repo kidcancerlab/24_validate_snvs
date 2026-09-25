@@ -198,7 +198,7 @@ snp_tree <-
         temp_dir = "output/02_snv_calling/snv/mouse/tempdir",
         output_base_name = "mouse_snvs",
         ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa",
-        min_depth = c(5, 10, 20, 30),
+        min_depth = c(1, 5, 10, 20, 30),
         job_base = "mouse_sbatch",
         log_base = "slurmOut/mouse_snv",
         min_snvs_per_cluster = 200,
