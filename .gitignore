@@ -24,3 +24,11 @@ slurmOut
 24_validate_snvs_cache
 24_validate_snvs_files
 geo_sub
+sing_sandbox
+*.sif
+.bash_history
+build.err
+build.out
+.quarto
+.cache
+R
