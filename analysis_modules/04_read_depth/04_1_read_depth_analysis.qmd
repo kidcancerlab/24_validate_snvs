@@ -18,7 +18,7 @@ output <-
         function(this_sample) {
             sobj <-
                 qs::qread(paste0(
-                    "output/seurat_objects/individual/",
+                    "output/01_process_raw/rdata/individual/",
                     this_sample,
                     "_human.qs"
                 ))
@@ -43,7 +43,7 @@ output <-
                 cutoff_vector = n_cell_cutoffs,
                 min_read_depth = c(1, 2, 5, 10, 20),
                 out_dir_base = file.path(
-                    "output/read_depth/scanbit_out/geo_samples/",
+                    "output/04_read_depth_analysis/snv/geo",
                     this_sample
                 ),
                 keep_temp_dir = TRUE,
@@ -65,7 +65,7 @@ sbatch sbatchCmds/geo_bcf_depths.sh
 ```{r readdepth_ncount_rna_stats}
 #| dependson: [readdepth_scanbit]
 list.files(
-    path = "output/read_depth/scanbit_out/geo_samples",
+    path = "output/04_read_depth_analysis/snv/geo",
     pattern = "cell_barcode_table_.+_1_cells.txt",
     recursive = TRUE,
     full.names = TRUE
@@ -80,7 +80,7 @@ list.files(
         min_ncount = min(nCount_RNA),
         max_ncount = max(nCount_RNA)
     ) %>%
-    write_tsv("output/read_depth/ncount_summary.tsv")
+    write_tsv("output/04_read_depth_analysis/counts/ncount_summary.tsv")
 ```
 
 ## Calculate the # of positions covered where any cell has a variant
