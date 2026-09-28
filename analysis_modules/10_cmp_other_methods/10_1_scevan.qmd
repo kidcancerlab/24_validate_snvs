@@ -1,0 +1,32 @@
+
+## Run SCENIC using slurm arrays
+```{bash}
+human_data=\
+  ($(cut -f 3 misc/validation_geo_metadata.tsv \
+    | sort \
+    | uniq \
+    | grep -v Sample_ID\
+  ))
+
+sbatch \
+  --array=0-$((${#human_data[@]}-1)) \
+  analysis_modules/10_cmp_other_methods/scripts/array_scevan_human.sh
+
+mouse_data=(
+  $(
+    {
+      cut -f 5 misc/mouse_samples_Roberts_metadata.tsv
+      cut -f 5 misc/mouse_samples_Roberts_realign_metadata_human.tsv
+    } |
+      grep -v '^Sample_ID$' |
+      sort -u
+  )
+)
+
+sbatch \
+  --array=0-$((${#mouse_data[@]}-1)) \
+  analysis_modules/10_cmp_other_methods/scripts/array_scevan_mouse.sh
+```
+
+## Start scATOMIC analyses using slurm arrays
+{{< include analysis_modules/10_cmp_other_methods/10_2_scatomic.qmd >}}
