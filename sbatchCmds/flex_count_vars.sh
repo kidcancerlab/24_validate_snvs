@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --output=slurmOut/slurmOut_depth-%j.out
 #SBATCH --error=slurmOut/slurmOut_depth-%j.out

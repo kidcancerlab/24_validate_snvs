@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --account=gdrobertslab
-#SBATCH --output=output/snv/mouse/tempdir//slurmOut_merge-%j.out_merge-%j.out
-#SBATCH --error=output/snv/mouse/tempdir//slurmOut_merge-%j.out_merge-%j.out
+#SBATCH --output=slurmOut/slurmOut_merge-%j.out_merge-%j.out
+#SBATCH --error=slurmOut/slurmOut_merge-%j.out_merge-%j.out
 #SBATCH --job-name=merge_bcfs
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -23,11 +23,11 @@ conda activate scanBit_xkcd_1337
 bcftools merge \
         --threads 4 \
         -O u \
-        output/snv/mouse/tempdir/split_bcfs_[0-9]*_c1//*.bcf \
+        output/02_snv_calling/snv/mouse/tempdir/split_bcfs_[0-9]*_c1//*.bcf \
     | bcftools view \
         -O b \
-        --output output/snv/mouse//mergedmouse_ours_c1_keep_all.bcf
+        --output output/03_test_flex/snvs/mergedmouse_ours_c1_keep_all.bcf
 
 bcftools index \
     --threads 4 \
-    output/snv/mouse//mergedmouse_ours_c1_keep_all.bcf
+    output/03_test_flex/snvs/mergedmouse_ours_c1_keep_all.bcf

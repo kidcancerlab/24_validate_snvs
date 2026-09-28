@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --output=slurmOut/flex_snv_merge-%j.out
 #SBATCH --error=slurmOut/flex_snv_merge-%j.out
 #SBATCH --job-name=merge_bcfs
@@ -29,11 +29,11 @@ bcftools merge \
     | bcftools view \
         -O b \
         -i 'N_ALT<=1' \
-        --output output/03_test_flex/mergedflex_snvs_c1_keep_all.bcf
+        --output output/03_test_flex/snvs/mergedflex_snvs_c1_keep_all.bcf
 
 bcftools index \
     --threads 3 \
-    output/03_test_flex/mergedflex_snvs_c1_keep_all.bcf
+    output/03_test_flex/snvs/mergedflex_snvs_c1_keep_all.bcf
 
 end_time=$(date +%s)
 
