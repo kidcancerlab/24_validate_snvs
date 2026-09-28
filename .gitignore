@@ -32,3 +32,7 @@ build.out
 .quarto
 .cache
 R
+render.out
+render.err
+.lesshst
+.python_history
