@@ -1,419 +1,31 @@
-## Read in and preprocess raw data
-```{r helper_read_raw_fun}
-#| cache.vars: [read_raw, pick_cutoff, pull_species_cutoff]
-# species_pattern - either "", "^mm10---" or "^GRCh38-"
-
-read_raw <- function(i,
-                     samples_tsv,
-                     species_pattern = "",
-                     organism = NULL,
-                     ncount_min = NA,
-                     ncount_max = NA,
-                     mt_percent_max = NA,
-                     save_qs_dir = "output/seurat_objects/individual/",
-                     h5_folder = "/home/gdrobertslab/lab/Counts_2/",
-                     min_n_cells = 50,
-                     annotate_ref,
-                     annotate_labels,
-                     annotate_species = "",
-                     annotate_additional_ref,
-                     annotate_additional_labels,
-                     bam_file) {
-    sample_name <- samples_tsv$Sample_ID[i]
-
-    # Not making this an lapply as defaults are different, may do it later
-    ncount_min <-
-        pick_cutoff(
-            ncount_min,
-            samples_tsv$subset_nCount_RNA_min[i],
-            0,
-            species_pattern
-        )
-    ncount_max <-
-        pick_cutoff(
-            ncount_max,
-            samples_tsv$subset_nCount_RNA_max[i],
-            Inf,
-            species_pattern
-        )
-    mt_percent_max <-
-        pick_cutoff(
-            mt_percent_max,
-            samples_tsv$subset_percent.mt_max[i],
-            100,
-            species_pattern
-        )
-
-    path_h5 <-
-        paste0(h5_folder, "/", sample_name, "/filtered_feature_bc_matrix.h5")
-
-    counts <- tibble::tibble(sample_name = sample_name)
-
-    if (!file.exists(path_h5)) {
-        stop(paste(sample_name, "h5 file does not exist"))
-    } else {
-        sobj <-
-            rrrSingleCellUtils::tenx_load_qc(
-                h5_file = path_h5,
-                species_pattern = species_pattern,
-                violin_plot = FALSE
-            )
-
-        sobj$bam_file <- bam_file
-
-        sobj$cell_barcode <- Seurat::Cells(sobj)
-
-        pre_filt_hist <-
-            rrrSingleCellUtils::feature_hist(
-                sobj,
-                features = c("nCount_RNA", "percent.mt"),
-                cutoff_table = tibble::tibble(
-                    feature = c("nCount_RNA", "percent.mt"),
-                    min_val = c(ncount_min, mt_percent_max),
-                    max_val = c(ncount_max, NA)
-                )
-            )
-
-        counts$n_cells_pre_filter <- ncol(sobj)
-
-        counts$n_cells_post_filter <-
-            sobj@meta.data %>%
-            as.data.frame() %>%
-            filter(
-                nCount_RNA > ncount_min &
-                    nCount_RNA < ncount_max &
-                    percent.mt < mt_percent_max
-            ) %>%
-            nrow()
-
-        if (counts$n_cells_post_filter >= min_n_cells) {
-            counts$kept <- TRUE
-            sobj <-
-                subset(
-                    sobj,
-                    nCount_RNA > ncount_min &
-                        nCount_RNA < ncount_max &
-                        percent.mt < mt_percent_max
-                ) %>%
-                rrrSingleCellUtils::process_seurat()
-
-            opt_res <-
-                rrrSingleCellUtils::optimize_silhouette(
-                    sobj,
-                    summary_plot = FALSE
-                ) %>%
-                dplyr::arrange(dplyr::desc(sil_vals)) %>%
-                dplyr::pull(res_vals) %>%
-                head(1)
-
-            sobj <- Seurat::FindClusters(sobj, resolution = opt_res)
-
-            sobj$individ_clusters <- sobj$seurat_clusters
-
-            # Add metadata to Seurat object from samples_tsv
-            for (colname in colnames(samples_tsv)) {
-                sobj[[colname]] <- samples_tsv[[colname]][i]
-            }
-
-            # Annotate celltypes
-            sobj <-
-                rrrSingleCellUtils::annotate_celltypes(
-                    sobj,
-                    species = annotate_species,
-                    ref = annotate_ref,
-                    labels = annotate_labels,
-                    add_ref = annotate_additional_ref,
-                    add_labels = annotate_additional_labels,
-                    aggr_ref = TRUE
-                )
-
-            dimplot_fig <-
-                Seurat::DimPlot(
-                    sobj,
-                    group.by = c("individ_clusters", "cell_type"),
-                    label = TRUE,
-                    label.size = 2,
-                    label.box = TRUE,
-                    repel = TRUE,
-                    ncol = 1
-                ) +
-                Seurat::NoLegend()
-
-            ggplot2::ggsave(
-                paste0(
-                    "output/figures/qc_cutoffs/pre_filter_hist_",
-                    sample_name,
-                    dplyr::if_else(
-                        organism == "",
-                        "",
-                        paste0("_", organism)
-                    ),
-                    ".pdf"
-                ),
-                patchwork::wrap_plots(
-                    pre_filt_hist,
-                    dimplot_fig,
-                    ncol = 1,
-                    heights = c(1, 5)
-                ),
-                width = 10,
-                height = 20
-            )
-
-            qs::qsave(
-                sobj,
-                dplyr::if_else(
-                    organism == "",
-                    paste0(save_qs_dir, "/", sample_name, ".qs"),
-                    paste0(save_qs_dir, "/", sample_name, "_", organism, ".qs")
-                )
-            )
-
-            message(sample_name, " sobject made and saved")
-        } else {
-            counts$kept <- FALSE
-            message(
-                paste0(
-                    sample_name,
-                    " started with ",
-                    ncol(sobj),
-                    " cells but has ",
-                    counts$n_cells_post_filter,
-                    " cells left after filtering which is less than ",
-                    min_n_cells,
-                    " hence it was discarded"
-                )
-            )
-        }
-    }
-
-    counts$median_ncount <-
-        median(sobj$nCount_RNA)
-
-    counts$mean_ncount <-
-        mean(sobj$nCount_RNA)
-
-    return(counts)
-}
-
-pick_cutoff <- function(arg_provided,
-                        from_sample_tsv,
-                        default,
-                        species_pattern) {
-    from_sample_tsv <- pull_species_cutoff(from_sample_tsv, species_pattern)
-    if (is.na(arg_provided)) {
-        if (is.na(from_sample_tsv)) {
-            return(default)
-        } else {
-            return(from_sample_tsv)
-        }
-    } else {
-        return(arg_provided)
-    }
-}
-
-# Pull the cutoff value from the sample tsv data if it's in there
-pull_species_cutoff <- function(from_sample_tsv,
-                                species_pattern) {
-    if (species_pattern != "") {
-        if (!grepl(
-            # we don't want the caret in the pattern for this
-            stringr::str_remove(species_pattern, "^\\^"),
-            from_sample_tsv
-        )) {
-            stop(
-                "Species pattern provided but not found in from_sample_tsv. ",
-                "Species_pattern: ",
-                species_pattern,
-                ". Cutoff info from sample sheet: ",
-                from_sample_tsv
-            )
-        }
-        cutoff <-
-            stringr::str_match(
-                from_sample_tsv,
-                paste0(stringr::str_remove(species_pattern, "\\^"), "([0-9]+)")
-            )[1, 2]
-        return(as.numeric(cutoff))
-    } else {
-        # If from_sample_tsv has letters in it, species pattern likely there
-        # We need to specify scientific = F so that 100,000 != 1e+05 which
-        # has an "e" :-| and so fails here
-        if (grepl("[a-zA-Z]", format(from_sample_tsv, scientific = FALSE)) &&
-            !is.na(from_sample_tsv)) {
-            stop(
-                "Sample cutoff value is not just a number but species_pattern ",
-                "not provided. Species_pattern: ",
-                species_pattern,
-                ". Cutoff from sample sheet: ",
-                from_sample_tsv
-            )
-            # Otherwise it's either a number or NA
-        } else {
-            return(from_sample_tsv)
-        }
-    }
-}
-```
-
-## Read raw from table of samples
-```{r helpers_raw_from_table}
-#| cache.vars: read_raw_from_table
-read_raw_from_table <- function(sample_table,
-                                h5_folder,
-                                min_n_cells = 1000,
-                                organism,
-                                annotate_species,
-                                count_table_file,
-                                bam_file,
-                                annotate_additional_ref = list(),
-                                annotate_additional_labels = list()) {
-    count_table <- parallel::mclapply(
-        seq_len(nrow(sample_table)),
-        mc.preschedule = FALSE,
-        mc.cores = parallelly::availableCores(),
-        function(i) {
-            read_raw(
-                i = i,
-                h5_folder = h5_folder,
-                min_n_cells = min_n_cells,
-                sample_table,
-                organism = organism,
-                annotate_species = annotate_species,
-                bam_file =
-                    paste0(
-                        h5_folder,
-                        "/",
-                        sample_table$Sample_ID[i],
-                        "/",
-                        bam_file
-                    ),
-                annotate_additional_ref = annotate_additional_ref,
-                annotate_additional_labels = annotate_additional_labels
-            )
-        }
-    ) |>
-        confirm_mclapply_worked() |>
-        dplyr::bind_rows()
-
-    readr::write_tsv(count_table, count_table_file)
-}
-```
-
-
-```{r helper_gsea_plot}
-#| cache.vars: gsea_dotplot
-gsea_dotplot <- function(data, x_col = "z_score") {
-    lab4plot <-
-        tibble::tibble(
-            y = c(-2.5, 2.5),
-            x = c(0.2, 0.2),
-            label = c("Downregulated", "Upregulated")
-        )
-
-    plot_name <-
-        ggplot2::ggplot() +
-        ggplot2::geom_point(
-            data = data,
-            ggplot2::aes(
-                x = -1 * order,
-                y = get(x_col),
-                color = -log10(padj),
-                size = size
-            ),
-            stat = "identity",
-            alpha = 0.8
-        ) +
-        ggplot2::coord_flip() +
-        ggplot2::geom_text(
-            data = data, # text for pathways names
-            aes(
-                x = -1 * order,
-                y = get(x_col) + (y_pos * 5),
-                hjust = justify_y,
-                label = pathway
-            ),
-            size = 2,
-            fontface = "bold"
-        ) +
-        geom_text(
-            data = lab4plot, # text for upregulated/downregulated
-            aes(
-                x = x,
-                y = y,
-                label = label
-            ),
-            fontface = "bold",
-            size = 2.5
-        ) +
-        ggplot2::scale_fill_manual(
-            values = rrrSingleCellUtils::plot_cols,
-            name = paste0(x_col, " > 0")
-        ) +
-        ggplot2::theme(
-            strip.background = ggplot2::element_rect(
-                color = "white",
-                fill = "white"
-            ),
-            panel.grid.major = ggplot2::element_blank(),
-            panel.grid.minor = ggplot2::element_blank(),
-            panel.border = ggplot2::element_blank(),
-            axis.line.x = ggplot2::element_line(color = "black"),
-            axis.line.y = ggplot2::element_blank(),
-            axis.title.x = ggplot2::element_text(size = 7),
-            axis.ticks.y = ggplot2::element_blank(),
-            plot.title = ggplot2::element_text(size = 7, face = "bold"),
-            axis.text.y = ggplot2::element_blank(),
-            axis.text.x = ggplot2::element_text(size = 7),
-            legend.title = ggplot2::element_text(size = 7, face = "bold")
-        ) +
-        ggplot2::labs(
-            title = data$sample[1],
-            y = "NES",
-            x = ""
-        ) +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-        ggplot2::ylim(-6, 6) +
-        ggplot2::scale_color_gradient(low = plot_cols[2], high = plot_cols[1])
-
-    return(plot_name)
-}
-```
-
 ## Confirm that we have HDF5 available
-```{r helper_h5_check}
-#| cache.vars: hdf5_check
-
 #' Check for HDF5 File Support
 #'
 #' This function checks for the availability of HDF5 file support in the current R environment.
 #'
 #' @return Logical value indicating whether HDF5 support is available.
 hdf5_check <- function() {
-    h5_return <-
-        suppressWarnings(
-            try(
-                system(
-                    "which h5pfc",
-                    intern = TRUE,
-                    ignore.stderr = TRUE
-                )
-            )
-        ) |>
-            length() > 0
-    if (!h5_return) {
-        stop(
-            "\nYou need to have h5pfc installed to read in h5_files. ",
-            "Perhaps ml load HDF5 before you start R?\n"
+  h5_return <-
+    suppressWarnings(
+      try(
+        system(
+          "ldconfig -p | grep libhdf5.so",
+          intern = TRUE,
+          ignore.stderr = TRUE
         )
-    }
+      )
+    ) |>
+      length() ==
+      0
+  if (!h5_return) {
+    stop(
+      "\nYou need to have h5pfc installed to read in h5_files. ",
+      "Perhaps ml load HDF5 before you start R?\n"
+    )
+  }
 }
-```
 
 ## Confirm that Seurat version installed is > 5
-```{r helper_seurat_check}
-#| cache.vars: seurat_version_check
-
 #' Check Seurat Version
 #'
 #' This function checks the version of the Seurat package installed in the R environment.
@@ -421,18 +33,15 @@ hdf5_check <- function() {
 #'
 #' @return A message indicating the version of Seurat installed.
 seurat_version_check <- function() {
-    if (packageVersion("Seurat") < "5.0.0") {
-        stop(
-            "Please install Seurat version 5.0.0 or higher. ",
-            "You are currently using version ",
-            packageVersion("Seurat")
-        )
-    }
+  if (packageVersion("Seurat") < "5.0.0") {
+    stop(
+      "Please install Seurat version 5.0.0 or higher. ",
+      "You are currently using version ",
+      packageVersion("Seurat")
+    )
+  }
 }
-```
 
-```{r helper_confirm_mclapply_worked}
-#| cache.vars: confirm_mclapply_worked
 #' Confirm mclapply Worked And Dump Error Messages If Not
 #'
 #' This function checks if the `mclapply` function executed successfully on the provided input list.
@@ -440,275 +49,271 @@ seurat_version_check <- function() {
 #' @param input_list A list that was processed by `mclapply`.
 #' @return The input list if `mclapply` was successful or the error messages if it failed.
 confirm_mclapply_worked <- function(input_list) {
-    if (length(input_list) == 0) {
-        stop("Empty input list")
-    }
+  if (length(input_list) == 0) {
+    stop("Empty input list")
+  }
 
-    has_error <- FALSE
-    for (item in input_list) {
-        if (inherits(item, "try-error")) {
-            warning("mclapply failed with error: ", item[[1]])
-            has_error <- TRUE
-        }
+  has_error <- FALSE
+  for (item in input_list) {
+    if (inherits(item, "try-error")) {
+      warning("mclapply failed with error: ", item[[1]])
+      has_error <- TRUE
     }
+  }
 
-    if (has_error) {
-        stop("mclapply failed")
-    } else {
-        return(input_list)
-    }
+  if (has_error) {
+    stop("mclapply failed")
+  } else {
+    return(input_list)
+  }
 }
-```
 
 ## Plotting Functions
-
-```{r helper_dimplot_better}
-#| cache.vars: [dimplot_better]
-dimplot_better <- function(object,
-                           group_by = NULL,
-                           cols,
-                           ncol = 1,
-                           label_size = 2.5,
-                           split_by = NULL,
-                           ...) {
-    Seurat::DimPlot(
-        object,
-        group.by = group_by,
-        split.by = split_by,
-        ncol = ncol,
-        label.size = label_size,
-        label = TRUE,
-        repel = TRUE,
-        shuffle = TRUE,
-        label.box = TRUE,
-        cols = c(rrrSingleCellUtils::plot_cols, sample(rainbow(1000))),
-        ...
-    ) +
-        ggplot2::coord_fixed()
+dimplot_better <- function(
+  object,
+  group_by = NULL,
+  cols,
+  ncol = 1,
+  label_size = 2.5,
+  split_by = NULL,
+  ...
+) {
+  Seurat::DimPlot(
+    object,
+    group.by = group_by,
+    split.by = split_by,
+    ncol = ncol,
+    label.size = label_size,
+    label = TRUE,
+    repel = TRUE,
+    shuffle = TRUE,
+    label.box = TRUE,
+    cols = c(rrrSingleCellUtils::plot_cols, sample(rainbow(1000))),
+    ...
+  ) +
+    ggplot2::coord_fixed()
 }
-```
 
 ## Samples for downsample analysis
-```{r helper_downsample_scanbit}
-#| cache.vars: [scanbit_downsample_loop, filter_cells_umi_cutoff, filter_cells_n_cell_cutoff, make_cbt]
 filter_cells_umi_cutoff <- function(sobj, max_umi) {
-    keep_cells <-
-        sobj |>
-        SeuratObject::FetchData(vars = c(
-            "cell_group",
-            "cell_barcode",
-            "bam_file",
-            "nCount_RNA"
-        )) |>
-        tibble::as_tibble() |>
-        dplyr::group_by(cell_group) |>
-        dplyr::arrange(cell_group, cell_barcode) |>
-        dplyr::mutate(cumsum = cumsum(nCount_RNA)) |>
-        dplyr::filter(cumsum < max_umi) |>
-        dplyr::pull(cell_barcode)
+  keep_cells <-
+    sobj |>
+    SeuratObject::FetchData(
+      vars = c(
+        "cell_group",
+        "cell_barcode",
+        "bam_file",
+        "nCount_RNA"
+      )
+    ) |>
+    tibble::as_tibble() |>
+    dplyr::group_by(cell_group) |>
+    dplyr::arrange(cell_group, cell_barcode) |>
+    dplyr::mutate(cumsum = cumsum(nCount_RNA)) |>
+    dplyr::filter(cumsum < max_umi) |>
+    dplyr::pull(cell_barcode)
 
-    sobj_sub <- subset(sobj, cells = keep_cells)
-    return(sobj_sub)
+  sobj_sub <- subset(sobj, cells = keep_cells)
+  return(sobj_sub)
 }
 
 filter_cells_n_cell_cutoff <- function(sobj, n_cells) {
-    set.seed(1337)
-    sobj <- subset(sobj, downsample = n_cells)
+  set.seed(1337)
+  sobj <- subset(sobj, downsample = n_cells)
 
-    return(sobj)
+  return(sobj)
 }
 
 make_cbt <- function(sobj, cutoff, downsample_type) {
-    if (downsample_type == "max_umi") {
-        sub_sobj <- filter_cells_umi_cutoff(sobj, cutoff)
-    } else if (downsample_type == "n_cells") {
-        sub_sobj <- filter_cells_n_cell_cutoff(sobj, cutoff)
-    } else {
-        stop("Must provide either max_umi or n_cells as downsample type")
+  if (downsample_type == "max_umi") {
+    sub_sobj <- filter_cells_umi_cutoff(sobj, cutoff)
+  } else if (downsample_type == "n_cells") {
+    sub_sobj <- filter_cells_n_cell_cutoff(sobj, cutoff)
+  } else {
+    stop("Must provide either max_umi or n_cells as downsample type")
+  }
+
+  cell_barcode_group_table <-
+    sub_sobj |>
+    SeuratObject::FetchData(
+      vars = c(
+        "cell_group",
+        "cell_barcode",
+        "bam_file",
+        "nCount_RNA"
+      )
+    ) |>
+    tibble::as_tibble() |>
+    dplyr::arrange(cell_group)
+
+  return(cell_barcode_group_table)
+}
+
+scanbit_downsample_loop <- function(
+  sobj,
+  cutoff_vector,
+  out_dir_base,
+  sample_label,
+  min_read_depth = 5,
+  min_snvs_per_cluster = 10,
+  downsample_type = "n_cells",
+  keep_temp_dir = FALSE,
+  ploidy,
+  ref_fasta
+) {
+  parallel::mclapply(
+    cutoff_vector,
+    mc.cores = 10,
+    mc.preschedule = FALSE,
+    function(cutoff) {
+      out_dir <-
+        file.path(
+          out_dir_base,
+          paste0(
+            "downsample_",
+            sprintf("%.0f", cutoff),
+            "_cells"
+          )
+        )
+
+      dir.create(
+        out_dir,
+        recursive = TRUE,
+        showWarnings = FALSE
+      )
+
+      if (keep_temp_dir) {
+        temp_dir <- file.path(out_dir_base, "tempdir")
+        cleanup <- FALSE
+      } else {
+        temp_dir <- tempfile(
+          pattern = paste0(
+            "tempdir_",
+            cutoff,
+            sample_label
+          )
+        )
+        cleanup <- TRUE
+      }
+
+      # Get the cell barcodes for the current cutoff
+      cell_barcode_group_table <-
+        make_cbt(
+          sobj,
+          cutoff = cutoff,
+          downsample_type = downsample_type
+        )
+
+      readr::write_tsv(
+        cell_barcode_group_table,
+        file.path(
+          out_dir,
+          paste0(
+            "cell_barcode_table_",
+            sample_label,
+            "_",
+            sprintf("%.0f", cutoff),
+            "_cells.txt"
+          )
+        )
+      )
+
+      cell_barcode_group_table <-
+        dplyr::select(cell_barcode_group_table, -nCount_RNA)
+
+      scanBit::get_snp_tree(
+        cellid_bam_table = cell_barcode_group_table,
+        ploidy = ploidy,
+        temp_dir = temp_dir,
+        output_dir = out_dir,
+        output_base_name = paste0(
+          "downsample_",
+          sample_label,
+          "_",
+          sprintf("%.0f", cutoff)
+        ),
+        ref_fasta = ref_fasta,
+        min_depth = min_read_depth,
+        job_base = "downsample_cells",
+        min_snvs_per_cluster = min_snvs_per_cluster,
+        n_bootstraps = 10000,
+        max_prop_missing_at_site = 0.9,
+        cleanup = cleanup,
+        tree_image_type = "pdf",
+        other_job_header_options = c(
+          "--time=8:00:00",
+          "--partition=himem,general"
+        ),
+        other_batch_options = c(
+          "ml purge"
+        ),
+        use_apptainer = TRUE
+      )
     }
-
-    cell_barcode_group_table <-
-        sub_sobj |>
-        SeuratObject::FetchData(vars = c(
-            "cell_group",
-            "cell_barcode",
-            "bam_file",
-            "nCount_RNA"
-        )) |>
-        tibble::as_tibble() |>
-        dplyr::arrange(cell_group)
-
-    return(cell_barcode_group_table)
+  )
 }
-
-scanbit_downsample_loop <- function(sobj,
-                                    cutoff_vector,
-                                    out_dir_base,
-                                    sample_label,
-                                    min_read_depth = 5,
-                                    min_snvs_per_cluster = 10,
-                                    downsample_type = "n_cells",
-                                    keep_temp_dir = FALSE,
-                                    ploidy,
-                                    ref_fasta) {
-    parallel::mclapply(
-        cutoff_vector,
-        mc.cores = 10,
-        mc.preschedule = FALSE,
-        function(cutoff) {
-            out_dir <-
-                file.path(
-                    out_dir_base,
-                    paste0(
-                        "downsample_",
-                        sprintf("%.0f", cutoff),
-                        "_cells"
-                    )
-                )
-
-            dir.create(
-                out_dir,
-                recursive = TRUE,
-                showWarnings = FALSE
-            )
-
-            if (keep_temp_dir) {
-                temp_dir <- file.path(out_dir_base, "tempdir")
-                cleanup <- FALSE
-            } else {
-                temp_dir <- tempfile(
-                    pattern = paste0(
-                        "tempdir_",
-                        cutoff,
-                        sample_label
-                    )
-                )
-                cleanup <- TRUE
-            }
-
-            # Get the cell barcodes for the current cutoff
-            cell_barcode_group_table <-
-                make_cbt(
-                    sobj,
-                    cutoff = cutoff,
-                    downsample_type = downsample_type
-                )
-
-            readr::write_tsv(
-                cell_barcode_group_table,
-                file.path(
-                    out_dir,
-                    paste0(
-                        "cell_barcode_table_",
-                        sample_label,
-                        "_",
-                        sprintf("%.0f", cutoff),
-                        "_cells.txt"
-                    )
-                )
-            )
-
-            cell_barcode_group_table <-
-                dplyr::select(cell_barcode_group_table, -nCount_RNA)
-
-            scanBit::get_snp_tree(
-                cellid_bam_table = cell_barcode_group_table,
-                ploidy = ploidy,
-                temp_dir = temp_dir,
-                output_dir = out_dir,
-                output_base_name = paste0(
-                    "downsample_",
-                    sample_label,
-                    "_",
-                    sprintf("%.0f", cutoff)
-                ),
-                ref_fasta = ref_fasta,
-                min_depth = min_read_depth,
-                job_base = "downsample_cells",
-                min_snvs_per_cluster = min_snvs_per_cluster,
-                n_bootstraps = 10000,
-                max_prop_missing_at_site = 0.9,
-                cleanup = cleanup,
-                tree_image_type = "pdf",
-                other_job_header_options = c(
-                    "--time=8:00:00",
-                    "--partition=himem,general"
-                ),
-                other_batch_options = c(
-                    "ml purge",
-                    "ml miniforge3",
-                    'eval "$(conda shell.bash hook)"'
-                ),
-            )
-        }
-    )
-}
-```
 
 
 ## Helper function to run scanbit
-This asssumes a bunch of things about the structure of this project
-```{r helpers_scanbit_one_sample}
-#| cache.vars: [scanbit_one_sample]
-scanbit_one_sample <- function(this_sample,
-                               species,
-                               ploidy,
-                               ref_fasta,
-                               out_dir) {
-    sobj <-
-        qs::qread(paste0(
-            "output/seurat_objects/individual/",
-            this_sample,
-            "_",
-            species,
-            ".qs"
-        ))
+# This asssumes a bunch of things about the structure of this project
+scanbit_one_sample <- function(
+  this_sample,
+  species,
+  ploidy,
+  ref_fasta,
+  out_dir
+) {
+  sobj <-
+    qs::qread(paste0(
+      "output/seurat_objects/individual/",
+      this_sample,
+      "_",
+      species,
+      ".qs"
+    ))
 
-    sobj$cell_group <-
-        paste0(
-            sobj$cluster_label,
-            "_c",
-            sobj$individ_clusters
-        )
+  sobj$cell_group <-
+    paste0(
+      sobj$cluster_label,
+      "_c",
+      sobj$individ_clusters
+    )
 
-    cell_barcode_group_table <-
-        sobj@meta.data |>
-        dplyr::select(cell_group, cell_barcode, bam_file) |>
-        dplyr::as_tibble()
+  cell_barcode_group_table <-
+    sobj@meta.data |>
+    dplyr::select(cell_group, cell_barcode, bam_file) |>
+    dplyr::as_tibble()
 
-    job_worked <-
-        scanBit::get_snp_tree(
-            cellid_bam_table = cell_barcode_group_table,
-            ploidy = ploidy,
-            output_dir = out_dir,
-            temp_dir = paste0("/gpfs0/scratch/mvc002/scanbit/", this_sample),
-            output_base_name = paste0("snvs_", this_sample),
-            ref_fasta = ref_fasta,
-            min_depth = c(5, 10, 20, 30),
-            job_base = paste0("sb_", this_sample),
-            log_base = paste0("slurmOut/snv_", this_sample),
-            min_snvs_per_cluster = 200,
-            n_bootstraps = 10000,
-            max_prop_missing_at_site = 0.9,
-            tree_image_type = "pdf",
-            cleanup = TRUE,
-            other_job_header_options = c(
-                "--time=8:00:00",
-                "--partition=himem,general"
-            ),
-            other_batch_options = c(
-                "ml purge",
-                "ml miniforge3",
-                'eval "$(conda shell.bash hook)"'
-            ),
-        )
+  job_worked <-
+    scanBit::get_snp_tree(
+      cellid_bam_table = cell_barcode_group_table,
+      ploidy = ploidy,
+      output_dir = out_dir,
+      temp_dir = paste0("/gpfs0/scratch/mvc002/scanbit/", this_sample),
+      output_base_name = paste0("snvs_", this_sample),
+      ref_fasta = ref_fasta,
+      min_depth = c(5, 10, 20, 30),
+      job_base = paste0("sb_", this_sample),
+      log_base = paste0("slurmOut/snv_", this_sample),
+      min_snvs_per_cluster = 200,
+      n_bootstraps = 10000,
+      max_prop_missing_at_site = 0.9,
+      tree_image_type = "pdf",
+      cleanup = TRUE,
+      other_job_header_options = c(
+        "--time=8:00:00",
+        "--partition=himem,general"
+      ),
+      other_batch_options = c(
+        "ml purge"
+      ),
+      use_apptainer = TRUE
+    )
 
-    return(job_worked)
+  return(job_worked)
 }
-```
 
-```{r helpers_ggsave}
-#| cache.vars: [ggsave_wrap]
+
 #' ggsave_wrap
 #'
 #' A wrapper function for saving a single ggplot object in multiple file formats at once.
@@ -730,23 +335,22 @@ scanbit_one_sample <- function(this_sample,
 #'
 #' @export
 ggsave_wrap <- function(
-    file_stub,
-    file_types,
-    plot_variable,
-    width,
-    height
+  file_stub,
+  file_types,
+  plot_variable,
+  width,
+  height
 ) {
-    files_made <-
-        lapply(
-            file_types,
-            function(x) {
-                ggplot2::ggsave(
-                    paste0(file_stub, ".", x),
-                    plot_variable,
-                    width = width,
-                    height = height
-                )
-            }
+  files_made <-
+    lapply(
+      file_types,
+      function(x) {
+        ggplot2::ggsave(
+          paste0(file_stub, ".", x),
+          plot_variable,
+          width = width,
+          height = height
         )
+      }
+    )
 }
-```
