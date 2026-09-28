@@ -9,7 +9,9 @@ n_geo_samples=$(grep -v geo_id misc/validation_geo_metadata.tsv | wc -l)
 
 n_geo_samples=$((n_geo_samples - 1))
 
-sbatch --array=0-${n_geo_samples}%20 sbatchCmds/get_geo_fastqs.sh
+sbatch \
+  --array=0-${n_geo_samples}%20 \
+  analysis_modules/01_process_raw/scripts/get_geo_fastqs.sh
 ```
 
 ## Next, run cellranger count on the raw data from GEO
@@ -26,7 +28,9 @@ n_samples=($( \
 # since the array will start at zero
 n_samples=$((n_samples - 1))
 
-sbatch --array=0-${n_samples} sbatchCmds/count_geo.sh
+sbatch \
+  --array=0-${n_samples} \
+  analysis_modules/01_process_raw/scripts/count_geo.sh
 ```
 
 ## Delete the GEO fastqs to save space
@@ -39,7 +43,7 @@ rm input/othertumors/fastqs/G*/*.fastq.gz
 ## Make up the fastqs for the data from our lab
 ```{bash get_data_roberts_fastqs}
 #| eval: false
-sbatch sbatchCmds/make_Roberts_fastqs.sh
+sbatch analysis_modules/01_process_raw/scripts/make_Roberts_fastqs.sh
 ```
 
 ## Run cellranger count on these samples
@@ -47,7 +51,7 @@ These are aligned to the new reference with gfp/rfp
 ```{bash get_data_roberts_count}
 #| dependson: get_data_roberts_fastqs
 #| eval: false
-sbatch sbatchCmds/count_roberts_gfp_rfp_mm10.sh
+sbatch analysis_modules/01_process_raw/scripts/count_roberts_gfp_rfp_mm10.sh
 ```
 
 ## Delete the Roberts fastqs since we're done with those
@@ -60,7 +64,7 @@ rm input/fastqs/S0*/*fastq.gz
 ## Get 10x flex data
 ```{bash get_data_flex}
 #| eval: false
-sbatch sbatchCmds/get10x_flex.sh
+sbatch analysis_modules/01_process_raw/scripts/get10x_flex.sh
 ```
 
 ## Read in raw data and process to Seurat objects
