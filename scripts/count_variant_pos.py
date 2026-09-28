@@ -71,7 +71,7 @@ def get_samps_records(bcf_file, threads):
 
 def get_genotypes(records, samples):
     genotypes = np.array([
-        [''.join(map(str, rec.samples[sample]['GT'])) for sample in samples if ''.join(map(str, rec.samples[sample]['GT'])) != 'NoneNone']
+        [''.join(map(str, rec.samples[sample]['GT'])) for sample in samples]
         for rec in records
     ]).flatten()
 
@@ -79,7 +79,7 @@ def get_genotypes(records, samples):
 
 def get_depths(records, samples):
     depths = np.array([
-        [str(rec.samples[sample]['DP']) for sample in samples if rec.samples[sample]['DP'] != 'None']
+        [ str(rec.samples[sample]['DP']) for sample in samples ]
         for rec in records
     ]).flatten()
     #depths = depths[depths != 'None']
@@ -99,19 +99,21 @@ def count_pos_covered(depths, alt_dict):
     depth_categories, counts = np.unique(depths, return_counts = True)
 
     for i in range(len(counts)):
-        alt_dict[depth_categories[i]] = {}
-        alt_dict[depth_categories[i]]['sites_covered'] = counts[i]
+        if depth_categories[i] != 'None':
+          alt_dict[depth_categories[i]] = {}
+          alt_dict[depth_categories[i]]['sites_covered'] = counts[i]
 
     return alt_dict
 
 def count_gt_by_depth(genotypes, depths, alt_dict):
     for i in range(len(genotypes)):
-        this_genotype = genotypes[i]
-        this_depth = depths[i]
-        if this_genotype in alt_dict[this_depth].keys():
-            alt_dict[this_depth][this_genotype] += 1
-        else:
-            alt_dict[this_depth][this_genotype] = 1
+        if genotypes[i] != 'NoneNone':
+          this_genotype = genotypes[i]
+          this_depth = depths[i]
+          if this_genotype in alt_dict[this_depth].keys():
+              alt_dict[this_depth][this_genotype] += 1
+          else:
+              alt_dict[this_depth][this_genotype] = 1
     return alt_dict
 
 def print_proportion_alt(alt_dict):
