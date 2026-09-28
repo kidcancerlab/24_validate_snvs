@@ -42,9 +42,6 @@ source activate_r461.sh
 
 I am using rv (https://a2-ai.github.io/rv-docs/) to manage my R environment and make it reproducible.
 
-On my cluster, I need to load the following modules
-ml purge
-
-Then run rv sync to get the R environment set up. The R environment is defined in rproject.toml.
+Run rv sync to get the R environment set up. The R environment is defined in rproject.toml.
 
 rv sync
