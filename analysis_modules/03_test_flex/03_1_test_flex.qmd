@@ -17,6 +17,12 @@ sbatch sbatchCmds/flex_merge_c1_all.sh
 sbatch sbatchCmds/flex_count_vars.sh
 ```
 
+### Merge mouse data into a single bcf file
+```{bash flex_merge_mouse}
+#| dependson: [flex_merge_c1]
+sbatch sbatchCmds/flex_merge_mouse.sh
+```
+
 ### Count the total number of positions that include an alt in flex data
 ```{bash flex_alt_counting}
 #| dependson: [flex_merge_c1]
@@ -170,9 +176,4 @@ flex_accuracy %>%
         filename = "output/03_test_flex/figures/flex_accuracy_table.html"
     )
 ```
-
-## Plot how many sites are covered at each depth
-
-## Plot how many inaccurate variant calls we would expect at each depth
-
 
