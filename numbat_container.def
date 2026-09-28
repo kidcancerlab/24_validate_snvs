@@ -1,0 +1,24 @@
+Bootstrap: docker
+From: pkharchenkolab/numbat-rbase:latest
+
+%post
+
+apt-get update && apt-get install -y --no-install-recommends \
+  cmake
+
+  ######## install general R package dependencies
+  Rscript -e 'install.packages("BiocManager", repos = "https://cloud.r-project.org", Ncpus = 4)'
+  Rscript -e 'install.packages("devtools", repos = "https://cloud.r-project.org", Ncpus = 4)'
+  Rscript -e 'install.packages("pak", repos = "https://cloud.r-project.org", Ncpus = 4)'
+  Rscript -e 'install.packages("tidyverse", repos = "https://cloud.r-project.org", Ncpus = 4)'
+  Rscript -e 'install.packages("ggrepel", repos = "https://cloud.r-project.org", Ncpus = 4)'
+  Rscript -e 'install.packages("qs2", repos = "https://cloud.r-project.org", Ncpus = 4)'
+
+%environment
+
+%test
+    # Verify installations
+    R --version
+
+%help
+    This container is the numbat docker container with a few R packages added

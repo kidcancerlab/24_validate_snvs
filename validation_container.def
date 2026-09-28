@@ -10,6 +10,9 @@ From: rocker/r-ver:4.4.3
     QUARTO_VERSION="1.9.37"
     MINIFORGE_VERSION="26.3.2-2"
 
+  # Specify reticulate python location
+  export RETICULATE_PYTHON=/opt/miniforge/bin/python
+
   # Remove strict format-security error enforcement from R's default compiler flags
   sed -i 's/-Werror=format-security//g' /usr/local/lib/R/etc/Makeconf
 
@@ -105,11 +108,13 @@ From: rocker/r-ver:4.4.3
   conda install -n base -y -c conda-forge -c bioconda \
     python=3.11 \
     setuptools \
-    pandas \
+    "numpy<2" \
+    "pandas=2.0.3" \
     scipy \
     scikit-learn \
     cellsnp-lite \
-    samtools
+    samtools \
+    scprep
 
   # Clean up APT
   apt-get clean
@@ -123,6 +128,7 @@ From: rocker/r-ver:4.4.3
   Rscript -e 'install.packages("ggrepel", repos = "https://cloud.r-project.org")'
   Rscript -e 'pak::pkg_install("hadley/pryr")'
   Rscript -e 'pak::pkg_install("saeyslab/nichenetr")'
+  Rscript -e 'pak::pkg_install("qs2")'
 
   # ggtree (via scalop) still calls the unexported ggplot2:::check_linewidth(),
   # which was removed in ggplot2 4.0.0, so pin ggplot2 to the last 3.x release
@@ -135,7 +141,7 @@ From: rocker/r-ver:4.4.3
 
   ######## Install scatomic and it's dependencies
   Rscript -e "pak::pkg_install('dlm@1.1.5')"
-  python -m pip install magic-impute
+  /opt/miniforge/bin/python -m pip install magic-impute
   Rscript -e "pak::pkg_install('Rmagic@2.0.3')"
   Rscript -e "pak::pkg_install('inofechm/cutoff.scATOMIC')"
   Rscript -e "options(timeout=9999999)
@@ -153,6 +159,7 @@ From: rocker/r-ver:4.4.3
     export LC_ALL=C
     export PATH=/opt/miniforge/bin:/usr/local/bin:$PATH
     export RV_CACHE_DIR=/cache/rv
+    export RETICULATE_PYTHON=/opt/miniforge/bin/python
 
 %test
     # Verify installations
