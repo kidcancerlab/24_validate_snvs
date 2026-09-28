@@ -138,18 +138,15 @@ This also downloads the flex data from 10x
 
 The output here will be cellrange counts folders in output/cellranger_out/
 
-{{< include child_qmds/process_raw_data.qmd >}}
-
-# Read in raw data and process to Seurat objects
 The metadata for all samples is stored in misc/sample_metadata.tsv.
 
 Note that in the sample_metadata, for samples with multiple references, the cutoff format is "GRCh38-40000;mm10---20000" where the species_pattern is at the beginning of the string, followed by the cutoff value (no dash or anything). This is split from the second cutoff value by a semicolon. If there is only one reference, just use the cutoff value, no species pattern is needed.
 
-{{< include child_qmds/make_Seurat_objs.qmd >}}
+{{< include analysis_modules/01_process_raw/01_1_process_raw_data.qmd >}}
 
 # Run scanBit on the Seurat objects
 
-{{< include child_qmds/call_snvs.qmd >}}
+{{< include analysis_modules/02_snv_calling/02_1_call_snvs.qmd >}}
 
 # Run analysis on flex data to calculate accuracy
 

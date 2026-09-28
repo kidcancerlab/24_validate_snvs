@@ -62,3 +62,6 @@ rm input/fastqs/S0*/*fastq.gz
 #| eval: false
 sbatch sbatchCmds/get10x_flex.sh
 ```
+
+## Read in raw data and process to Seurat objects
+{{< include analysis_modules/01_process_raw/01_2_make_Seurat_objs.qmd >}}
