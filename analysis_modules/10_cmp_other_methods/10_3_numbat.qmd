@@ -1,0 +1,73 @@
+## Get numbat reference data
+
+```{bash}
+#| eval: FALSE
+# hg38
+wget \
+  -O input/numbat/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz \
+  https://sourceforge.net/projects/cellsnp/files/SNPlist/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz
+
+# hg38
+#!!!! Had to download this using a web browser
+# wget \
+#   --no-check-certificate \
+#   -O input/numbat/1000G_hg38.zip \
+#   http://pklab.med.harvard.edu/teng/data/1000G_hg38.zip
+
+```
+
+## Get numbat container
+```{bash}
+#| eval: FALSE
+sbatch sbatchCmds/build_numbat_sing_container.sh
+```
+
+
+```{bash}
+
+apptainer exec -b /work:/mnt/mydata -it pkharchenkolab/numbat-rbase:latest /bin/bash
+singularity shell \
+  --no-home \
+  --cleanenv \
+  --bind $(pwd):/mnt/mydata \
+  --home "$(pwd):/mnt/mydata" \
+  --pwd /mnt/mydata \
+  sing_numbat_container.sif
+
+/numbat/inst/bin/pileup_and_phase.R \
+  --label testLabel \
+  --samples testSample \
+  --bams output/cellranger_out/G0001/possorted_genome_bam.bam \
+  --barcodes output/cellranger_out/G0001/filtered_feature_bc_matrix/barcodes.tsv.gz \
+  --gmap /Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz \
+  --snpvcf input/numbat/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz \
+  --paneldir input/numbat/1000G_hg38/ \
+  --outdir testnumbat \
+  --ncores 4
+
+```
+
+```{r}
+
+library(numbat)
+
+g01 <- qs2::qs_read("output/01_process_raw/rdata/individual/G0001_human.qs2")
+
+count_mat_ATC2 = readRDS(url('http://pklab.med.harvard.edu/teng/data/count_mat_ATC2.rds'))
+df_allele_ATC2 = readRDS(url('http://pklab.med.harvard.edu/teng/data/df_allele_ATC2.rds'))
+
+# run
+out = run_numbat(
+    GetAssayData(g01, layer = "counts"), # gene x cell integer UMI count matrix 
+    ref_hca, # reference expression profile, a gene x cell type normalized expression level matrix
+    read.delim("testnumbat/testSample_allele_counts.tsv.gz", sep = "\t"),
+    genome = "hg38",
+    t = 1e-5,
+    ncores = 4,
+    plot = TRUE,
+    out_dir = './test'
+)
+
+```
+
+
