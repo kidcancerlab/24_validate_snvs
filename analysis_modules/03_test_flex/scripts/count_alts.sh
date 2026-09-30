@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
-#SBATCH --output=slurmOut/slurmOut_merge-%j.out
-#SBATCH --error=slurmOut/slurmOut_merge-%j.out
+#SBATCH --output=slurmOut/count_alts-%j.out
+#SBATCH --error=slurmOut/count_alts-%j.out
 #SBATCH --job-name=count_alts
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=30
+#SBATCH --cpus-per-task=5
 #SBATCH --partition=himem
 #SBATCH --time=24:00:00
 #SBATCH --wait
@@ -21,37 +21,27 @@ ml load Miniconda3/4.9.2
 eval "$(conda shell.bash hook)"
 conda activate scanBit_xkcd_1337
 
-# Filter out any multi-allelic site using -M 2
-bcftools view \
-    -M 2 \
-    -O b \
-    output/03_test_flex/snvs/mergedflex_snvs_c1_keep_all.bcf \
-  > temp_bcf.bcf
-
-bcftools index temp_bcf.bcf
-
 python scripts/count_variant_pos.py \
     --threads 4 \
-    --bcf temp_bcf.bcf \
+    --bcf output/03_test_flex/snvs/mergedflex_snvs_c1_keep_all.bcf \
     --verbose \
     > output/03_test_flex/counts/alt_pos_counts_flex.txt
 
-rm temp_bcf.bcf temp_bcf.bcf.csi
 echo "first count done"
 
 # Filter out any multi-allelic site using -M 2
-bcftools view \
-    -M 2 \
-    -O b \
-    output/03_test_flex/snvs/mergedmouse_ours_c1_keep_all.bcf \
-  > temp_bcf_mouse.bcf
+# bcftools view \
+#     -M 2 \
+#     -O b \
+#     output/03_test_flex/snvs/mergedmouse_ours_c1_keep_all.bcf \
+#   > temp_bcf_mouse.bcf
 
-bcftools index temp_bcf_mouse.bcf
+# bcftools index temp_bcf_mouse.bcf
 
-python scripts/count_variant_pos.py \
-    --threads 4 \
-    --bcf temp_bcf_mouse.bcf \
-    --verbose \
-    > output/03_test_flex/counts/alt_pos_counts_mouse.txt
+# python scripts/count_variant_pos.py \
+#     --threads 4 \
+#     --bcf temp_bcf_mouse.bcf \
+#     --verbose \
+#     > output/03_test_flex/counts/alt_pos_counts_mouse.txt
 
-rm temp_bcf_mouse.bcf temp_bcf_mouse.bcf.csi
+# rm temp_bcf_mouse.bcf temp_bcf_mouse.bcf.csi

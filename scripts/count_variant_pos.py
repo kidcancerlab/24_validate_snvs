@@ -71,7 +71,7 @@ def get_samps_records(bcf_file, threads):
 
 def get_genotypes(records, samples):
     genotypes = np.array([
-        [''.join(map(str, rec.samples[sample]['GT'])) for sample in samples]
+        [ ''.join(map(str, rec.samples[sample]['GT'])) for sample in samples ]
         for rec in records
     ]).flatten()
 
@@ -107,7 +107,7 @@ def count_pos_covered(depths, alt_dict):
 
 def count_gt_by_depth(genotypes, depths, alt_dict):
     for i in range(len(genotypes)):
-        if genotypes[i] != 'NoneNone':
+        if depths[i] != 'None':
           this_genotype = genotypes[i]
           this_depth = depths[i]
           if this_genotype in alt_dict[this_depth].keys():

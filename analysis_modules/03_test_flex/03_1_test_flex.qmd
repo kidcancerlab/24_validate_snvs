@@ -8,25 +8,25 @@ This keeps all the positions, not just those with an alt position
 This requires that the `scanbit_run_flex` chunk has cleanup set to FALSE
 ```{bash flex_merge_c1}
 #| dependson: [scanbit_run_flex]
-sbatch sbatchCmds/flex_merge_c1_all.sh
+sbatch analysis_modules/03_test_flex/scripts/flex_merge_c1_all.sh 
 ```
 
 ### Count the total number of positions covered by flex data for each cluster
 ```{bash flex_cov_alts}
 #| dependson: [flex_merge_c1]
-sbatch sbatchCmds/flex_count_vars.sh
+sbatch analysis_modules/03_test_flex/scripts/flex_count_vars.sh 
 ```
 
 ### Merge mouse data into a single bcf file
 ```{bash flex_merge_mouse}
 #| dependson: [flex_merge_c1]
-sbatch sbatchCmds/flex_merge_mouse.sh
+# sbatch analysis_modules/03_test_flex/scripts/our_mouse_sbatchmerge_keep_all.sh
 ```
 
 ### Count the total number of positions that include an alt in flex data
 ```{bash flex_alt_counting}
 #| dependson: [flex_merge_c1]
-sbatch sbatchCmds/count_alts.sh
+sbatch analysis_modules/03_test_flex/scripts/count_alts.sh
 ```
 
 ### Calculate variant calling accuracy in flex data
