@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
-#SBATCH --output=slurmOut/slurmOut_scevan-%j.out
-#SBATCH --error=slurmOut/slurmOut_scevan-%j.out
-#SBATCH --job-name=scevan
+#SBATCH --output=slurmOut/scevan_human-%j.out
+#SBATCH --error=slurmOut/scevan_human-%j.out
+#SBATCH --job-name=scevan_human
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
@@ -12,12 +12,14 @@
 
 set -e
 
-human_data=\
-  ($(cut -f 3 misc/validation_geo_metadata.tsv \
+human_data=(
+  $(grep 10x-hg38 misc/validation_geo_metadata.tsv \
+    | cut -f 3 \
     | sort \
     | uniq \
     | grep -v Sample_ID\
-  ))
+  )
+)
 
 this_sample=${human_data[${SLURM_ARRAY_TASK_ID}]}
 

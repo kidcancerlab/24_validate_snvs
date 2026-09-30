@@ -15,5 +15,5 @@ run_scevan(
   )),
   organism = species,
   sample_name = this_sample,
-  temp_dir = "sc_temp"
+  temp_dir = "output/10_cmp_other_methods/scevan_results/temp_dir/"
 )

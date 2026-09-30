@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
-#SBATCH --output=slurmOut/slurmOut_scevan-%j.out
-#SBATCH --error=slurmOut/slurmOut_scevan-%j.out
-#SBATCH --job-name=scevan
+#SBATCH --output=slurmOut/scevan_mouse-%j.out
+#SBATCH --error=slurmOut/scevan_mouse-%j.out
+#SBATCH --job-name=scevan_mouse
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
@@ -15,8 +15,8 @@ set -e
 mouse_data=(
   $(
     {
-      cut -f 5 misc/validation_geo_metadata.tsv
-      cut -f 5 misc/mouse_samples_Roberts_realign_metadata_human.tsv
+      cut -f 1 misc/mouse_samples_Roberts_metadata.tsv
+      cut -f 1 misc/mouse_samples_Roberts_realign_metadata.tsv
     } |
       grep -v '^Sample_ID$' |
       sort -u
