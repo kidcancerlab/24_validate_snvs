@@ -58,7 +58,7 @@ output <-
 ## Batch job to count site coverage of GEO human patient samples
 This includes any site with coverage, not just variant calls
 ```{bash readdepth_count_depth}
-sbatch sbatchCmds/geo_bcf_depths.sh
+sbatch analysis_modules/04_read_depth/scripts/geo_bcf_depths.sh
 ```
 
 ## Calculate stats on nCount_RNA for single cell data
@@ -88,7 +88,7 @@ list.files(
 #| cache.vars: [var_depths, ave_var_depths]
 all_var_files <-
     list.files(
-        path = "output/read_depth/depths/bcf_depth",
+        path = "output/04_read_depth_analysis/depths/bcf_depth",
         pattern = "variant_pos",
         full.names = TRUE
     )
@@ -133,7 +133,7 @@ ave_var_depths <-
 
 write_tsv(
     ave_var_depths,
-    "output/read_depth/n_var_count_summary.tsv"
+    "output/04_read_depth_analysis/n_var_count_summary.tsv"
 )
 ```
 
@@ -142,7 +142,7 @@ write_tsv(
 #| cache.vars: [all_depths, ave_depths]
 all_depth_files <-
     list.files(
-        path = "output/read_depth/depths/bcf_depth",
+        path = "output/04_read_depth_analysis/depths/bcf_depth",
         pattern = "bcf_depth_G",
         full.names = TRUE
     )
@@ -186,7 +186,7 @@ ave_depths <-
 
 write_tsv(
     ave_depths,
-    "output/read_depth/n_covered_count_summary.tsv"
+    "output/04_read_depth_analysis/n_covered_count_summary.tsv"
 )
 ```
 
@@ -212,7 +212,7 @@ site_covered_plot <-
     )
 
 ggsave(
-    "output/figures/mean_coverage_1_cell.pdf",
+    "output/04_read_depth_analysis/figures/mean_coverage_1_cell.pdf",
     site_covered_plot,
     width = 6,
     height = 4
@@ -263,7 +263,7 @@ jitter_coverage_plot <-
     )
 
 ggsave_wrap(
-    file_stub = "output/figures/total_and_nonref_site_coverage",
+    file_stub = "output/04_read_depth_analysis/figures/total_and_nonref_site_coverage",
     file_types = c("png", "pdf"),
     jitter_coverage_plot,
     width = 8,
@@ -300,7 +300,7 @@ all_depth_data %>%
         .groups = "drop"
     ) %>%
     arrange(depth) %>%
-    write_tsv("output/read_depth/perc_variant_summary.tsv")
+    write_tsv("output/04_read_depth_analysis/perc_variant_summary.tsv")
 
 perc_variant_plot <-
     all_depth_data %>%
@@ -318,7 +318,7 @@ perc_variant_plot <-
         y = "Percent of Calls That Are Variant"
     )
 ggsave(
-    "output/figures/percent_variant_calls_1_cell.pdf",
+    "output/04_read_depth_analysis/figures/percent_variant_calls_1_cell.pdf",
     perc_variant_plot,
     width = 6,
     height = 4
@@ -342,7 +342,7 @@ perc_no_variants_plot <-
         y = "Percent of Cells With No Variant Calls"
     )
 ggsave(
-    "output/figures/percent_no_variant_calls_1_cell.pdf",
+    "output/04_read_depth_analysis/figures/percent_no_variant_calls_1_cell.pdf",
     width = 6,
     height = 4
 )
@@ -353,7 +353,7 @@ Based on flex accuracy calculations
 #| cache.vars: [expected_mis_calls]
 # Make a named vector or accuracy - name is depth, value is % accurate
 flex_accuracy_prop <-
-    read_tsv("output/flex/flex_accuracy.txt", show_col_types = FALSE) %>%
+    read_tsv("output/03_test_flex/counts/flex_accuracy.txt", show_col_types = FALSE) %>%
     pull(mean_perc_wrong, name = depth) / 100
 
 expected_mis_calls <-
@@ -376,7 +376,7 @@ expected_errors_plot <-
     scale_y_log10(labels = scales::label_comma())
 
 ggsave(
-    "output/figures/expected_errors_1_cell.png",
+    "output/04_read_depth_analysis/figures/expected_errors_1_cell.png",
     expected_errors_plot,
     width = 6,
     height = 4
@@ -385,14 +385,14 @@ ggsave(
 
 ## Count the number of variant (non-reference) calls made in single cells
 ```{bash readdepth_actual_n_vars}
-sbatch sbatchCmds/count_single_cell_variant_calls.sh
+sbatch analysis_modules/04_read_depth/scripts/count_single_cell_variant_calls.sh
 ```
 
 ## Calculate the average number of variants actually called by depth
 ```{r readdepth_compile_depths_ave}
 all_call_files <-
     list.files(
-        path = "output/read_depth/depths/call_count",
+        path = "output/04_read_depth_analysis/depths/call_count",
         pattern = "bcf_calls_depth_G0",
         full.names = TRUE
     )
@@ -442,7 +442,7 @@ n_vars_plot <-
     )
 
 ggsave(
-    "output/figures/average_vars_1_cell.pdf",
+    "output/04_read_depth_analysis/figures/average_vars_1_cell.pdf",
     n_vars_plot,
     width = 6,
     height = 4
@@ -482,7 +482,7 @@ calls_summary_plot <-
     )
 
 ggsave(
-    "output/figures/wrong_vs_called_nvars_1_cell.pdf",
+    "output/04_read_depth_analysis/figures/wrong_vs_called_nvars_1_cell.pdf",
     calls_summary_plot,
     width = 6,
     height = 4
@@ -505,7 +505,7 @@ percent_wrong_table <-
 
 write_tsv(
     percent_wrong_table,
-    file = "output/read_depth/percent_wrong_table.tsv"
+    file = "output/04_read_depth_analysis/percent_wrong_table.tsv"
 )
 
 percent_wrong_plot <-
@@ -527,7 +527,7 @@ percent_wrong_plot <-
     theme_bw()
 
 ggsave(
-    "output/figures/percent_wrong_1_cell.pdf",
+    "output/04_read_depth_analysis/figures/percent_wrong_1_cell.pdf",
     percent_wrong_plot,
     width = 6,
     height = 4
@@ -537,14 +537,14 @@ ggsave(
 ## Calculate how many sites have shared variant information per sample
 ```{bash readdepth_calc_shared}
 #| dependson: [readdepth_scanbit]
-sbatch sbatchCmds/count_single_cell_shared_sites.sh
+sbatch analysis_modules/04_read_depth/scripts/count_single_cell_shared_sites.sh
 ```
 
 ```{r readdepth_shared_sites}
 #| dependson: [readdepth_calc_shared]
 shared_files <-
     list.files(
-        path = "output/read_depth/shared",
+        path = "output/04_read_depth_analysis/shared",
         pattern = "shared.+\\.txt",
         full.names = TRUE
     )
@@ -580,7 +580,7 @@ shared_sites <-
     bind_rows()
 
 pdf(
-    "output/figures/shared_sites/shared_sites_heatmaps.pdf",
+    "output/04_read_depth_analysis/figures/shared_sites/shared_sites_heatmaps.pdf",
     width = 10,
     height = 10
 )
@@ -642,7 +642,7 @@ shared_sites_histograms <-
     )
 
 ggsave(
-    "output/figures/shared_sites/shared_sites_histograms.pdf",
+    "output/04_read_depth_analysis/figures/shared_sites/shared_sites_histograms.pdf",
     plot = shared_sites_histograms,
     width = 8,
     height = 5
@@ -655,5 +655,5 @@ shared_sites %>%
         mean_shared_sites = mean(shared_sites),
         median_shared_sites = median(shared_sites)
     ) %>%
-    write_tsv("output/read_depth/shared_sites_stats.tsv")
+    write_tsv("output/04_read_depth_analysis/shared_sites_stats.tsv")
 ```

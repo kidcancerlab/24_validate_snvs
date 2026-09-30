@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --account=gdrobertslab
-#SBATCH --output=slurmOut/slurmOut_shared-%j.out
-#SBATCH --error=slurmOut/slurmOut_shared-%j.out
+#SBATCH --output=slurmOut/shared-%j.out
+#SBATCH --error=slurmOut/shared-%j.out
 #SBATCH --job-name=count_sc_shared
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -20,7 +20,7 @@ ml load Miniconda3/4.9.2
 eval "$(conda shell.bash hook)"
 conda activate scanBit_xkcd_1337
 
-samples=$(ls -d output/read_depth/scanbit_out/geo_samples/G00* | perl -pe 's/.+\///')
+samples=$(ls -d output/04_read_depth_analysis/snv/geo/G00* | perl -pe 's/.+\///')
 
 cutoffs=(1 2 5 10 20)
 
@@ -33,8 +33,8 @@ do
         export this_cutoff=${cutoff}
 
         python scripts/count_shared_pos.py \
-            --bcf output/read_depth/scanbit_out/geo_samples/${this_sample}/downsample_1_cells/mergeddownsample_${this_sample}_1_c${this_cutoff}.bcf \
-            > output/read_depth/shared/shared_${this_sample}_${this_cutoff}.txt
+            --bcf output/04_read_depth_analysis/scanbit_out/geo_samples/${this_sample}/downsample_1_cells/mergeddownsample_${this_sample}_1_c${this_cutoff}.bcf \
+            > output/04_read_depth_analysis/shared/shared_${this_sample}_${this_cutoff}.txt
     done
 done
 
