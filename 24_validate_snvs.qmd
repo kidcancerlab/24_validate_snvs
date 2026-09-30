@@ -18,7 +18,6 @@ execute:
 knitr:
     opts_chunk:
         cache.lazy: false
-        cache.vars: ""
         warning: false
         message: false
 lightbox: true
@@ -39,46 +38,41 @@ library(gridExtra)
 library(patchwork)
 library(scanBit)
 library(qs2)
+library(HDF5Array)
 
 set.seed(1337)
-```
 
-# Load in helper R functions
-{{< include child_qmds/helper_functions.qmd >}}
+# Load in general helper R functions
+source("analysis_modules/general_helper_functions.R")
+```
 
 # Set up directory structure
 ```{bash mkdirs}
 for directoryName in \
-    /gfpf0/scratch/mvc002/scanbit \
+    /gpfs0/scratch/mvc002/scanbit \
     input/10x_flex \
     output \
     slurmOut \
-    output/counts \
-    output/degs \
-    output/gsea \
-    output/refs \
-    output/figures \
-    output/figures/qc_cutoffs \
-    output/figures/transgene \
-    output/figures/shared_sites \
-    output/seurat_objects/individual \
-    output/seurat_objects/merged \
-    output/downsample/scanbit_out \
-    output/downsample/scanbit_out/geo_samples/ \
-    output/read_depth/depths/bcf_depth \
-    output/read_depth/depths/call_count \
-    output/read_depth/scanbit_out/geo_samples \
-    output/read_depth/depths \
-    output/read_depth/shared \
-    output/snv/tumor/x3 \
-    output/snv/human/ \
-    output/snv/flex \
-    output/snv/mouse \
-    output/snv/transgene/ \
-    output/snv_processing/norm_mouse/ \
-    output/snv_processing/transgene \
-    output/snv_processing/F420_K7M2 \
-    output/flex/var_counts_d1 \
+    output/01_process_raw/counts \
+    output/01_process_raw/figures/qc_cutoffs \
+    output/01_process_raw/rdata/individual \
+    output/01_process_raw/rdata/merged \
+    output/02_snv_calling/rdata/merged \
+    output/02_snv_calling/figures \
+    output/02_snv_calling/snv/flex \
+    output/02_snv_calling/snv/transgene \
+    output/02_snv_calling/snv/mouse \
+    output/02_snv_calling/snv/human \
+    output/03_test_flex/counts/flex_var_counts_d1 \
+    output/03_test_flex/counts/mouse \
+    output/03_test_flex/figures \
+    output/03_test_flex/snvs \
+    output/04_read_depth_analysis/snv/geo \
+    output/05_mouse_strain/rdata/merged \
+    output/10_cmp_other_methods/scevan_results \
+    output/10_cmp_other_methods/scatomic_results \
+    output/10_cmp_other_methods/copykat_results/temp \
+    output/10_cmp_other_methods/copykat_results/rdata \
     input \
     input/fastqs \
     custom_ref
@@ -93,7 +87,7 @@ done
 ## Check required software is available
 ```{r h5_check}
 #| cache: false
-hdf5_check()
+#hdf5_check()
 
 seurat_version_check()
 ```
@@ -150,39 +144,42 @@ Note that in the sample_metadata, for samples with multiple references, the cuto
 
 # Run analysis on flex data to calculate accuracy
 
-{{< include child_qmds/test_flex.qmd >}}
+{{< include analysis_modules/03_test_flex/03_1_test_flex.qmd >}}
 
 # Downsample GEO samples to one cell and quantify read depth coverage
 
-{{< include child_qmds/read_depth_analysis.qmd >}}
+{{< include analysis_modules/04_read_depth/04_1_read_depth_analysis.qmd >}}
 
 # Look at how well scanBit works to distinguish B6 from Balbc
 
-{{< include child_qmds/test_mouse_strains.qmd >}}
+include child_qmds/test_mouse_strains.qmd >}}
 
 # Look at how well scanBit can distinguish B6 from F420 and Balbc from K7M2
 This is more similar to the situation found in patients where the tumor cells derive from the patient
 
-{{< include child_qmds/F420_K7M2_analysis.qmd >}}
+include child_qmds/F420_K7M2_analysis.qmd >}}
 
 # Downsample each sample to a range of cells per cluster
 This is to test the minimum number of cells/reads needed to accurately identify genetically distinct populations.
 
 Also, I will use the data where I downsample to one cell to calculate coverage provided by one cell on average
 
-{{< include child_qmds/downsample_analysis.qmd >}}
+include child_qmds/downsample_analysis.qmd >}}
 
 # Look at samples from tumors with transgene markers
 
-{{< include child_qmds/evaluate_tumor_markers.qmd >}}
+include child_qmds/evaluate_tumor_markers.qmd >}}
 
 # Look at human patient data
 
-{{< include child_qmds/human_validation.qmd >}}
+include child_qmds/human_validation.qmd >}}
 
 # Quantify average run time and RAM usage
 
-{{< include child_qmds/run_time_analysis.qmd >}}
+include child_qmds/run_time_analysis.qmd >}}
+
+# Run SCEVAN and other alternative methods
+{{< include analysis_modules/10_cmp_other_methods/10_1_scevan.qmd >}}
 
 # Session info
 ```{r session_info}
