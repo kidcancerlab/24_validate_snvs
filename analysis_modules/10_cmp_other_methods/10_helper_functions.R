@@ -34,6 +34,8 @@ run_scevan <- function(
       }
     )
 
+  setwd(orig_wd)
+
   # Clean up temporary directory
   unlink(temp_dir, recursive = TRUE)
 
@@ -125,4 +127,47 @@ convert_mouse_to_human <- function(counts) {
   rownames(counts) <- human_genenames[!is.na(human_genenames)]
 
   return(counts)
+}
+
+run_numbat <- function(count_mat, species) {
+
+}
+
+
+
+run_copykat <- function(count_mat, species, temp_dir) {
+  if (species == "mouse") {
+    genome <- "mm10"
+  } else if (species == "human") {
+    genome <- "hg20" # same as hg38 - https://github.com/navinlabcode/copykat/issues/4
+  } else {
+    stop("Unsupported species: ", species)
+  }
+
+  orig_wd <- getwd()
+
+  if (!dir.exists(temp_dir)) {
+    dir.create(temp_dir, recursive = TRUE)
+  }
+  setwd(temp_dir)
+  on.exit(setwd(orig_wd), add = TRUE)
+
+  copykat_results <-
+    copykat(
+      rawmat = count_mat,
+      sam.name = "test",
+      genome = genome,
+      n.cores = 5
+    )
+
+  qs2::qs_save(
+    copykat_results,
+    paste0(
+      "output/10_cmp_other_methods/copykat_results/",
+      sample_name,
+      "_copykat_results.qs2"
+    )
+  )
+
+  setwd(orig_wd)
 }

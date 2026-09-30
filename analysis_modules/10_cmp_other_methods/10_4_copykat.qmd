@@ -1,0 +1,30 @@
+## Run SCENIC using slurm arrays
+```{bash other_meth_scenic}
+human_data=(
+  $(grep 10x-hg38 misc/validation_geo_metadata.tsv \
+    | cut -f 3 \
+    | sort \
+    | uniq \
+    | grep -v Sample_ID \
+  )
+)
+
+sbatch \
+  --array=0-$((${#human_data[@]}-1)) \
+  analysis_modules/10_cmp_other_methods/scripts/array_copykat_human.sh
+
+mouse_data=(
+  $(
+    {
+      cut -f 1 misc/mouse_samples_Roberts_metadata.tsv
+      cut -f 1 misc/mouse_samples_Roberts_realign_metadata.tsv
+    } |
+      grep -v '^Sample_ID$' |
+      sort -u
+  )
+)
+
+sbatch \
+  --array=0-$((${#mouse_data[@]}-1)) \
+  analysis_modules/10_cmp_other_methods/scripts/array_copykat_mouse.sh
+```
