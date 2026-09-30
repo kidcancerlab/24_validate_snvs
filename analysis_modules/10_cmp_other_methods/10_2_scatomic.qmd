@@ -1,12 +1,14 @@
 This program is designed to run only on human cells
 
-```{bash}
-human_data=\
-  ($(cut -f 3 misc/validation_geo_metadata.tsv \
+```{bash other_meth_scatomic}
+human_data=(
+  $(grep 10x-hg38 misc/validation_geo_metadata.tsv \
+    | cut -f 3 \
     | sort \
     | uniq \
     | grep -v Sample_ID\
-  ))
+  )
+)
 
 sbatch \
   --array=0-$((${#human_data[@]}-1)) \
@@ -14,4 +16,4 @@ sbatch \
 ```
 
 ## Start Numbat analyses using slurm arrays
-include analysis_modules/10_cmp_other_methods/10_3_numbat.qmd >}}
+{{< include analysis_modules/10_cmp_other_methods/10_3_numbat.qmd >}}
