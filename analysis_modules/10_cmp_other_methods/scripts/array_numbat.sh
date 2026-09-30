@@ -14,15 +14,18 @@ set -e
 
 # This program only works on human data
 
-human_data=\
-  ($(cut -f 3 misc/validation_geo_metadata.tsv \
+human_data=(
+  $(grep 10x-hg38 misc/validation_geo_metadata.tsv \
+    | cut -f 3 \
     | sort \
     | uniq \
     | grep -v Sample_ID\
-  ))
+  )
+)
 
 this_sample=${human_data[${SLURM_ARRAY_TASK_ID}]}
 
+# Prep alignment data and pileup
 singularity exec \
     --no-home \
     --cleanenv \
@@ -41,15 +44,14 @@ singularity exec \
     --outdir output/10_cmp_other_methods/numbat_results/numbat_temp/${this_sample} \
     --ncores 4
 
-
-
+# Run numbat
 singularity exec \
   --no-home \
   --cleanenv \
   --bind $(pwd):/project \
   --home "$(pwd):/project" \
   --pwd /project \
-  sing_container.sif \
+  numbat-rbase_latest.sif \
   Rscript --no-init-file \
     analysis_modules/10_cmp_other_methods/scripts/run_numbat.R \
     ${this_sample}

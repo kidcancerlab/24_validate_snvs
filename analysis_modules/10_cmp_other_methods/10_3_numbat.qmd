@@ -1,6 +1,8 @@
 ## Get numbat reference data
 
-```{bash}
+note that numbat does not work for the mouse samples: https://github.com/kharchenkolab/numbat/issues/198
+
+```{bash other_meth_get_vcf}
 #| eval: FALSE
 # hg38
 wget \
@@ -13,61 +15,54 @@ wget \
 #   --no-check-certificate \
 #   -O input/numbat/1000G_hg38.zip \
 #   http://pklab.med.harvard.edu/teng/data/1000G_hg38.zip
-
 ```
 
 ## Get numbat container
-```{bash}
+```{bash other_meth_container}
 #| eval: FALSE
-sbatch sbatchCmds/build_numbat_sing_container.sh
+#sbatch sbatchCmds/build_numbat_sing_container.sh
+apptainer pull pkharchenkolab/numbat-rbase:latest numbat-rbase_latest.sif
+```
+
+```{r other_meth_numbat_save_counts}
+human_samples <-
+  read_tsv("misc/validation_geo_metadata.tsv", show_col_types = FALSE) %>%
+  filter(align_ref == "/home/gdrobertslab/lab/GenRef/10x-hg38") %>%
+  pull(Sample_ID) %>%
+  unique()
+
+for (this_sample in human_samples) {
+    qs2::qs_read(
+      paste0(
+        "output/01_process_raw/rdata/individual/",
+        this_sample,
+        "_human.qs2"
+      )
+    ) %>%
+    GetAssayData(layer = "counts") %>%
+    saveRDS(paste0(
+      "output/10_cmp_other_methods/numbat_results/rdata/",
+      this_sample,
+      "_human_counts.rds"
+    ))
+}
 ```
 
 
-```{bash}
-
-apptainer exec -b /work:/mnt/mydata -it pkharchenkolab/numbat-rbase:latest /bin/bash
-singularity shell \
-  --no-home \
-  --cleanenv \
-  --bind $(pwd):/mnt/mydata \
-  --home "$(pwd):/mnt/mydata" \
-  --pwd /mnt/mydata \
-  sing_numbat_container.sif
-
-/numbat/inst/bin/pileup_and_phase.R \
-  --label testLabel \
-  --samples testSample \
-  --bams output/cellranger_out/G0001/possorted_genome_bam.bam \
-  --barcodes output/cellranger_out/G0001/filtered_feature_bc_matrix/barcodes.tsv.gz \
-  --gmap /Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz \
-  --snpvcf input/numbat/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz \
-  --paneldir input/numbat/1000G_hg38/ \
-  --outdir testnumbat \
-  --ncores 4
-
-```
-
-```{r}
-
-library(numbat)
-
-g01 <- qs2::qs_read("output/01_process_raw/rdata/individual/G0001_human.qs2")
-
-count_mat_ATC2 = readRDS(url('http://pklab.med.harvard.edu/teng/data/count_mat_ATC2.rds'))
-df_allele_ATC2 = readRDS(url('http://pklab.med.harvard.edu/teng/data/df_allele_ATC2.rds'))
-
-# run
-out = run_numbat(
-    GetAssayData(g01, layer = "counts"), # gene x cell integer UMI count matrix 
-    ref_hca, # reference expression profile, a gene x cell type normalized expression level matrix
-    read.delim("testnumbat/testSample_allele_counts.tsv.gz", sep = "\t"),
-    genome = "hg38",
-    t = 1e-5,
-    ncores = 4,
-    plot = TRUE,
-    out_dir = './test'
+```{bash other_meth_numbat}
+human_data=(
+  $(grep 10x-hg38 misc/validation_geo_metadata.tsv \
+    | cut -f 3 \
+    | sort \
+    | uniq \
+    | grep -v Sample_ID \
+  )
 )
 
+sbatch \
+  --array=0-$((${#human_data[@]}-1)) \
+  analysis_modules/10_cmp_other_methods/scripts/array_numbat.sh
 ```
 
-
+## Start copykat analysis using slurm arrays
+{{< include analysis_modules/10_cmp_other_methods/10_4_copykat.qmd >}}
