@@ -73,6 +73,8 @@ for directoryName in \
     output/10_cmp_other_methods/scatomic_results \
     output/10_cmp_other_methods/copykat_results/temp \
     output/10_cmp_other_methods/copykat_results/rdata \
+    output/10_cmp_other_methods/infercna_results/matrix/ \
+    output/10_cmp_other_methods/infercna_results/cancer_call/ \
     input \
     input/fastqs \
     custom_ref
@@ -148,7 +150,7 @@ Note that in the sample_metadata, for samples with multiple references, the cuto
 
 # Downsample GEO samples to one cell and quantify read depth coverage
 
-{{< include analysis_modules/04_read_depth/04_1_read_depth_analysis.qmd >}}
+ include analysis_modules/04_read_depth/04_1_read_depth_analysis.qmd >}}
 
 # Look at how well scanBit works to distinguish B6 from Balbc
 
