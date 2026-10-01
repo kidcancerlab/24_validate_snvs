@@ -171,3 +171,103 @@ run_copykat <- function(count_mat, species, temp_dir) {
 
   setwd(orig_wd)
 }
+
+infercna_wrapper <- function(
+  sobj,
+  species,
+  ref_cell_types = c("T cells", "B cells", "NK cells"),
+  sample_name
+) {
+  if (species == "mouse") {
+    infercna::useGenome("mm10")
+  } else if (species == "human") {
+    infercna::useGenome("hg38")
+  } else {
+    stop("Unsupported species: ", species)
+  }
+
+  reference_cells <- get_ref_cells(
+    sobj = sobj,
+    ref_cell_types = ref_cell_types,
+    sample_name = sample_name
+  )
+
+  run_infercna(
+    sobj = sobj,
+    reference_cells = reference_cells,
+    sample_name = sample_name
+  ) |>
+    infercna_call_tumor(sample_name = sample_name)
+}
+
+get_ref_cells <- function(sobj, ref_cell_types, sample_name) {
+  use_ref_cell_types <-
+    ref_cell_types[ref_cell_types %in% unique(sobj$cell_type)]
+
+  # Stop if none of the reference cell types are present in the data
+  if (length(use_ref_cell_types) == 0) {
+    warning(
+      "None of the reference cell types are present in the data for ",
+      "sample: ",
+      sample_name
+    )
+    return(FALSE)
+  }
+
+  reference_cells <-
+    sapply(
+      use_ref_cell_types,
+      function(x) {
+        Seurat::Cells(sobj)[sobj$cell_type %in% x]
+      }
+    )
+
+  return(reference_cells)
+}
+
+run_infercna <- function(sobj, reference_cells, sample_name) {
+  infercna_out <-
+    infercna::infercna(
+      m = Seurat::GetAssayData(sobj, layer = "counts") |> as.matrix(),
+      refCells = reference_cells,
+      n = 5000,
+      verbose = TRUE
+    )
+
+  qs2::qs_save(
+    infercna_out,
+    paste0(
+      "output/10_cmp_other_methods/infercna_results/matrix/",
+      sample_name,
+      "_infercna_results.qs2"
+    )
+  )
+
+  return(infercna_out)
+}
+
+infercna_call_tumor <- function(infercna_out, sample_name) {
+  cancer_call <- tryCatch(
+    {
+      infercna::findMalignant(infercna_out, samples = NULL)
+    },
+    error = function(e) {
+      warning("Error in findMalignant: ", e$message)
+      return(FALSE)
+    }
+  )
+
+  if (is.list(cancer_call)) {
+    lapply(names(cancer_call), function(x) {
+      data.frame(group = x, cell = cancer_call[[x]])
+    }) |>
+      dplyr::bind_rows() |>
+      readr::write_tsv(
+        paste0(
+          "output/10_cmp_other_methods/infercna_results/cancer_call/",
+          sample_name,
+          "_infercna_cancer_call.tsv"
+        )
+      )
+  }
+}
