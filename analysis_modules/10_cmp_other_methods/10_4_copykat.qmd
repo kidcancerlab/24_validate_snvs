@@ -1,5 +1,5 @@
 ## Run SCENIC using slurm arrays
-```{bash other_meth_scenic}
+```{bash other_meth_copykat}
 human_data=(
   $(grep 10x-hg38 misc/validation_geo_metadata.tsv \
     | cut -f 3 \
@@ -28,3 +28,6 @@ sbatch \
   --array=0-$((${#mouse_data[@]}-1)) \
   analysis_modules/10_cmp_other_methods/scripts/array_copykat_mouse.sh
 ```
+
+## Run infercna
+{{< include analysis_modules/10_cmp_other_methods/10_5_infercna.qmd >}}
