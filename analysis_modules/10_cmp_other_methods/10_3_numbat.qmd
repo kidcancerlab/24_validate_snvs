@@ -41,7 +41,7 @@ for (this_sample in human_samples) {
     ) %>%
     GetAssayData(layer = "counts") %>%
     saveRDS(paste0(
-      "output/10_cmp_other_methods/numbat_results/rdata/",
+      "output/10_cmp_other_methods/numbat_results/rdata/counts/",
       this_sample,
       "_human_counts.rds"
     ))

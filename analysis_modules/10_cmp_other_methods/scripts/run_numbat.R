@@ -2,14 +2,17 @@
 
 library(numbat)
 
-source("analysis_modules/10_cmp_other_methods/10_helper_functions.R")
-
 this_sample <- commandArgs(trailingOnly = TRUE)[1]
+
+print(paste0("Running numbat for sample: ", this_sample))
+print(paste0("Current working directory: ", getwd()))
+
+source("analysis_modules/10_cmp_other_methods/10_helper_functions.R")
 
 numbat_out <-
   run_numbat(
     count_mat = readRDS(paste0(
-      "output/10_cmp_other_methods/numbat_results/rdata/",
+      "output/10_cmp_other_methods/numbat_results/rdata/counts/",
       this_sample,
       "_human_counts.rds"
     )), # gene x cell integer UMI count matrix
@@ -28,11 +31,18 @@ numbat_out <-
     t = 1e-5,
     ncores = 4,
     plot = TRUE,
-    out_dir = './test'
+    out_dir = paste0(
+      "output/10_cmp_other_methods/numbat_results/rdata/",
+      this_sample,
+      "/output"
+    )
   )
 
-saveRDS(numbat_out, paste0(
-  "output/10_cmp_other_methods/numbat_results/rdata/",
-  this_sample,
-  "_numbat_out.rds"
-))
+saveRDS(
+  numbat_out,
+  paste0(
+    "output/10_cmp_other_methods/numbat_results/rdata/results/",
+    this_sample,
+    "_numbat_out.rds"
+  )
+)

@@ -44,6 +44,8 @@ singularity exec \
     --outdir output/10_cmp_other_methods/numbat_results/numbat_temp/${this_sample} \
     --ncores 4
 
+echo "Finished preparing alignment data and pileup for sample ${this_sample}"
+
 # Run numbat
 singularity exec \
   --no-home \
