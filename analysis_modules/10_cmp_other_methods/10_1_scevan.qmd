@@ -1,6 +1,6 @@
 
 ## Run SCENIC using slurm arrays
-```{bash other_meth_scenic}
+```{bash other_meth_scevan}
 human_data=(
   $(grep 10x-hg38 misc/validation_geo_metadata.tsv \
     | cut -f 3 \
