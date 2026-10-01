@@ -129,12 +129,6 @@ convert_mouse_to_human <- function(counts) {
   return(counts)
 }
 
-run_numbat <- function(count_mat, species) {
-
-}
-
-
-
 run_copykat <- function(count_mat, species, temp_dir) {
   if (species == "mouse") {
     genome <- "mm10"
