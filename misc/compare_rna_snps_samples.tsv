@@ -1,17 +1,4 @@
 SRR_ID	sample_type	tissue	biosample_description	experiment	design
-SRR25779122	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 3
-SRR25779123	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 2
-SRR25779124	K7M2	lung_tumor		RNAseq	lung, D14 after orthotopic implantation of K7M2 cells in balb/c mice, biol rep 1
-SRR18218812	K7M2	primary_tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218813	K7M2	primary_tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218814	K7M2	primary_tumor		RNAseq	SFV-Luc; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218815	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218816	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218817	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218818	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR18218819	K7M2	primary_tumor		RNAseq	PBS; Analyses of prometastasic gene profile and immune infiltration in K7M2 osteosarcoma mouse model after treatment with SFV vectors expressing galectin-3 inhibitor.
-SRR30345422	F420	lung_tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
-SRR30345423	F420	lung_tumor		spatialRNA	F420, lung met Visium; Aberrant activation of wound healing programs within the metastatic niche facilitates lung colonization by osteosarcoma cells
 SRR39660984	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
 SRR39660988	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
 SRR39660989	BALBc	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
@@ -39,4 +26,4 @@ SRR36722043	C57BL6	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_1, mRNA-seq; Mu
 SRR36707628	C57BL6	lung		RNAseq	uninfected, negative; G1m4_4; Mus musculus; RNA-Seq
 SRR36707629	C57BL6	lung		RNAseq	uninfected, negative; G1m3_4; Mus musculus; RNA-Seq
 SRR36707630	C57BL6	lung		RNAseq	uninfected, negative; G1m2_4; Mus musculus; RNA-Seq
-SRR36707631	C57BL6	lung		RNAseq	uninfected, negative; G1m1_4; Mus musculus; RNA-Seq 
+SRR36707631	C57BL6	lung		RNAseq	uninfected, negative; G1m1_4; Mus musculus; RNA-Seq
