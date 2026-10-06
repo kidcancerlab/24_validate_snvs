@@ -264,12 +264,12 @@ scanbit_one_sample <- function(
   out_dir
 ) {
   sobj <-
-    qs::qread(paste0(
-      "output/seurat_objects/individual/",
+    qs2::qs_read(paste0(
+      "output/01_process_raw/rdata/individual/",
       this_sample,
       "_",
       species,
-      ".qs"
+      ".qs2"
     ))
 
   sobj$cell_group <-
