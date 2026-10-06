@@ -2,7 +2,7 @@
 This is to test how low we can go while the algorithm still works and provide bcf files to use to quantify coverage per cell in later analyses
 ```{r}
 merged_sobj_mouse_ctrls <-
-    qs::qread("output/seurat_objects/merged/merged_norm_mouse.qs")
+    qs_read("output/02_snv_calling/rdata/merged/merged_norm_mouse.qs2")
 
 min_n_cells <- 500
 
@@ -24,7 +24,7 @@ n_cell_cutoffs <- c(1, 2, 3, 4, 5, 10, 20, 50, 100, 500, 500000)
 output <- scanbit_downsample_loop(
     merged_sobj_mouse_ctrls,
     cutoff_vector = n_cell_cutoffs,
-    out_dir_base = "output/downsample/scanbit_out/mouse/",
+    out_dir_base = "output/06_downsample_analysis/snv/mouse/",
     sample_label = "mouse",
     min_read_depth = 10,
     ploidy = "mm10",
@@ -55,10 +55,10 @@ output <-
         mc.preschedule = FALSE,
         function(this_sample) {
             sobj <-
-                qs::qread(paste0(
-                    "output/seurat_objects/individual/",
+                qs_read(paste0(
+                    "output/02_snv_calling/rdata/individual/",
                     this_sample,
-                    "_human.qs"
+                    "_human.qs2"
                 ))
 
             sobj$cell_group <- paste0("clust_", sobj$individ_clusters)
@@ -82,7 +82,7 @@ output <-
                 sobj,
                 cutoff_vector = n_cell_cutoffs,
                 out_dir_base = file.path(
-                    "output/downsample/scanbit_out/geo_samples/",
+                    "output/06_downsample_analysis/snv/geo_samples/",
                     this_sample
                 ),
                 sample_label = this_sample,
@@ -100,7 +100,7 @@ The data were gathered by hand since I don't have a programatic way to pull the 
 #| dependson: [downsample_loop_geo]
 rna_per_run <-
     list.files(
-        path = "output/downsample/scanbit_out",
+        path = "output/06_downsample_analysis/snv",
         pattern = "cell_barcode_table*",
         recursive = TRUE,
         full.names = TRUE
@@ -125,7 +125,7 @@ rna_per_run <-
 
 write_tsv(
     rna_per_run,
-    "output/counts/rna_per_run_downsample.tsv"
+    "output/06_downsample_analysis/counts/rna_per_run_downsample.tsv"
 )
 
 bootstrap_downsample_data <-
@@ -197,7 +197,7 @@ bootstrap_ncell_plot <-
     )
 
 ggsave(
-    "output/figures/downsample_bootstrap_cells_plot.pdf",
+    "output/06_downsample_analysis/figures/downsample_bootstrap_cells_plot.pdf",
     plot = bootstrap_ncell_plot,
     width = 8,
     height = 10
@@ -235,7 +235,7 @@ bootstrap_numi_plot <-
     )
 
 ggsave(
-    "output/figures/downsample_bootstrap_UMI_plot.pdf",
+    "output/06_downsample_analysis/figures/downsample_bootstrap_UMI_plot.pdf",
     plot = bootstrap_numi_plot,
     width = 8,
     height = 7
@@ -249,7 +249,7 @@ tree_table <-
     tibble(
         downsample_pdfs =
             list.files(
-                path = "output/downsample/scanbit_out/geo_samples",
+                path = "output/06_downsample_analysis/snv/geo_samples",
                 pattern = "*_10_tree.pdf",
                 full.names = TRUE,
                 recursive = TRUE
@@ -270,7 +270,7 @@ tree_table$cells <-
 tree_table <-
     tree_table %>%
     left_join(
-        read_tsv("output/counts/rna_per_run_downsample.tsv")
+        read_tsv("output/06_downsample_analysis/counts/rna_per_run_downsample.tsv")
     )
 
 tree_table <-
@@ -286,7 +286,7 @@ tree_table <-
     )
 
 pdf(
-    "output/figures/combined_downsample_trees.pdf",
+    "output/06_downsample_analysis/figures/combined_downsample_trees.pdf",
     width = 8,
     height = 10
 )

@@ -68,4 +68,4 @@ sbatch analysis_modules/01_process_raw/scripts/get10x_flex.sh
 ```
 
 ## Read in raw data and process to Seurat objects
-{{< include analysis_modules/01_process_raw/01_2_make_Seurat_objs.qmd >}}
+{{< include analysis_modules/01_process_raw/01_02_make_Seurat_objs.qmd >}}

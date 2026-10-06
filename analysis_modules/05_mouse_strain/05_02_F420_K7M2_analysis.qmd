@@ -10,14 +10,14 @@ b6_f420_samples <-
     pull(Sample_ID)
 
 merged_mouse_b6_f420 <-
-    qs::qread("output/seurat_objects/merged/merged_mouse.qs") %>%
+    qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs") %>%
     JoinLayers() %>%
     subset(Sample_ID %in% b6_f420_samples) %>%
     process_seurat()
 
-qs::qsave(
+qs_save(
     merged_mouse_b6_f420,
-    "output/seurat_objects/merged/merged_mouse_b6_f420.qs"
+    "output/05_mouse_strain/rdata/merged/merged_mouse_b6_f420.qs"
 )
 
 # Write out which clusters were primarily identified as tumor by SingleR
@@ -30,11 +30,11 @@ merged_mouse_b6_f420@meta.data %>%
     mutate(proportion = n / sum(n)) %>%
     filter(cell_type == "Tumor" & proportion > 0.3) %>%
     arrange(desc(proportion)) %>%
-    write_tsv("output/snv_processing/F420_K7M2/b6_f420_singler_tumor_clust.txt")
+    write_tsv("output/05_mouse_strain/b6_f420_singler_tumor_clust.txt")
 
 merged_mouse_b6_f420$cell_group %>%
     unique() %>%
-    write_lines("output/snv_processing/F420_K7M2/keep_clusters_b6_f420.txt")
+    write_lines("output/05_mouse_strain/keep_clusters_b6_f420.txt")
 
 f420_b6_dimplot <-
     DimPlot(
@@ -47,7 +47,7 @@ f420_b6_dimplot <-
     NoLegend()
 
 ggsave(
-    "output/figures/b6_F420_dimplot_clusters.pdf",
+    "output/05_mouse_strain/figures/b6_F420_dimplot_clusters.pdf",
     plot = f420_b6_dimplot,
     width = 10,
     height = 10
@@ -63,9 +63,9 @@ for cutoff in 5 10 20 30
 do
 bcftools \
     view \
-    -S output/snv_processing/F420_K7M2/keep_clusters_b6_f420.txt \
-    output/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
-    -o output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c${cutoff}_filtered.bcf
+    -S output/05_mouse_strain/keep_clusters_b6_f420.txt \
+    output/02_snv_calling/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
+    -o output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c${cutoff}_filtered.bcf
 done
 ```
 
@@ -84,12 +84,12 @@ dist_worked <-
         function(cutoff) {
             group_clusters_by_dist(
                 merged_bcf_file = paste0(
-                    "output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
                     cutoff,
                     "_filtered.bcf"
                 ),
                 output_file = paste0(
-                    "output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
                     cutoff,
                     "_groups.txt"
                 ),
@@ -97,7 +97,7 @@ dist_worked <-
                 n_bootstraps = n_bootstraps,
                 bootstrap_cutoff = bootstrap_cutoff,
                 tree_figure_file = paste0(
-                    "output/snv_processing/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
                     cutoff,
                     "_tree.pdf"
                 ),
@@ -112,7 +112,8 @@ dist_worked <-
                     'eval "$(conda shell.bash hook)"'
                 ),
                 sge_q = "",
-                sge_parallel_environment = ""
+                sge_parallel_environment = "",
+                use_apptainer = TRUE
             )
         }
     )
@@ -137,14 +138,14 @@ balbc_k7m2_samples <-
     )
 
 merged_mouse_balbc_k7m2 <-
-    qs::qread("output/seurat_objects/merged/merged_mouse.qs") %>%
+    qs::qread("output/05_mouse_strain/rdata/merged/merged_mouse.qs") %>%
     JoinLayers() %>%
     subset(Sample_ID %in% balbc_k7m2_samples) %>%
     process_seurat()
 
 qs::qsave(
     merged_mouse_balbc_k7m2,
-    "output/seurat_objects/merged/merged_mouse_balbc_k7m2.qs"
+    "output/05_mouse_strain/rdata/merged/merged_mouse_balbc_k7m2.qs"
 )
 
 merged_mouse_balbc_k7m2@meta.data %>%
@@ -156,11 +157,11 @@ merged_mouse_balbc_k7m2@meta.data %>%
     mutate(proportion = n / sum(n)) %>%
     filter(cell_type == "Tumor" & proportion > 0.3) %>%
     arrange(desc(proportion)) %>%
-    write_tsv("output/snv_processing/F420_K7M2/balb_k7m2_singler_tumor_clust.txt")
+    write_tsv("output/05_mouse_strain/F420_K7M2/balb_k7m2_singler_tumor_clust.txt")
 
 merged_mouse_balbc_k7m2$cell_group %>%
     unique() %>%
-    write_lines("output/snv_processing/F420_K7M2/keep_clusters_balbc_k7m2.txt")
+    write_lines("output/05_mouse_strain/F420_K7M2/keep_clusters_balbc_k7m2.txt")
 
 balbc_k7m2_dimplot <-
     DimPlot(
@@ -173,7 +174,7 @@ balbc_k7m2_dimplot <-
     NoLegend()
 
 ggsave(
-    "output/figures/balbc_k7m2_dimplot_clusters.pdf",
+    "output/05_mouse_strain/figures/balbc_k7m2_dimplot_clusters.pdf",
     plot = balbc_k7m2_dimplot,
     width = 10,
     height = 10
@@ -189,9 +190,9 @@ for cutoff in 5 10 20 30
 do
 bcftools \
     view \
-    -S output/snv_processing/F420_K7M2/keep_clusters_balbc_k7m2.txt \
+    -S output/05_mouse_strain/F420_K7M2/keep_clusters_balbc_k7m2.txt \
     output/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
-    -o output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c${cutoff}_filtered.bcf
+    -o output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c${cutoff}_filtered.bcf
 done
 ```
 
@@ -210,12 +211,12 @@ dist_worked <-
         function(cutoff) {
             group_clusters_by_dist(
                 merged_bcf_file = paste0(
-                    "output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+                    "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
                     cutoff,
                     "_filtered.bcf"
                 ),
                 output_file = paste0(
-                    "output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+                    "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
                     cutoff,
                     "_groups.txt"
                 ),
@@ -223,7 +224,7 @@ dist_worked <-
                 n_bootstraps = n_bootstraps,
                 bootstrap_cutoff = bootstrap_cutoff,
                 tree_figure_file = paste0(
-                    "output/snv_processing/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+                    "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
                     cutoff,
                     "_tree.pdf"
                 ),
@@ -238,7 +239,8 @@ dist_worked <-
                     'eval "$(conda shell.bash hook)"'
                 ),
                 sge_q = "",
-                sge_parallel_environment = ""
+                sge_parallel_environment = "",
+                use_apptainer = TRUE
             )
         }
     )
