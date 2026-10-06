@@ -34,7 +34,9 @@ dependencies = [
   { name = "rrrSingleCellUtils", git = "https://github.com/kidcancerlab/rrrSingleCellUtils", branch = "detect_hdf5" },
   { name = "scanBit", git = "https://github.com/kidcancerlab/scanBit", branch = "resub_update" },
   { name = "DT", git = "https://github.com/rstudio/DT", branch = "main" },
-  "gt"
+  "gt",
+  "downlit",
+  "xml2",
  ]
 
   #{ name = "ggrepel", git = "https://github.com/slowkow/ggrepel", tag = "0.9.6"},

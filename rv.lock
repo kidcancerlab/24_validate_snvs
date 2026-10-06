@@ -1221,6 +1221,13 @@ force_source = false
 dependencies = []
 
 [[packages]]
+name = "brio"
+version = "1.1.5"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = []
+
+[[packages]]
 name = "broom"
 version = "1.0.13"
 source = { repository = "https://cran.rstudio.com/" }
@@ -1653,6 +1660,24 @@ force_source = false
 dependencies = []
 
 [[packages]]
+name = "downlit"
+version = "0.4.5"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = [
+    "brio",
+    "desc",
+    "digest",
+    "evaluate",
+    "fansi",
+    "memoise",
+    "rlang",
+    "vctrs",
+    "withr",
+    "yaml",
+]
+
+[[packages]]
 name = "dplyr"
 version = "1.2.1"
 source = { repository = "https://cran.rstudio.com/" }
@@ -1736,6 +1761,13 @@ dependencies = [
 [[packages]]
 name = "extrafontdb"
 version = "1.1"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = []
+
+[[packages]]
+name = "fansi"
+version = "1.0.7"
 source = { repository = "https://cran.rstudio.com/" }
 force_source = false
 dependencies = []
