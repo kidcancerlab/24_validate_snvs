@@ -17,10 +17,10 @@ output <-
         mc.preschedule = FALSE,
         function(this_sample) {
             sobj <-
-                qs::qread(paste0(
+                qs_read(paste0(
                     "output/01_process_raw/rdata/individual/",
                     this_sample,
-                    "_human.qs"
+                    "_human.qs2"
                 ))
 
             sobj$cell_group <-
