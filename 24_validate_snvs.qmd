@@ -144,35 +144,30 @@ The metadata for all samples is stored in misc/sample_metadata.tsv.
 
 Note that in the sample_metadata, for samples with multiple references, the cutoff format is "GRCh38-40000;mm10---20000" where the species_pattern is at the beginning of the string, followed by the cutoff value (no dash or anything). This is split from the second cutoff value by a semicolon. If there is only one reference, just use the cutoff value, no species pattern is needed.
 
-{{< include analysis_modules/01_process_raw/01_1_process_raw_data.qmd >}}
+{{< include analysis_modules/01_process_raw/01_01_process_raw_data.qmd >}}
 
 # Run scanBit on the Seurat objects
 
-{{< include analysis_modules/02_snv_calling/02_1_call_snvs.qmd >}}
+{{< include analysis_modules/02_snv_calling/02_01_call_snvs.qmd >}}
 
 # Run analysis on flex data to calculate accuracy
 
-{{< include analysis_modules/03_test_flex/03_1_test_flex.qmd >}}
+{{< include analysis_modules/03_test_flex/03_01_test_flex.qmd >}}
 
 # Downsample GEO samples to one cell and quantify read depth coverage
 
- include analysis_modules/04_read_depth/04_1_read_depth_analysis.qmd >}}
+{{< include analysis_modules/04_read_depth/04_01_read_depth_analysis.qmd >}}
 
-# Look at how well scanBit works to distinguish B6 from Balbc
+# Look at how well scanBit works to distinguish B6 from Balbc, B6 from F420 and Balbc from K7M2
 
-include child_qmds/test_mouse_strains.qmd >}}
-
-# Look at how well scanBit can distinguish B6 from F420 and Balbc from K7M2
-This is more similar to the situation found in patients where the tumor cells derive from the patient
-
-include child_qmds/F420_K7M2_analysis.qmd >}}
+{{< include analysis_modules/05_mouse_strain/05_01_mouse_strains.qmd >}}
 
 # Downsample each sample to a range of cells per cluster
 This is to test the minimum number of cells/reads needed to accurately identify genetically distinct populations.
 
 Also, I will use the data where I downsample to one cell to calculate coverage provided by one cell on average
 
-include child_qmds/downsample_analysis.qmd >}}
+{{< include analysis_modules/06_downsample_analysis/06_01_downsample_analysis.qmd >}}
 
 # Look at samples from tumors with transgene markers
 
@@ -187,7 +182,7 @@ include child_qmds/human_validation.qmd >}}
 include child_qmds/run_time_analysis.qmd >}}
 
 # Run SCEVAN and other alternative methods
-{{< include analysis_modules/10_cmp_other_methods/10_1_scevan.qmd >}}
+{{< include analysis_modules/10_cmp_other_methods/10_01_scevan.qmd >}}
 
 # Session info
 ```{r session_info}
