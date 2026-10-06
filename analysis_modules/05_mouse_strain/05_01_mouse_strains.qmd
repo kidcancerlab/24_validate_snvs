@@ -4,19 +4,19 @@
 ```{r mouse_strain_make_sobj}
 #| dependson: [read_raw_mouse, scanbit_run_mouse]
 merged_norm_mouse <-
-    qs::qread("output/seurat_objects/merged/merged_mouse.qs") %>%
+    qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
     JoinLayers() %>%
     subset(Sample_ID %in% c("S0066", "S0074")) %>%
     process_seurat()
 
-qs::qsave(
+qs_save(
     merged_norm_mouse,
-    "output/seurat_objects/merged/merged_norm_mouse.qs"
+    "output/05_mouse_strain/rdata/merged/merged_norm_mouse.qs2"
 )
 
 merged_norm_mouse$cell_group %>%
     unique() %>%
-    write_lines("output/snv_processing/norm_mouse/keep_clusters.txt")
+    write_lines("output/05_mouse_strain/keep_clusters.txt")
 
 norm_mouse_dimplot <-
     DimPlot(
@@ -30,7 +30,7 @@ norm_mouse_dimplot <-
     NoLegend()
 
 ggsave(
-    "output/figures/norm_mouse_dimplot_clusters.pdf",
+    "output/05_mouse_strain/figures/norm_mouse_dimplot_clusters.pdf",
     plot = norm_mouse_dimplot,
     width = 10,
     height = 10
@@ -46,9 +46,9 @@ for cutoff in 5 10 20 30
 do
 bcftools \
     view \
-    -S output/snv_processing/norm_mouse/keep_clusters.txt \
-    output/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
-    -o output/snv_processing/norm_mouse/mergedmouse_snvs_c${cutoff}_filtered.bcf
+    -S output/05_mouse_strain/keep_clusters.txt \
+    output/02_snv_calling/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
+    -o output/05_mouse_strain/snv/mergedmouse_snvs_c${cutoff}_filtered.bcf
 done
 ```
 
@@ -68,12 +68,12 @@ dist_worked <-
         function(cutoff) {
             group_clusters_by_dist(
                 merged_bcf_file = paste0(
-                    "output/snv_processing/norm_mouse/mergedmouse_snvs_c",
+                    "output/05_mouse_strain/snv/mergedmouse_snvs_c",
                     cutoff,
                     "_filtered.bcf"
                 ),
                 output_file = paste0(
-                    "output/snv_processing/norm_mouse/mergedmouse_snvs_c",
+                    "output/05_mouse_strain/snv/mergedmouse_snvs_c",
                     cutoff,
                     "_groups.txt"
                 ),
@@ -81,7 +81,7 @@ dist_worked <-
                 n_bootstraps = n_bootstraps,
                 bootstrap_cutoff = bootstrap_cutoff,
                 tree_figure_file = paste0(
-                    "output/snv_processing/norm_mouse/mergedmouse_snvs_c",
+                    "output/05_mouse_strain/snv/mergedmouse_snvs_c",
                     cutoff,
                     "_tree.pdf"
                 ),
@@ -96,7 +96,8 @@ dist_worked <-
                     'eval "$(conda shell.bash hook)"'
                 ),
                 sge_q = "",
-                sge_parallel_environment = ""
+                sge_parallel_environment = "",
+                use_apptainer = TRUE
             )
         }
     )
@@ -107,3 +108,5 @@ dist_worked <-
 I want to look over the merged bcfs and quantify the proportion of positions covered by n reads has a variant call.
 
 Then I want to compare these values between the flex data, where any variant call is artifactual and the B6 data, where an unknown proportion of variant calls at any depth are artifactual. This will allow me to estimate the false positive rate for SNV calls in the pipeline.
+
+{{< include analysis_modules/05_mouse_strain/05_02_F420_K7M2_analysis.qmd >}}
