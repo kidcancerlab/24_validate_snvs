@@ -30,4 +30,4 @@ sbatch \
 ```
 
 ## Run infercna
-{{< include analysis_modules/10_cmp_other_methods/10_5_infercna.qmd >}}
+{{< include analysis_modules/10_cmp_other_methods/10_05_infercna.qmd >}}

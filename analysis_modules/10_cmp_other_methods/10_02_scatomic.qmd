@@ -16,4 +16,4 @@ sbatch \
 ```
 
 ## Start Numbat analyses using slurm arrays
-{{< include analysis_modules/10_cmp_other_methods/10_3_numbat.qmd >}}
+{{< include analysis_modules/10_cmp_other_methods/10_03_numbat.qmd >}}

@@ -1,0 +1,147 @@
+
+## Read in scevan results
+```{r other_meth_compile_scevan}
+read_tsv(
+  list.files(
+    "output/10_cmp_other_methods/scevan_results",
+    pattern = "_scevan_results.tsv",
+    full.names = TRUE
+  ),
+  id = "sample",
+  show_col_types = FALSE
+) %>%
+  mutate(
+    sample = str_remove(sample, "_scevan_results.tsv") %>%
+      str_remove(".+/")
+  ) %>%
+  dplyr::rename(
+    scevan_call = class,
+    cell = barcode
+  ) %>%
+  select(-confidentNormal) %>%
+  write_tsv(
+    "output/10_cmp_other_methods/scevan_results/compiled_scevan_output.tsv"
+  )
+```
+
+## Read in scatomic results
+```{r other_meth_compile_scatomic}
+read_tsv(
+  list.files(
+    "output/10_cmp_other_methods/scatomic_results",
+    pattern = "_scatomic_results.tsv",
+    full.names = TRUE
+  ),
+  id = "sample",
+  show_col_types = FALSE
+) %>%
+  mutate(
+    sample = str_remove(sample, "_scatomic_results.tsv") %>%
+      str_remove(".+/")
+  ) %>%
+  dplyr::rename(
+    scatomic_call = pan_cancer_cluster,
+    cell = barcode
+    ) %>%
+  select(sample, cell, scatomic_call) %>%
+  write_tsv(
+    "output/10_cmp_other_methods/scatomic_results/compiled_scatomic_output.tsv"
+  )
+```
+
+## Read in numbat results
+```{r other_meth_compile_numbat}
+numbat_files <- list.files(
+  path = "output/10_cmp_other_methods/numbat_results/rdata",
+  pattern = "^clone_post_2.tsv$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+
+numbat_results <- tibble(sample = character())
+for (this_file in numbat_files) {
+  numbat_results <-
+    read_tsv(
+      this_file,
+      id = "sample",
+      show_col_types = FALSE,
+      col_select = c(cell, sample, compartment_opt)
+    ) %>%
+    mutate(sample = str_remove(sample, ".+rdata/") %>%
+      str_remove("/output/clone_post_2.tsv")
+    ) %>%
+    dplyr::rename(numbat_call = compartment_opt) %>%
+    bind_rows(numbat_results)
+}
+
+write_tsv(
+  numbat_results,
+  "output/10_cmp_other_methods/numbat_results/compiled_numbat_output.tsv"
+)
+
+rm(numbat_results, numbat_files)
+```
+
+## Read in copykat results
+```{r other_meth_compile_copykat}
+copykat_files <- list.files(
+  "output/10_cmp_other_methods/copykat_results/rdata",
+  pattern = "_copykat_results.qs2",
+  full.names = TRUE
+)
+
+copykat_results <- tibble(sample = character())
+for (this_file in copykat_files) {
+  copykat_results <-
+    qs_read(this_file)[["prediction"]] %>%
+    dplyr::rename(cell = cell.names, copykat_call = copykat.pred) %>%
+    as_tibble() %>%
+    mutate(
+      sample = str_remove(this_file, ".+rdata/") %>%
+      str_remove("_copykat_results.qs2")
+    ) %>%
+    bind_rows(copykat_results)
+}
+write_tsv(copykat_results, "output/10_cmp_other_methods/copykat_results/compiled_copykat_output.tsv")
+
+rm(copykat_results, copykat_files)
+```
+
+## Read in infercna results
+```{r other_meth_compile_infercna}
+read_tsv(
+  list.files(
+    "output/10_cmp_other_methods/infercna_results/cancer_call",
+    pattern = "_infercna_cancer_call.tsv",
+    full.names = TRUE
+  ),
+  id = "sample",
+  show_col_types = FALSE
+) %>%
+  mutate(
+    sample = str_remove(sample, "_infercna_cancer_call.tsv") %>%
+      str_remove(".+/")
+  ) %>%
+  dplyr::rename(infercna_call = group) %>%
+  select(sample, cell, infercna_call) %>%
+  write_tsv(
+    "output/10_cmp_other_methods/infercna_results/compiled_infercna_output.tsv"
+  )
+```
+
+## Merge all the outputs together
+```{r other_meth_compile_compile}
+call_files <- c(
+  "output/10_cmp_other_methods/scevan_results/compiled_scevan_output.tsv",
+  "output/10_cmp_other_methods/scatomic_results/compiled_scatomic_output.tsv",
+  "output/10_cmp_other_methods/numbat_results/compiled_numbat_output.tsv",
+  "output/10_cmp_other_methods/copykat_results/compiled_copykat_output.tsv",
+  "output/10_cmp_other_methods/infercna_results/compiled_infercna_output.tsv"
+)
+
+all_calls <-
+  lapply(call_files, function(x) read_tsv(x, show_col_types = FALSE)) %>%
+  purrr::reduce(function(x, y) full_join(x, y, by = c("cell", "sample")))
+
+all_calls
+```

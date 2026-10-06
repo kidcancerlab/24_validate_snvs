@@ -31,4 +31,4 @@ sbatch \
 ```
 
 ## Start scATOMIC analyses using slurm arrays
-{{< include analysis_modules/10_cmp_other_methods/10_2_scatomic.qmd >}}
+{{< include analysis_modules/10_cmp_other_methods/10_02_scatomic.qmd >}}

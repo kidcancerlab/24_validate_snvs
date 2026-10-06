@@ -27,3 +27,5 @@ sbatch \
   --array=0-$((${#mouse_data[@]}-1)) \
   analysis_modules/10_cmp_other_methods/scripts/array_infercna_mouse.sh
 ```
+
+analysis_modules/10_cmp_other_methods/10_06_compile_results.qmd

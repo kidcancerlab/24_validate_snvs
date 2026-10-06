@@ -73,9 +73,9 @@ run_scatomic <- function(
           raw_counts = counts,
           min_prop = 0.5
         ) |>
-          select(
-            starts_with("layer_"),
-            any_of(c(
+          dplyr::select(
+            dplyr::starts_with("layer_"),
+            dplyr::any_of(c(
               "scATOMIC_pred",
               "classification_confidence",
               "CNV_status",
@@ -129,7 +129,7 @@ convert_mouse_to_human <- function(counts) {
   return(counts)
 }
 
-run_copykat <- function(count_mat, species, temp_dir) {
+run_copykat <- function(count_mat, species, temp_dir, sample_name) {
   if (species == "mouse") {
     genome <- "mm10"
   } else if (species == "human") {
@@ -149,21 +149,21 @@ run_copykat <- function(count_mat, species, temp_dir) {
   copykat_results <-
     copykat(
       rawmat = count_mat,
-      sam.name = "test",
+      sam.name = sample_name,
       genome = genome,
       n.cores = 5
     )
 
+  setwd(orig_wd)
+
   qs2::qs_save(
     copykat_results,
     paste0(
-      "output/10_cmp_other_methods/copykat_results/",
+      "output/10_cmp_other_methods/copykat_results/rdata/",
       sample_name,
       "_copykat_results.qs2"
     )
   )
-
-  setwd(orig_wd)
 }
 
 infercna_wrapper <- function(

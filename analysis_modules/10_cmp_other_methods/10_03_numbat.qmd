@@ -65,4 +65,4 @@ sbatch \
 ```
 
 ## Start copykat analysis using slurm arrays
-{{< include analysis_modules/10_cmp_other_methods/10_4_copykat.qmd >}}
+{{< include analysis_modules/10_cmp_other_methods/10_04_copykat.qmd >}}
