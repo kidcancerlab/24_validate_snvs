@@ -69,6 +69,12 @@ for directoryName in \
     output/03_test_flex/snvs \
     output/04_read_depth_analysis/snv/geo \
     output/05_mouse_strain/rdata/merged \
+    output/05_mouse_strain/figures \
+    output/05_mouse_strain/snv \
+    output/05_mouse_strain/F420_K7M2 \
+    output/06_downsample_analysis/snv/mouse \
+    output/06_downsample_analysis/snv/geo_samples \
+    output/06_downsample_analysis/counts \
     output/10_cmp_other_methods/scevan_results \
     output/10_cmp_other_methods/scatomic_results \
     output/10_cmp_other_methods/copykat_results/temp \
