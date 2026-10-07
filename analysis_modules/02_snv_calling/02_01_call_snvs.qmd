@@ -260,7 +260,8 @@ samples_worked <-
                 species = "mouse",
                 ploidy = "mm10",
                 ref_fasta = "custom_ref/gfp_rfp_mm10/fasta/genome.fa",
-                out_dir = "output/02_snv_calling/snv/transgene/"
+                out_dir = "output/02_snv_calling/snv/transgene/",
+                temp_dir = "output/02_snv_calling/snv/transgene/tempdir"
             )
         }
     )
@@ -293,7 +294,8 @@ samples_worked <-
                 species = "human",
                 ploidy = "GRCh38",
                 ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
-                out_dir = "output/02_snv_calling/snv/human/"
+                out_dir = "output/02_snv_calling/snv/human/",
+                temp_dir = "output/02_snv_calling/snv/human/tempdir/"
             )
         }
     )
