@@ -182,7 +182,7 @@ Also, I will use the data where I downsample to one cell to calculate coverage p
 
 # Quantify average run time and RAM usage
 
-include child_qmds/run_time_analysis.qmd >}}
+{{< include analysis_modules/09_run_time/09_01_run_time_analysis.qmd >}}
 
 # Run SCEVAN and other alternative methods
 {{< include analysis_modules/10_cmp_other_methods/10_01_scevan.qmd >}}
