@@ -77,6 +77,7 @@ for directoryName in \
     output/06_downsample_analysis/counts \
     output/07_known_tumors/snv/transgene \
     output/07_known_tumors/figures/transgene \
+    output/08_human_validation/figures \
     output/10_cmp_other_methods/scevan_results \
     output/10_cmp_other_methods/scatomic_results \
     output/10_cmp_other_methods/copykat_results/temp \
@@ -177,7 +178,7 @@ Also, I will use the data where I downsample to one cell to calculate coverage p
 
 # Look at human patient data
 
-include child_qmds/human_validation.qmd >}}
+{{< include analysis_modules/08_human_validation/08_01_human_validation.qmd >}}
 
 # Quantify average run time and RAM usage
 

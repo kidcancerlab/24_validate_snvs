@@ -64,7 +64,7 @@ bootstrap_pointplot <-
 # Maybe violin
 
 ggsave(
-    "output/figures/human_bootstrap_beeswarm.pdf",
+    "output/08_human_validation/figures/human_bootstrap_beeswarm.pdf",
     bootstrap_pointplot,
     width = 8,
     height = 6
@@ -140,7 +140,7 @@ bootstrap_boxplot <-
     )
 
 ggsave(
-    "output/figures/human_bootstrap_boxplot2.pdf",
+    "output/08_human_validation/figures/human_bootstrap_boxplot2.pdf",
     bootstrap_boxplot,
     width = 8,
     height = 4
@@ -149,7 +149,7 @@ ggsave(
 
 ## FeaturePlots for figure 4
 ```{r human_val_featureplots}
-g0013 <- qs::qread("output/seurat_objects/individual/G0013_human.qs")
+g0013 <- qs_read("output/01_process_raw/rdata/individual/G0013_human.qs2")
 
 g0013$cluster_label <-
     paste0(g0013$cluster_label, "_c", g0013$individ_clusters)
@@ -165,7 +165,7 @@ g13_vlnplot <-
     )
 
 ggsave(
-    "output/figures/g13_vlnplot.pdf",
+    "output/08_human_validation/figures/g13_vlnplot.pdf",
     g13_vlnplot,
     width = 6,
     height = 15
@@ -183,7 +183,7 @@ g13_cluster_dimplot <-
     coord_fixed()
 
 ggsave(
-    "output/figures/g13_cluster_dimplot.pdf",
+    "output/08_human_validation/figures/g13_cluster_dimplot.pdf",
     g13_cluster_dimplot,
     width = 6,
     height = 6
@@ -197,8 +197,8 @@ We are no longer doing this since we removed healthy ovary samples
 #| eval: false
 ovary_samples <-
     merge(
-        qs::qread("output/seurat_objects/individual/G0041_human.qs"),
-        qs::qread("output/seurat_objects/individual/G0042_human.qs")
+        qs_read("output/01_process_raw/rdata/individual/G0041_human.qs2"),
+        qs_read("output/01_process_raw/rdata/individual/G0042_human.qs2")
     ) %>%
     process_seurat()
 
@@ -217,10 +217,9 @@ DimPlot(
 ```{r human_val_g41}
 #| eval: FALSE
 calc_variant_variability(
-    merged_bcf_file = "output/snv/human/mergedsnvs_G0041_c10.bcf",
+    merged_bcf_file = "output/02_snv_calling/snv/human/mergedsnvs_G0041_c10.bcf",
     log_base = "output/G41_log",
-    # temp_dir = "output/temp",
-    output_file = "output/snv/human/mergedsnvs_G0041_variable_variants.tsv",
+    output_file = "output/08_human_validation/mergedsnvs_G0041_variable_variants.tsv",
     group_1 = "Ovary_pt_3_c7", # Group_1 is tumor
     group_2 = paste(
         "Ovary_pt_3_c0",
@@ -240,10 +239,11 @@ calc_variant_variability(
         "module load miniforge3",
         'eval "$(conda shell.bash hook)"'
     ),
-    job_scheduler = "slurm"
+    job_scheduler = "slurm",
+    use_apptainer = TRUE
 )
 
-g41 <- qs::qread("output/seurat_objects/individual/G0041_human.qs")
+g41 <- qs_read("output/01_process_raw/rdata/individual/G0041_human.qs2")
 g41_cell_barcodes <-
     g41 %>%
     colnames() %>%
@@ -253,16 +253,15 @@ g41_cell_barcodes <-
 
 call_variants_single_cell(
     bam_to_use = "output/cellranger_out/G0041/possorted_genome_bam.bam",
-    variable_variants_file = "output/snv/human/mergedsnvs_G0041_variable_variants.tsv",
+    variable_variants_file = "output/08_human_validation/mergedsnvs_G0041_variable_variants.tsv",
     cell_barcodes = g41_cell_barcodes,
-    output_file = "cell_variant_calls_g41.tsv",
+    output_file = "output/08_human_validation/cell_variant_calls_g41.tsv",
     min_depth = 3,
     variant_diff_cutoff = 1,
     ploidy = "GRCh38",
     ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
     job_base = "cell_vars",
     log_base = "slurm_cell_vars",
-    # temp_dir = "output/temp/cell_vars_59",
     submit = TRUE,
     other_job_header_options = c("--time=12:00:00"),
     other_batch_options = c( # Just here as examples of things you might put
@@ -281,7 +280,7 @@ count_to_call <-
 
 genotype_info <-
     read_tsv(
-        "output/snv/human/mergedsnvs_G0041_variable_variants.tsv",
+        "output/08_human_validation/mergedsnvs_G0041_variable_variants.tsv",
         show_col_types = FALSE
     ) %>%
     filter(cross_minus_within_dist >= 1) %>%
@@ -310,7 +309,7 @@ normal_genotype_profile <-
 
 single_call_meta <-
     read_tsv(
-        "cell_variant_calls_g41.tsv",
+        "output/08_human_validation/cell_variant_calls_g41.tsv",
         show_col_types = FALSE
     ) %>%
     mutate(
@@ -363,10 +362,10 @@ cluster_ncounts <-
         mc.preschedule = FALSE,
         mc.cores = 5,
         function(x) {
-            qs::qread(paste0(
-                "output/seurat_objects/individual/",
+            qs_read(paste0(
+                "output/01_process_raw/rdata/individual/",
                 x,
-                "_human.qs"
+                "_human.qs2"
             ))@meta.data %>%
                 group_by(Sample_ID, individ_clusters) %>%
                 summarize(
@@ -386,7 +385,7 @@ tree_table <-
     tibble(
         downsample_pdfs =
             list.files(
-                path = "output/snv/human",
+                path = "output/02_snv_calling/snv/human",
                 pattern = "*_10_tree.pdf",
                 full.names = TRUE
             )
@@ -398,17 +397,17 @@ tree_table$sample <-
     str_remove("_.+")
 
 pdf(
-    "output/figures/combined_human_validation_trees.pdf",
+    "output/08_human_validation/figures/combined_human_validation_trees.pdf",
     width = 6,
     height = 15
 )
 
 for (i in seq_len(nrow(tree_table))) {
     sobj <-
-        qs::qread(paste0(
-            "output/seurat_objects/individual/",
+        qs_read(paste0(
+            "output/01_process_raw/rdata/individual/",
             tree_table$sample[i],
-            "_human.qs"
+            "_human.qs2"
         ))
     tree <-
         ggplot2::ggplot() +
