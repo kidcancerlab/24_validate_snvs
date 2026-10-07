@@ -1,3 +1,7 @@
+```{r}
+source("analysis_modules/02_snv_calling/02_helper_functions.R")
+```
+
 ## Prep the flex data
 We're going to run scanBit on a merged object for this so the data all ends up in one BCF file.
 ```{r scanbit_prep_flex}
