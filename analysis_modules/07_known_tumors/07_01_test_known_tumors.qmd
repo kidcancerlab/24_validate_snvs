@@ -1,65 +1,8 @@
-## Read in datasets and count the tumor transgene markers
-```{r transgene_panel_plot}
-#| cache.vars: [transgene_panel_plot]
-transgene_panel_plot <- function(sobj, sample_name, plot_point_size = 0.5) {
-    panel_plot <-
-        ((
-            DimPlot(
-                sobj,
-                group.by = "cell_group",
-                pt.size = plot_point_size,
-                label = TRUE,
-                label.box = TRUE,
-                repel = TRUE
-            ) +
-                NoLegend() +
-                coord_fixed()
-        ) +
-            (
-                DimPlot(
-                    sobj,
-                    group.by = "tumor_cell",
-                    pt.size = plot_point_size,
-                    label = TRUE,
-                    label.box = TRUE,
-                    repel = TRUE
-                ) +
-                    NoLegend() +
-                    coord_fixed()
-            )) /
-            ((
-                DimPlot(
-                    sobj,
-                    group.by = "snv_top_lvl_group_10",
-                    pt.size = plot_point_size,
-                    label = TRUE,
-                    label.box = TRUE,
-                    repel = TRUE
-                ) +
-                    NoLegend() +
-                    coord_fixed()
-            ) +
-                (
-                    FeaturePlot(
-                        sobj,
-                        features = "tumor_marker_count",
-                        order = TRUE,
-                        pt.size = plot_point_size
-                    ) +
-                        coord_fixed()
-                ))
-
-    ggplot2::ggsave(
-        paste0("output/figures/transgene/", sample_name, "_plots.pdf"),
-        plot = panel_plot,
-        width = 15,
-        height = 15
-    )
-
-    return()
-}
+```{r}
+source("analysis_modules/07_known_tumors/07_helper_functions.R")
 ```
 
+## Read in datasets and count the tumor transgene markers
 ```{r transgene_read}
 #| dependson: [scanbit_prep_mouse_gfp_rfp]
 transgene_samples <-
@@ -91,10 +34,10 @@ plot_point_size <- 0.5
 sobj_list <- list()
 for (this_sample in transgene_samples) {
     sobj_list[[this_sample]] <-
-        qs::qread(paste0(
-            "output/seurat_objects/individual/",
+        qs_read(paste0(
+            "output/01_process_raw/rdata/individual/",
             this_sample,
-            "_mouse.qs"
+            "_mouse.qs2"
         )) %>%
         PercentageFeatureSet(pattern = "^tumor", col.name = "tumor_marker_pct")
 
@@ -108,7 +51,7 @@ for (this_sample in transgene_samples) {
         sobj_list[[this_sample]] <- add_snv_group_to_sobj(
             sobj_list[[this_sample]],
             snv_group_file = paste0(
-                "output/snv/transgene/snvs_",
+                "output/02_snv_calling/snv/transgene/snvs_",
                 this_sample,
                 "_",
                 this_cutoff,
@@ -173,7 +116,7 @@ merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
     mutate(proportion = n / sum(n)) %>%
     filter(tumor_cell == "Has transgene") %>%
     arrange(desc(proportion)) %>%
-    write_tsv("output/snv_processing/transgene/transgene_tumor_clust.txt")
+    write_tsv("output/07_known_tumors/snv/transgene/transgene_tumor_clust.txt")
 ```
 
 ## Look at lineage tracing barcodes
@@ -190,10 +133,10 @@ marker_table <-
         mc.cores = 2,
         function(this_sample) {
             sobj <-
-                qs::qread(paste0(
-                    "output/seurat_objects/individual/",
+                qs_read(paste0(
+                    "output/01_process_raw/rdata/individual/",
                     this_sample,
-                    "_mouse.qs"
+                    "_mouse.qs2"
                 ))
 
             ltbc_table <- gen_cellecta_bc_data(
@@ -256,7 +199,7 @@ marker_table <-
                 sobj <- add_snv_group_to_sobj(
                     sobj,
                     snv_group_file = paste0(
-                        "output/snv/transgene/snvs_",
+                        "output/02_snv_calling/snv/transgene/snvs_",
                         this_sample,
                         "_",
                         this_cutoff,
@@ -308,14 +251,14 @@ marker_table <-
 
 write_tsv(
     marker_table,
-    "output/snv_processing/transgene/transgene_tumor_clust_ltbc.txt"
+    "output/07_known_tumors/snv/transgene/transgene_tumor_clust_ltbc.txt"
 )
 ```
 
 ```{r transgene_match}
 snv_groups <-
     list.files(
-        path = "output/snv/transgene",
+        path = "output/02_snv_calling/snv/transgene",
         pattern = "10_groups.txt",
         full.names = TRUE
     ) %>%
@@ -349,12 +292,11 @@ min_transgene_prop <- 0.2
 transgene_groups <-
     read_tsv(
         c(
-            "output/snv_processing/transgene/transgene_tumor_clust.txt",
-            "output/snv_processing/transgene/transgene_tumor_clust_ltbc.txt"
+            "output/02_snv_calling/transgene/transgene_tumor_clust.txt",
+            "output/07_known_tumors/snv/transgene/transgene_tumor_clust_ltbc.txt"
         ),
         show_col_types = FALSE
-    ) # %>%
-# filter(proportion > min_transgene_prop)
+    )
 
 transgene_plot <-
     full_join(snv_groups, transgene_groups) %>%
@@ -391,7 +333,7 @@ transgene_plot <-
     )
 
 ggsave(
-    "output/figures/transgene_beeswarm_plot.pdf",
+    "output/07_known_tumors/figures/transgene_beeswarm_plot.pdf",
     transgene_plot,
     width = 8,
     height = 6
@@ -430,10 +372,9 @@ transgene_boxplot <-
     )
 
 ggsave(
-    "output/figures/transgene_boxplot_facet.pdf",
+    "output/07_known_tumors/figures/transgene_boxplot_facet.pdf",
     transgene_boxplot,
     width = 6,
     height = 6
 )
 ```
-

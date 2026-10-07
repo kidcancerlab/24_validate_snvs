@@ -75,6 +75,8 @@ for directoryName in \
     output/06_downsample_analysis/snv/mouse \
     output/06_downsample_analysis/snv/geo_samples \
     output/06_downsample_analysis/counts \
+    output/07_known_tumors/snv/transgene \
+    output/07_known_tumors/figures/transgene \
     output/10_cmp_other_methods/scevan_results \
     output/10_cmp_other_methods/scatomic_results \
     output/10_cmp_other_methods/copykat_results/temp \
@@ -171,7 +173,7 @@ Also, I will use the data where I downsample to one cell to calculate coverage p
 
 # Look at samples from tumors with transgene markers
 
-include child_qmds/evaluate_tumor_markers.qmd >}}
+{{< include analysis_modules/07_known_tumors/07_01_test_known_tumors.qmd >}}
 
 # Look at human patient data
 
