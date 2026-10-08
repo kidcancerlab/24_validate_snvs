@@ -3,7 +3,7 @@
 #SBATCH --job-name=call_variant
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant/variant_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant/variant_%A_%a.txt
-#SBATCH --array=0-57
+#SBATCH --array=0-29
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
 #SBATCH --time=2-00:00:00
@@ -39,14 +39,20 @@ echo "Processing $sample_type ($accession)"
 
 mkdir -p $wd_path/output/rna/vcfs/${sample_type}
 
-if [ ! -f "$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam" ]; then
-    echo "Input file not found for sample ${sample_type} (${accession}). Skipping." >&2
-    exit 0
-fi
+if [[ $accession == SRR* ]]; then
+    output_path=$wd_path/output/rna/bwa/${sample_type}/${accession}
 
-if [ ! -f "$wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa" ]; then
-    echo "Reference file not found. Skipping." >&2
-    exit 0
+    mkdir -p $wd_path/output/rna/vcfs/${sample_type}/${accession}
+
+    input_file=$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam
+
+else
+    output_path=$wd_path/output/rna/bwa/${sample_type}
+
+    mkdir -p $wd_path/output/rna/vcfs/${sample_type}
+
+    input_file=$wd_path/output/rna/bwa/${sample_type}/${accession}_markdup.bam
+
 fi
 
 echo "**Starting bcftools mpileup"
@@ -56,7 +62,7 @@ bcftools mpileup \
     --max-depth 2000 \
     -O u \
     -f $wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
-    $wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam | \
+    ${input_file}| \
 bcftools call \
     --threads 3 \
     -m \
