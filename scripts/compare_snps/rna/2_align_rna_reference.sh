@@ -3,7 +3,7 @@
 #SBATCH --job-name=align_rna
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/bwa/logs/aligning_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/bwa/logs/aligning_%A_%a.txt
-#SBATCH --array=0-30
+#SBATCH --array=0-29
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
 #SBATCH --time=2-00:00:00
