@@ -3,7 +3,7 @@
 #SBATCH --job-name=align_rna
 #SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/bwa/logs/aligning_%A_%a.txt
 #SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/bwa/logs/aligning_%A_%a.txt
-#SBATCH --array=0-57
+#SBATCH --array=0-30
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
 #SBATCH --time=2-00:00:00
@@ -21,7 +21,6 @@ wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 ## <() => process substitution; runs command inside () as if it were file
 ## cut => extract columns from tsv
 ## -f1 => field 1 or first column
-mapfile \
 sample_types=($(cut \
         -f2 \
         $wd_path/misc/compare_rna_snps_samples.tsv \
@@ -52,50 +51,78 @@ echo "**Processing $sample_type ($accession)"
 
 # then, get stats!
 
-input_path=$wd_path/input/rna/${sample_type}/${accession}
-output_path=$wd_path/output/rna/bwa/${sample_type}/${accession}
+if [[ $accession == SRR* ]]; then
+    input_path=$wd_path/input/rna/${sample_type}/${accession}
+    output_path=$wd_path/output/rna/bwa/${sample_type}/${accession}
 
-if [ ! -f "$input_path/${accession}_1.fastq" ]; then
-    echo "Input file not found for sample ${sample_type} (${accession}). Skipping." >&2
-    exit 0
+    r1=$input_path/${accession}_1.fastq.gz
+    r2=$input_path/${accession}_2.fastq.gz
+
+    echo "r1 is ${r1} and r2 is ${r2}"
+
+    if [ ! -f ${r1} ]; then
+        echo "Input file not found for sample ${sample_type} (${accession}). Skipping." >&2
+        exit 0
+    fi
+
+    mkdir -p $wd_path/output/rna/bwa/${sample_type}/${accession}
+
+else
+    input_path=$wd_path/input/rna/${sample_type}
+    output_path=$wd_path/output/rna/bwa/${sample_type}
+
+    mkdir -p $wd_path/output/rna/bwa/${sample_type}
+
+    r1=$(ls "$input_path"/${sample_type}_S*_L00*_R1_001.fastq.gz | paste -sd,)
+    r2=${r1//_R1_001/_R2_001}
+
 fi
 
-mkdir -p $wd_path/output/rna/bwa/${sample_type}/${accession}
-
-# run alignment on human genome with STAR
 STAR --genomeDir /reference/mus_musculus/GRCm38/ensembl/release-86/Sequence/STARIndex_2.7.9a \
---runThreadN 6 \
---readFilesIn $input_path/${accession}_1.fastq $input_path/${accession}_2.fastq \
---outFileNamePrefix $output_path/${accession}_ \
---outSAMtype BAM SortedByCoordinate \
---twopassMode Basic \
---outSAMunmapped Within \
---outSAMattributes NH HI AS nM NM MD
+    --runThreadN 6 \
+    --readFilesIn "$r1" "$r2" \
+    --readFilesCommand zcat \
+    --outSAMattrRGline ID:${accession} SM:${accession} PL:ILLUMINA \
+    --outFileNamePrefix $output_path/${accession}_ \
+    --outSAMtype BAM Unsorted \
+    --twopassMode Basic \
+    --outSAMunmapped Within \
+    --outSAMattributes NH HI AS nM NM MD
 
 echo "**Finished aligning, marking duplicates"
 
-# mark duplicates
-gatk MarkDuplicates \
-    -I $output_path/${accession}_Aligned.sortedByCoord.out.bam \
-    -O $output_path/${accession}_markdup.bam \
-    -M $output_path/${accession}_markdup_metrics.txt
+samtools collate -@ 6 -O -u "$output_path"/${accession}_Aligned.out.bam "$output_path"/${accession}_collate_tmp \
+  | samtools fixmate -@ 6 -m -u - - \
+  | samtools sort -@ 6 -u -T "$output_path"/${accession}_sort_tmp - \
+  | samtools markdup -@ 6 - "$output_path"/${accession}_markdup.bam
 
-samtools index -@ 2 $output_path/${accession}_markdup.bam
+samtools index "$output_path"/${accession}_markdup.bam
 
-echo "**Finished marking duplicates, splitting CIGAR string"
+# # mark duplicates
+# ## identifies reads from same original fragment and flags them
+# gatk MarkDuplicates \
+#     -I $output_path/${accession}_Aligned.sortedByCoord.out.bam \
+#     -O $output_path/${accession}_markdup.bam \
+#     -M $output_path/${accession}_markdup_metrics.txt
 
-# split N cigar reads
-gatk SplitNCigarReads \
-    -R $wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
-    -I $output_path/${accession}_markdup.bam \
-    -O $output_path/${accession}_split.bam
+# samtools index -@ 2 $output_path/${accession}_markdup.bam
 
-echo "**Finally, running stats"
+# echo "**Finished marking duplicates, splitting CIGAR string"
 
-samtools index -@ 2 $output_path/${accession}_split.bam
+# # split N cigar reads
+# ## splits reads spanning splice junctions into separate reads
+# ## so that variant callers built for DNA can handle them
+# gatk SplitNCigarReads \
+#     -R $wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
+#     -I $output_path/${accession}_markdup.bam \
+#     -O $output_path/${accession}_split.bam
 
-samtools flagstat -@ 2 $output_path/${accession}_split.bam \
-    > "$output_path/${accession}_flagstat.txt"
+# echo "**Finally, running stats"
 
-samtools stats -@ 2 $output_path/${accession}_split.bam \
-    > "$output_path/${accession}_stats.txt"
+# samtools index -@ 2 $output_path/${accession}_split.bam
+
+# samtools flagstat -@ 2 $output_path/${accession}_split.bam \
+#     > "$output_path/${accession}_flagstat.txt"
+
+# samtools stats -@ 2 $output_path/${accession}_split.bam \
+#     > "$output_path/${accession}_stats.txt"
