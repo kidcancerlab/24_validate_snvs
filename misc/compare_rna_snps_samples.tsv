@@ -27,3 +27,5 @@ SRR36707628	C57BL6	lung		RNAseq	uninfected, negative; G1m4_4; Mus musculus; RNA-
 SRR36707629	C57BL6	lung		RNAseq	uninfected, negative; G1m3_4; Mus musculus; RNA-Seq
 SRR36707630	C57BL6	lung		RNAseq	uninfected, negative; G1m2_4; Mus musculus; RNA-Seq
 SRR36707631	C57BL6	lung		RNAseq	uninfected, negative; G1m1_4; Mus musculus; RNA-Seq
+F420_culture	F420	cell culture		RNAseq	cell culture, sequenced in Roberts lab
+K7M2_culture	K7M2	cell culture		RNAseq	cell culture, sequenced in Roberts lab
