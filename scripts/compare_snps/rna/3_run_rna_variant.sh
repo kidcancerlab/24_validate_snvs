@@ -39,17 +39,13 @@ echo "Processing $sample_type ($accession)"
 
 mkdir -p $wd_path/output/rna/vcfs/${sample_type}
 
-if [[ $accession == SRR* ]]; then
-    output_path=$wd_path/output/rna/bwa/${sample_type}/${accession}
+output_path=$wd_path/output/rna/bwa/${sample_type}
 
-    mkdir -p $wd_path/output/rna/vcfs/${sample_type}/${accession}
+if [[ $accession == SRR* ]]; then
 
     input_file=$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam
 
 else
-    output_path=$wd_path/output/rna/bwa/${sample_type}
-
-    mkdir -p $wd_path/output/rna/vcfs/${sample_type}
 
     input_file=$wd_path/output/rna/bwa/${sample_type}/${accession}_markdup.bam
 
@@ -75,11 +71,11 @@ bcftools filter \
     -O u \
  | bcftools view \
     -O b \
-    -o $wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
+    -o $output_path/${accession}.bcf
 
 echo "**Finished bcftools mpileup, call, & filter -- now indexing"
 
-bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
+bcftools index $output_path/${accession}.bcf
 
 echo "**Finished bcftools index"
 
