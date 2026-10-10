@@ -278,11 +278,11 @@ ggsave_wrap(
 all_depth_data <-
     full_join(
         all_depths %>%
-            rename(total_depth = count) %>%
+            dplyr::rename(total_depth = count) %>%
             select(-group) %>%
             filter(depth != 1),
         var_depths %>%
-            rename(variant_depth = count) %>%
+            dplyr::rename(variant_depth = count) %>%
             select(-group)
     ) %>%
     mutate(
@@ -454,7 +454,7 @@ calls_table <-
 
 calls_summary_plot <-
     calls_table %>%
-    rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
+    dplyr::rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
     pivot_longer(
         cols = c(wrong_variants, called_variants),
         names_to = "var_type",
@@ -490,7 +490,7 @@ ggsave(
 
 percent_wrong_table <-
     calls_table %>%
-    rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
+    dplyr::rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
     mutate(perc_wrong = wrong_variants / called_variants) %>%
     arrange(desc(depth)) %>%
     mutate(
