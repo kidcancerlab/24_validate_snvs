@@ -1,7 +1,8 @@
 import argparse
 import sys
-from pysam import VariantFile
+
 import numpy as np
+from pysam import VariantFile
 
 ################################################################################
 ### Code
