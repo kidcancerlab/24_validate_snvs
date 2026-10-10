@@ -20,7 +20,7 @@ grep \
     | perl -pe 's/:Elapsed seconds://' \
     | cut -f 2 -d " " \
     | numberStats.pl \
-    > output/counts/mpileup_time.txt
+    > output/09_run_time/counts/mpileup_time.txt
 ```
 
 I'm grepping M; here because slurm output double summaries for a couple samples
@@ -34,7 +34,7 @@ grep \
     | perl -pe 's/.+Maximum CPU Memory://' \
     | perl -pe 's/M;.+//' \
     | numberStats.pl \
-    > output/counts/mpileup_ram_M.txt
+    > output/09_run_time/counts/mpileup_ram_M.txt
 ```
 
 ## Delete failed runs so they don't throw off our average
@@ -59,7 +59,7 @@ grep \
     | perl -pe 's/:Elapsed seconds://' \
     | cut -f 2 -d " " \
     | numberStats.pl \
-    > output/counts/merge_time.txt
+    > output/09_run_time/counts/merge_time.txt
 ```
 
 I'm grepping M; here because slurm output double summaries for a couple samples
@@ -72,7 +72,7 @@ grep \
     | perl -pe 's/.+Maximum CPU Memory://' \
     | perl -pe 's/M;.+//' \
     | numberStats.pl \
-    > output/counts/merge_ram_M.txt
+    > output/09_run_time/counts/merge_ram_M.txt
 ```
 
 ## Delete failed runs so they don't throw off our average
@@ -97,7 +97,7 @@ grep \
     | perl -pe 's/:Elapsed seconds://' \
     | cut -f 2 -d " " \
     | numberStats.pl \
-    > output/counts/dist_time.txt
+    > output/09_run_time/counts/dist_time.txt
 ```
 
 I'm grepping M; here because slurm output double summaries for a couple samples
@@ -110,5 +110,5 @@ grep \
     | perl -pe 's/.+Maximum CPU Memory://' \
     | perl -pe 's/M;.+//' \
     | numberStats.pl \
-    > output/counts/dist_ram_M.txt
+    > output/09_run_time/counts/dist_ram_M.txt
 ```

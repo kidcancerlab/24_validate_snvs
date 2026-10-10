@@ -292,7 +292,7 @@ min_transgene_prop <- 0.2
 transgene_groups <-
     read_tsv(
         c(
-            "output/02_snv_calling/transgene/transgene_tumor_clust.txt",
+            "output/07_known_tumors/snv/transgene/transgene_tumor_clust.txt",
             "output/07_known_tumors/snv/transgene/transgene_tumor_clust_ltbc.txt"
         ),
         show_col_types = FALSE
