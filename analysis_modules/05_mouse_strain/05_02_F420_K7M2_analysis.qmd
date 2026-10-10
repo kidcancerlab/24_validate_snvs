@@ -10,14 +10,14 @@ b6_f420_samples <-
     pull(Sample_ID)
 
 merged_mouse_b6_f420 <-
-    qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs") %>%
+    qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
     JoinLayers() %>%
     subset(Sample_ID %in% b6_f420_samples) %>%
     process_seurat()
 
 qs_save(
     merged_mouse_b6_f420,
-    "output/05_mouse_strain/rdata/merged/merged_mouse_b6_f420.qs"
+    "output/05_mouse_strain/rdata/merged/merged_mouse_b6_f420.qs2"
 )
 
 # Write out which clusters were primarily identified as tumor by SingleR
@@ -138,14 +138,14 @@ balbc_k7m2_samples <-
     )
 
 merged_mouse_balbc_k7m2 <-
-    qs::qread("output/05_mouse_strain/rdata/merged/merged_mouse.qs") %>%
+    qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
     JoinLayers() %>%
     subset(Sample_ID %in% balbc_k7m2_samples) %>%
     process_seurat()
 
-qs::qsave(
+qs_save(
     merged_mouse_balbc_k7m2,
-    "output/05_mouse_strain/rdata/merged/merged_mouse_balbc_k7m2.qs"
+    "output/05_mouse_strain/rdata/merged/merged_mouse_balbc_k7m2.qs2"
 )
 
 merged_mouse_balbc_k7m2@meta.data %>%
