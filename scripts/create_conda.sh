@@ -34,9 +34,9 @@ ACTIVATE_SCRIPT="${ACTIVATE_SCRIPT:-$HOME/activate_r461.sh}"
 # ignore anything in ~/.condarc (including "defaults"/"main"/"r").
 # To use a mirror instead of conda.anaconda.org, e.g.:
 #   CHANNEL=https://prefix.dev/conda-forge bash setup_rconda.sh
-CHANNEL="${CHANNEL:-conda-forge}"
+CHANNEL="${CHANNEL:-https://prefix.dev/conda-forge}"
+BIOCONDA_CHANNEL="${BIOCONDA_CHANNEL:-https://prefix.dev/bioconda}"
 MGR=conda
-
 if [ -e "$ENV_PREFIX" ]; then
   echo "ERROR: $ENV_PREFIX already exists. Remove it or set ENV_PREFIX to a new path." >&2
   exit 1
@@ -98,6 +98,7 @@ PKGS=(
   fribidi
   cairo
   pango
+  imagemagick
   xorg-libx11
   xorg-xorgproto
 
@@ -109,6 +110,8 @@ PKGS=(
   mpfr
   fftw
   nlopt
+  bcftools
+  samtools
 
   # --- data formats / geospatial ---
   sqlite
@@ -128,7 +131,16 @@ PKGS=(
 # ---------------------------------------------------------------------------
 mkdir -p "$(dirname "$ENV_PREFIX")"
 echo ">> Creating environment at $ENV_PREFIX"
-"$MGR" create -y -p "$ENV_PREFIX" --override-channels -c "$CHANNEL" "${PKGS[@]}" python=3.12
+"$MGR" create \
+  -y \
+  -p "$ENV_PREFIX" \
+  --repodata-fn repodata.json \
+  --override-channels \
+  --solver classic \
+  -c "$CHANNEL" \
+  -c "$BIOCONDA_CHANNEL" \
+  "${PKGS[@]}" \
+  python=3.12
 
 # ---------------------------------------------------------------------------
 # Write an activation helper that also keeps HPC modules from leaking in
