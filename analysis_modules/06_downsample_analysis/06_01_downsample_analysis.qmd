@@ -1,34 +1,38 @@
+```{r}
+source("analysis_modules/06_downsample_analysis/06_helper_functions.R")
+```
+
 ## Here I am going to downsample the mouse samples to varying number of cells per cluster to run scanBit
 This is to test how low we can go while the algorithm still works and provide bcf files to use to quantify coverage per cell in later analyses
 ```{r}
 merged_sobj_mouse_ctrls <-
-    qs_read("output/02_snv_calling/rdata/merged/merged_norm_mouse.qs2")
+  qs_read("output/05_mouse_strain/rdata/merged/merged_norm_mouse.qs2")
 
 min_n_cells <- 500
 
 keep_clusters <-
-    merged_sobj_mouse_ctrls$cell_group %>%
-    table() %>%
-    as.data.frame() %>%
-    filter(Freq > min_n_cells) %>%
-    pull(".")
+  merged_sobj_mouse_ctrls$cell_group %>%
+  table() %>%
+  as.data.frame() %>%
+  filter(Freq > min_n_cells) %>%
+  pull(".")
 
 # Keep only clusters with > min_n_cells cells
 merged_sobj_mouse_ctrls <-
-    merged_sobj_mouse_ctrls %>%
-    subset(cell_group %in% keep_clusters)
+  merged_sobj_mouse_ctrls %>%
+  subset(cell_group %in% keep_clusters)
 
 # Here, 500000 is forcing us to keep all the cells, so functions as a control
 n_cell_cutoffs <- c(1, 2, 3, 4, 5, 10, 20, 50, 100, 500, 500000)
 
 output <- scanbit_downsample_loop(
-    merged_sobj_mouse_ctrls,
-    cutoff_vector = n_cell_cutoffs,
-    out_dir_base = "output/06_downsample_analysis/snv/mouse/",
-    sample_label = "mouse",
-    min_read_depth = 10,
-    ploidy = "mm10",
-    ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa"
+  merged_sobj_mouse_ctrls,
+  cutoff_vector = n_cell_cutoffs,
+  out_dir_base = "output/06_downsample_analysis/snv/mouse/",
+  sample_label = "mouse",
+  min_read_depth = 10,
+  ploidy = "mm10",
+  ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-mm10/fasta/genome.fa"
 )
 ```
 
@@ -36,62 +40,62 @@ output <- scanbit_downsample_loop(
 ```{r downsample_loop_geo}
 #| dependson: [helper_downsample_scanbit, read_raw_human_geo]
 samples_geo <-
-    read_tsv(
-        "misc/validation_geo_metadata.tsv",
-        show_col_types = FALSE
-    ) %>%
-    filter(grepl("tumor validation|healthy samples", sample_group)) %>%
-    pull(Sample_ID) %>%
-    unique()
+  read_tsv(
+    "misc/validation_geo_metadata.tsv",
+    show_col_types = FALSE
+  ) %>%
+  filter(grepl("tumor validation|healthy samples", sample_group)) %>%
+  pull(Sample_ID) %>%
+  unique()
 
 min_n_cells <- 200
 
 n_cell_cutoffs <- c(1, 2, 3, 4, 5, 10, 20, 50, 100, 500, 500000)
 
 output <-
-    parallel::mclapply(
-        samples_geo,
-        mc.cores = 5,
-        mc.preschedule = FALSE,
-        function(this_sample) {
-            sobj <-
-                qs_read(paste0(
-                    "output/02_snv_calling/rdata/individual/",
-                    this_sample,
-                    "_human.qs2"
-                ))
+  parallel::mclapply(
+    samples_geo,
+    mc.cores = 5,
+    mc.preschedule = FALSE,
+    function(this_sample) {
+      sobj <-
+        qs_read(paste0(
+          "output/01_process_raw/rdata/individual/",
+          this_sample,
+          "_human.qs2"
+        ))
 
-            sobj$cell_group <- paste0("clust_", sobj$individ_clusters)
+      sobj$cell_group <- paste0("clust_", sobj$individ_clusters)
 
-            keep_clusters <-
-                sobj$cell_group %>%
-                table() %>%
-                as.data.frame() %>%
-                filter(Freq > min_n_cells) %>%
-                pull(".")
+      keep_clusters <-
+        sobj$cell_group %>%
+        table() %>%
+        as.data.frame() %>%
+        filter(Freq > min_n_cells) %>%
+        pull(".")
 
-            # Keep only clusters with > min_n_cells cells
-            sobj <-
-                sobj %>%
-                subset(cell_group %in% keep_clusters)
+      # Keep only clusters with > min_n_cells cells
+      sobj <-
+        sobj %>%
+        subset(cell_group %in% keep_clusters)
 
-            Idents(sobj) <-
-                sobj$cell_group
+      Idents(sobj) <-
+        sobj$cell_group
 
-            scanbit_downsample_loop(
-                sobj,
-                cutoff_vector = n_cell_cutoffs,
-                out_dir_base = file.path(
-                    "output/06_downsample_analysis/snv/geo_samples/",
-                    this_sample
-                ),
-                sample_label = this_sample,
-                ploidy = "GRCh38",
-                min_read_depth = 10,
-                ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa"
-            )
-        }
-    )
+      scanbit_downsample_loop(
+        sobj,
+        cutoff_vector = n_cell_cutoffs,
+        out_dir_base = file.path(
+          "output/06_downsample_analysis/snv/geo_samples/",
+          this_sample
+        ),
+        sample_label = this_sample,
+        ploidy = "GRCh38",
+        min_read_depth = 10,
+        ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa"
+      )
+    }
+  )
 ```
 
 ## Show how bootstrap values degrade with decreasing cell count and UMI per pseudobulked cluster
@@ -99,146 +103,146 @@ The data were gathered by hand since I don't have a programatic way to pull the 
 ```{r downsample_plot}
 #| dependson: [downsample_loop_geo]
 rna_per_run <-
-    list.files(
-        path = "output/06_downsample_analysis/snv",
-        pattern = "cell_barcode_table*",
-        recursive = TRUE,
-        full.names = TRUE
-    ) %>%
-    read_tsv(id = "run") %>%
-    select(-cell_barcode, -bam_file) %>%
-    mutate(
-        run = basename(run) %>%
-            str_remove("cell_barcode_table_") %>%
-            str_remove("_cells.txt")
-    ) %>%
-    separate_wider_delim(
-        run,
-        delim = "_",
-        names = c("sample", "cells")
-    ) %>%
-    mutate(cells = as.numeric(cells)) %>%
-    group_by(sample, cells, cell_group) %>%
-    summarize(total_umi = sum(nCount_RNA), .groups = "drop") %>%
-    group_by(sample, cells) %>%
-    summarize(mean_umi = mean(total_umi), .groups = "drop")
+  list.files(
+    path = "output/06_downsample_analysis/snv",
+    pattern = "cell_barcode_table*",
+    recursive = TRUE,
+    full.names = TRUE
+  ) %>%
+  read_tsv(id = "run") %>%
+  select(-cell_barcode, -bam_file) %>%
+  mutate(
+    run = basename(run) %>%
+      str_remove("cell_barcode_table_") %>%
+      str_remove("_cells.txt")
+  ) %>%
+  separate_wider_delim(
+    run,
+    delim = "_",
+    names = c("sample", "cells")
+  ) %>%
+  mutate(cells = as.numeric(cells)) %>%
+  group_by(sample, cells, cell_group) %>%
+  summarize(total_umi = sum(nCount_RNA), .groups = "drop") %>%
+  group_by(sample, cells) %>%
+  summarize(mean_umi = mean(total_umi), .groups = "drop")
 
 write_tsv(
-    rna_per_run,
-    "output/06_downsample_analysis/counts/rna_per_run_downsample.tsv"
+  rna_per_run,
+  "output/06_downsample_analysis/counts/rna_per_run_downsample.tsv"
 )
 
 bootstrap_downsample_data <-
-    readxl::read_xlsx("downsample_bootstrap_values.xlsx") %>%
-    mutate(bootstrap_val = replace_na(bootstrap_val, 0)) %>%
-    full_join(rna_per_run) %>%
-    left_join(
-        bind_rows(
-            read_tsv(
-                "misc/validation_geo_metadata.tsv",
-                show_col_types = FALSE
-            ) %>%
-                select(Sample_ID, sample_group, tumor_type) %>%
-                rename(sample = Sample_ID) %>%
-                distinct(),
-            tibble(sample = "mouse", sample_group = "Mouse")
-        )
-    ) %>%
-    mutate(
-        cells_char = as.factor(cells_char) %>% fct_reorder(cells),
-        tumor_type = str_replace(tumor_type, "healthy", "Healthy")
-    ) %>%
-    filter(cells > 1 & sample_group != "Mouse")
+  readxl::read_xlsx("downsample_bootstrap_values.xlsx") %>%
+  mutate(bootstrap_val = replace_na(bootstrap_val, 0)) %>%
+  full_join(rna_per_run) %>%
+  left_join(
+    bind_rows(
+      read_tsv(
+        "misc/validation_geo_metadata.tsv",
+        show_col_types = FALSE
+      ) %>%
+        select(Sample_ID, sample_group, tumor_type) %>%
+        dplyr::rename(sample = Sample_ID) %>%
+        distinct(),
+      tibble(sample = "mouse", sample_group = "Mouse")
+    )
+  ) %>%
+  mutate(
+    cells_char = as.factor(cells_char) %>% fct_reorder(cells),
+    tumor_type = str_replace(tumor_type, "healthy", "Healthy")
+  ) %>%
+  filter(cells > 1 & sample_group != "Mouse")
 
 cell_colors <-
-    c(
-        "#D43F3AFF",
-        "#EEA236FF",
-        "#5CB85CFF",
-        "blue",
-        "#6D1D87FF",
-        "#69D1F3FF",
-        "#68A4E3FF"
-    )
+  c(
+    "#D43F3AFF",
+    "#EEA236FF",
+    "#5CB85CFF",
+    "blue",
+    "#6D1D87FF",
+    "#69D1F3FF",
+    "#68A4E3FF"
+  )
 
 set.seed(1337) # for jitter
 bootstrap_ncell_plot <-
-    bootstrap_downsample_data %>%
-    ggplot(
-        aes(
-            x = cells_char,
-            y = bootstrap_val,
-            group = sample
-        )
-    ) +
-    geom_boxplot(
-        aes(group = cells),
-        color = "black",
-        fill = "lightgray",
-        outlier.alpha = 0
-    ) +
-    geom_jitter(
-        aes(
-            color = tumor_type,
-            shape = sample_group
-        ),
-        size = 1,
-        width = 0.25
-    ) +
-    facet_wrap(~sample_group, ncol = 1) +
-    scale_shape_manual(values = c(18, 16)) +
-    scale_color_manual(values = cell_colors) +
-    labs(
-        title = "Top Level Bootstrap Values for Downsampled Data",
-        subtitle = "Confidence when using only 'X' cells per cluster",
-        x = "Cells per cluster",
-        y = "Bootstrap value of top tree division",
-        color = "Tumor or healthy"
+  bootstrap_downsample_data %>%
+  ggplot(
+    aes(
+      x = cells_char,
+      y = bootstrap_val,
+      group = sample
     )
+  ) +
+  geom_boxplot(
+    aes(group = cells),
+    color = "black",
+    fill = "lightgray",
+    outlier.alpha = 0
+  ) +
+  geom_jitter(
+    aes(
+      color = tumor_type,
+      shape = sample_group
+    ),
+    size = 1,
+    width = 0.25
+  ) +
+  facet_wrap(~sample_group, ncol = 1) +
+  scale_shape_manual(values = c(18, 16)) +
+  scale_color_manual(values = cell_colors) +
+  labs(
+    title = "Top Level Bootstrap Values for Downsampled Data",
+    subtitle = "Confidence when using only 'X' cells per cluster",
+    x = "Cells per cluster",
+    y = "Bootstrap value of top tree division",
+    color = "Tumor or healthy"
+  )
 
 ggsave(
-    "output/06_downsample_analysis/figures/downsample_bootstrap_cells_plot.pdf",
-    plot = bootstrap_ncell_plot,
-    width = 8,
-    height = 10
+  "output/06_downsample_analysis/figures/downsample_bootstrap_cells_plot.pdf",
+  plot = bootstrap_ncell_plot,
+  width = 8,
+  height = 10
 )
 
 bootstrap_numi_plot <-
-    bootstrap_downsample_data %>%
-    ggplot(
-        aes(
-            x = mean_umi,
-            y = bootstrap_val,
-            group = sample
-        )
-    ) +
-    geom_point(
-        aes(color = tumor_type, shape = sample_group),
-        size = 2
-    ) +
-    geom_vline(xintercept = 500000, color = "black", linetype = "dashed") +
-    facet_wrap(~sample_group, ncol = 1) +
-    scale_x_continuous(
-        breaks = scales::breaks_width(10000000)
-    ) +
-    scale_shape_manual(values = c(18, 16)) +
-    scale_color_manual(values = cell_colors) +
-    labs(
-        title = "Top Level Bootstrap Values for Downsampled Data",
-        subtitle = "Confidence When Using Only 'X' UMIs per Cluster. Vertical line at 500,000",
-        x = "Mean UMI per cluster",
-        y = "Bootstrap value of top tree division",
-        color = "Sample type"
-    ) +
-    theme(
-        legend.position = "bottom"
+  bootstrap_downsample_data %>%
+  ggplot(
+    aes(
+      x = mean_umi,
+      y = bootstrap_val,
+      group = sample
     )
+  ) +
+  geom_point(
+    aes(color = tumor_type, shape = sample_group),
+    size = 2
+  ) +
+  geom_vline(xintercept = 500000, color = "black", linetype = "dashed") +
+  facet_wrap(~sample_group, ncol = 1) +
+  scale_x_continuous(
+    breaks = scales::breaks_width(10000000)
+  ) +
+  scale_shape_manual(values = c(18, 16)) +
+  scale_color_manual(values = cell_colors) +
+  labs(
+    title = "Top Level Bootstrap Values for Downsampled Data",
+    subtitle = "Confidence When Using Only 'X' UMIs per Cluster. Vertical line at 500,000",
+    x = "Mean UMI per cluster",
+    y = "Bootstrap value of top tree division",
+    color = "Sample type"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
 
 ggsave(
-    "output/06_downsample_analysis/figures/downsample_bootstrap_UMI_plot.pdf",
-    plot = bootstrap_numi_plot,
-    width = 8,
-    height = 7
+  "output/06_downsample_analysis/figures/downsample_bootstrap_UMI_plot.pdf",
+  plot = bootstrap_numi_plot,
+  width = 8,
+  height = 7
 )
 ```
 
@@ -246,78 +250,122 @@ ggsave(
 ```{r downsample_merge_plots}
 #| dependson: [downsample_loop_geo]
 tree_table <-
-    tibble(
-        downsample_pdfs =
-            list.files(
-                path = "output/06_downsample_analysis/snv/geo_samples",
-                pattern = "*_10_tree.pdf",
-                full.names = TRUE,
-                recursive = TRUE
-            )
+  tibble(
+    downsample_pdfs = list.files(
+      path = "output/06_downsample_analysis/snv/geo_samples",
+      pattern = "*_10_tree.pdf",
+      full.names = TRUE,
+      recursive = TRUE
     )
+  )
 
 tree_table$sample <-
-    tree_table$downsample_pdfs %>%
-    str_remove(".+downsample_") %>%
-    str_remove("_.+")
+  tree_table$downsample_pdfs %>%
+  str_remove(".+downsample_") %>%
+  str_remove("_.+")
 
 tree_table$cells <-
-    tree_table$downsample_pdfs %>%
-    str_remove("_10_tree.pdf") %>%
-    str_remove(".+_") %>%
-    as.numeric()
+  tree_table$downsample_pdfs %>%
+  str_remove("_10_tree.pdf") %>%
+  str_remove(".+_") %>%
+  as.numeric()
 
 tree_table <-
-    tree_table %>%
-    left_join(
-        read_tsv("output/06_downsample_analysis/counts/rna_per_run_downsample.tsv")
-    )
+  tree_table %>%
+  left_join(
+    read_tsv("output/06_downsample_analysis/counts/rna_per_run_downsample.tsv")
+  )
 
 tree_table <-
-    tree_table %>%
-    arrange(sample, desc(cells)) %>%
-    mutate(
-        n_cells_str =
-            if_else(
-                cells == 500000,
-                "all",
-                as.character(cells)
-            )
+  tree_table %>%
+  arrange(sample, desc(cells)) %>%
+  mutate(
+    n_cells_str = if_else(
+      cells == 500000,
+      "all",
+      as.character(cells)
     )
+  )
 
 pdf(
-    "output/06_downsample_analysis/figures/combined_downsample_trees.pdf",
-    width = 8,
-    height = 10
+  "output/06_downsample_analysis/figures/combined_downsample_trees.pdf",
+  width = 8,
+  height = 10
 )
 
 for (i in seq_len(nrow(tree_table))) {
-    print(
-        ggplot2::ggplot() +
-            ggpubr::background_image(
-                magick::image_read(tree_table$downsample_pdfs[i], density = 300)
-            ) +
-            ggplot2::coord_fixed() +
-            ggplot2::labs(
-                title = paste0(
-                    "Sample: ",
-                    tree_table$sample[i],
-                    " with ",
-                    tree_table$n_cells_str[i],
-                    " cells per cluster"
-                ),
-                subtitle = paste(
-                    "Min. read depth: 10, ",
-                    "Mean UMIs per cluster: ",
-                    format(
-                        round(tree_table$mean_umi[i]),
-                        big.mark = ",",
-                        scientific = FALSE
-                    )
-                )
-            )
-    )
+  print(
+    ggplot2::ggplot() +
+      ggpubr::background_image(
+        magick::image_read(tree_table$downsample_pdfs[i], density = 300)
+      ) +
+      ggplot2::coord_fixed() +
+      ggplot2::labs(
+        title = paste0(
+          "Sample: ",
+          tree_table$sample[i],
+          " with ",
+          tree_table$n_cells_str[i],
+          " cells per cluster"
+        ),
+        subtitle = paste(
+          "Min. read depth: 10, ",
+          "Mean UMIs per cluster: ",
+          format(
+            round(tree_table$mean_umi[i]),
+            big.mark = ",",
+            scientific = FALSE
+          )
+        )
+      )
+  )
 }
 
 dev.off()
+```
+
+## Look at the number of comparable sites at varying downsample depths
+```{r downsample_comparable_sites}
+n_comps_files <- list.files(
+  path = "output/06_downsample_analysis/snv/geo_samples",
+  pattern = "*_n_comps.txt",
+  full.names = TRUE,
+  recursive = TRUE
+)
+
+shared_sites_plot <-
+  lapply(
+    n_comps_files,
+    get_n_shared_sites
+  ) %>%
+  bind_rows() %>%
+  left_join(
+    bootstrap_downsample_data %>%
+    select(sample, bootstrap_val, cells) %>%
+    distinct() #%>%
+    #mutate(cells = as.character(cells))
+  ) %>%
+  filter(cells != "1") %>%
+  mutate(
+    cells = as.character(cells) %>%
+      str_replace("5e.05", "All cells") %>%
+      as.factor() %>%
+      fct_reorder(numeric_n_cells)
+  ) %>%
+  ggplot(
+    aes(
+      x = cells,
+      y = shared_sites,
+      color = bootstrap_val > 80
+    )
+  ) +
+  geom_jitter(width = 0.25) +
+  scale_y_log10()
+
+ggsave(
+  "output/06_downsample_analysis/figures/downsample_bootstrap_shared_sites_plot.pdf",
+  plot = shared_sites_plot,
+  width = 8,
+  height = 7
+)
 ```
