@@ -10,9 +10,9 @@
 #SBATCH --time=02:00:00
 #SBATCH --wait
 
-set -e ### stops bash script if line ends with error
+set -eo pipefail ### stops bash script if line ends with error
 
-echo ${HOSTNAME} ${SLURM_ARRAY_TASK_ID}
+echo ${HOSTNAME}
 
 ml purge
 ml load Miniconda3/4.9.2
