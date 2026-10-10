@@ -68,6 +68,12 @@ for directoryName in \
     output/03_test_flex/figures \
     output/03_test_flex/snvs \
     output/04_read_depth_analysis/snv/geo \
+    output/04_read_depth_analysis/depths/bcf_depth \
+    output/04_read_depth_analysis/counts \
+    output/04_read_depth_analysis/figures \
+    output/04_read_depth_analysis/shared \
+    output/04_read_depth_analysis/depths/call_count \
+    output/04_read_depth_analysis/figures/shared_sites \
     output/05_mouse_strain/rdata/merged \
     output/05_mouse_strain/figures \
     output/05_mouse_strain/snv \
@@ -75,9 +81,11 @@ for directoryName in \
     output/06_downsample_analysis/snv/mouse \
     output/06_downsample_analysis/snv/geo_samples \
     output/06_downsample_analysis/counts \
+    output/06_downsample_analysis/figures \
     output/07_known_tumors/snv/transgene \
     output/07_known_tumors/figures/transgene \
     output/08_human_validation/figures \
+    output/09_run_time/counts \
     output/10_cmp_other_methods/scevan_results \
     output/10_cmp_other_methods/scatomic_results \
     output/10_cmp_other_methods/copykat_results/temp \
