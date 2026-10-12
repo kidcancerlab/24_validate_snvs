@@ -48,5 +48,5 @@ for sra_file in $wd_path/input/rna/${sample_type}/${accession}*/*.sra; do
         -e 8
 done
 
-gzip "$wd_path/input/rna/${sample_type}/${accession}/${accession}_1.fastq"
-gzip "$wd_path/input/rna/${sample_type}/${accession}/${accession}_2.fastq"
+pigz "$wd_path/input/rna/${sample_type}/${accession}/${accession}_1.fastq"
+pigz "$wd_path/input/rna/${sample_type}/${accession}/${accession}_2.fastq"
