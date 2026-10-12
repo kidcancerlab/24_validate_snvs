@@ -54,32 +54,27 @@ fi
 echo "**Starting bcftools mpileup"
 
 bcftools mpileup \
-    --threads 3 \
-    --max-depth 2000 \
-    -O u \
-    -f $wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
-    ${input_file}| \
-bcftools call \
-    --threads 3 \
-    -m \
-    --ploidy-file $wd_path/misc/mm10_ploidy.txt \
-    -O u | \
-bcftools filter \
-    --threads 3 \
-    -g 10 \
-    -e "QUAL<20 || DP<10" \
-    -O u \
- | bcftools view \
-    -O b \
-    -o $output_path/${accession}.bcf
+        --threads 3 \
+        --max-depth 2000 \
+        -O u \
+        -f $wd_path/input/reference/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa \
+        ${input_file} \
+    | bcftools call \
+        --threads 3 \
+        -m \
+        --ploidy-file $wd_path/misc/mm10_ploidy.txt \
+        -O u \
+    | bcftools filter \
+        --threads 3 \
+        -g 10 \
+        -e "QUAL<20 || DP<10" \
+        -O u \
+    | bcftools view \
+        -O b \
+        -o $output_path/${accession}.bcf
 
 echo "**Finished bcftools mpileup, call, & filter -- now indexing"
 
 bcftools index $output_path/${accession}.bcf
 
 echo "**Finished bcftools index"
-
-#-o $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz \
-#-s LowQual \
-
-#bcftools index $wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
