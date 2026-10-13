@@ -1,13 +1,15 @@
 import argparse
-import sys
 import multiprocessing
-from itertools import repeat, chain
-from pysam import VariantFile
-import numpy as np
-from scipy.cluster.hierarchy import linkage, dendrogram
-from scipy.spatial.distance import squareform
+import sys
+from itertools import chain, repeat
+
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+from pysam import VariantFile
+from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.spatial.distance import squareform
+
 matplotlib.use('pdf')
 # from https://physicalmodelingwithpython.blogspot.com/2015/06/making-plots-for-publication.html
 matplotlib.rcParams['pdf.fonttype'] = 42
@@ -27,6 +29,14 @@ def main():
                         type = str,
                         default = 'dendrogram.pdf',
                         help = 'output file name of plot. Id suggest either png or pdf')
+    parser.add_argument('--n_comps_file',
+                        type = str,
+                        default = 'n_comps_matrix.txt',
+                        help = 'output file name of number of comparisons matrix')
+    parser.add_argument('--dist_matrix_file',
+                        type = str,
+                        default = 'dist_matrix.txt',
+                        help = 'output file name of distance matrix')
     parser.add_argument('--min_snvs_for_cluster',
                         type = int,
                         default = 1000,
@@ -43,6 +53,10 @@ def main():
                         type = float,
                         default = 0.99,
                         help = 'threshold for collapsing clusters')
+    parser.add_argument('--linkage_method',
+                        type = str,
+                        default = 'ward',
+                        help = 'linkage method to use for hierarchical clustering. Options are "single", "complete", "average", "weighted", "centroid", "median", "ward"')
     parser.add_argument('--verbose',
                         action = 'store_true',
                         help = 'print out extra information')
@@ -51,6 +65,10 @@ def main():
                         type = int,
                         default = 1,
                         help = 'number of processes to use for parallel processing')
+    parser.add_argument('--dist_method',
+                        type = str,
+                        default = 'binary',
+                        help = 'distance method to use for calculating distance matrix. Options are "binary" or "euclidian"')
     parser.add_argument('--fig_width',
                         type = float,
                         default = 6,
@@ -72,11 +90,18 @@ def main():
         args.bcf,
         args.min_snvs_for_cluster,
         args.max_prop_missing,
-        args.processes)
+        args.processes,
+        args.dist_method
+    )
 
-    prop_diff_matrix = calc_proportion_dist_matrix(differences)
+    prop_diff_matrix, n_comps_matrix = calc_proportion_dist_matrix(differences)
 
-    hclust_out = hierarchical_clustering(prop_diff_matrix)
+    write_n_comps_matrix(n_comps_matrix, samples, args.n_comps_file)
+
+    write_dist_matrix(prop_diff_matrix, samples, args.dist_matrix_file)
+
+    hclust_out = hierarchical_clustering(prop_diff_matrix,
+                                         linkage_method = args.linkage_method)
 
     original_cluster_dict = get_cluster_dict(hclust_out, samples)
 
@@ -95,7 +120,8 @@ def main():
             differences,
             samples,
             args.n_bootstrap,
-            threads = args.processes
+            threads = args.processes,
+            linkage_method = args.linkage_method
         )
 
     plt.figure(figsize=(args.fig_width, args.fig_height))
@@ -115,8 +141,6 @@ def main():
 
     if args.verbose:
         print("Done!", file=sys.stderr)
-    return
-
 
 ########
 ### functions
@@ -125,7 +149,8 @@ def main():
 def get_diff_matrix_from_bcf(bcf_file,
                              min_snvs_for_cluster,
                              max_prop_missing,
-                             threads):
+                             threads,
+                             dist_method):
     dist_key_dict = {'00':            0,
                      '01':            1,
                      '10':            1,
@@ -134,20 +159,33 @@ def get_diff_matrix_from_bcf(bcf_file,
     ### Check if bcf index exists
     bcf_in = VariantFile(bcf_file, threads = threads)
     samples = tuple(bcf_in.header.samples)
-    records = tuple(x for x in list(bcf_in.fetch()) if (len(x.alts) == 1))
+    records = tuple(x for x in list(bcf_in.fetch()) if len(x.alts) == 1)
     bcf_in.close()
 
-    # Precompute the genotype tuples for all samples
-    genotype_tuples = np.array([
-        [tuple(pad_len_1_genotype(rec.samples[sample]['GT'])) for sample in samples]
-        for rec in records
-    ])
 
-    # Convert genotype tuples to strings and look up in dist_key_dict
-    genotype_matrix = np.array([
-        [dist_key_dict.get(''.join(map(str, gt)), np.nan) for gt in sample_genotypes]
-        for sample_genotypes in genotype_tuples
-    ])
+    if dist_method == 'binary':
+    # Precompute the genotype tuples for all samples
+      genotype_tuples = np.array([
+          [tuple(pad_len_1_genotype(rec.samples.get(sample).get('GT'))) for sample in samples]
+          for rec in records
+      ])
+
+      # Convert genotype tuples to strings and look up in dist_key_dict
+      genotype_matrix = np.array([
+          [dist_key_dict.get(''.join(map(str, gt)), np.nan) for gt in sample_genotypes]
+          for sample_genotypes in genotype_tuples
+      ])
+    elif dist_method == 'euclidian':
+      # ! Something to note for later, in the case where no reads are "informative" for a site, but there are still enough reads to call a genotype, the genotype will be called as homozygous reference. This means that you end up with a value such as 0/0:10:0,.:.:. for a sample
+      # ! DP is 10, but AD is "0,.", so sum of AD is zero
+      # ! This means that the euclidian distance can kick out positions where the binary calculation keeps them, so n_comps_matrix will be different between the two methods
+      # ! If anything I should figure out how to filter these sites in the binary calculation as well, though it would introduce additional computational overhead
+      genotype_matrix = np.array([
+        [calc_prop_ref(sample, rec) for sample in samples]
+        for rec in records
+      ])
+    else:
+      raise ValueError(f"Invalid dist_method: {dist_method}. Must be 'binary' or 'euclidian'.")
 
     # Filter out variant positions seen in less than x% of samples
     percent_missing = np.sum(np.isnan(genotype_matrix), axis=1) / len(samples)
@@ -164,6 +202,18 @@ def get_diff_matrix_from_bcf(bcf_file,
         )
 
     return differences, samples
+
+def calc_prop_ref(sample, rec):
+    allele_depths = rec.samples.get(sample).get('AD')
+    if all(x is None for x in allele_depths):
+        return np.nan
+    else:
+      total_depth = sum(x for x in allele_depths if x is not None)
+      if total_depth == 0:
+          return np.nan
+
+    # first element of allele_depths is the reference allele depth
+    return allele_depths[0] / total_depth
 
 def pad_len_1_genotype(gt):
     if len(gt) == 1:
@@ -192,11 +242,34 @@ def calc_proportion_dist_matrix(differences, bootstrap=False):
                   "the min_snvs_per_cluster value."
         raise Exception(message)
 
+    # This is a "fix" for the situation where two clusters have no shared
+    # variant sites. If that is the case, prop_diff_matrix will have a nan value
+    # for that pair (0/0) and it breaks the hierarchical clustering.
+    # I will need to keep thinking of a better way to handle this.
+    n_comps_matrix[n_comps_matrix == 0] = 1
+
     # Sum up differences while ignoring np.nan values
     sum_differences = np.nansum(differences, axis=0)
     # Calculate the proportion of differences
     prop_diff_matrix = sum_differences / (n_comps_matrix * 2)
-    return prop_diff_matrix
+    return prop_diff_matrix, n_comps_matrix
+
+def write_n_comps_matrix(n_comps_matrix, samples, output_file):
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write('\t' + '\t'.join(samples) + '\n')
+        f.writelines(
+            sample + '\t' + '\t'.join(map(str, row)) + '\n'
+            for sample, row in zip(samples, n_comps_matrix)
+        )
+
+def write_dist_matrix(dist_matrix, samples, output_file):
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write('\t' + '\t'.join(samples) + '\n')
+        f.writelines(
+            sample + '\t' + '\t'.join(map(str, row)) + '\n'
+            for sample, row in zip(samples, dist_matrix)
+        )
+
 
 def hierarchical_clustering(distance_matrix,
                             linkage_method='ward'):
@@ -274,12 +347,12 @@ def get_cluster_dict(hclust, samples):
 
     return cluster_dict
 
-def bootstrap_worker(rand_seed, differences, true_cluster_dict, samples):
+def bootstrap_worker(rand_seed, differences, true_cluster_dict, samples, linkage_method):
     np.random.seed(rand_seed)
-    prop_diff_matrix_boot = calc_proportion_dist_matrix(differences,
-                                                        bootstrap = True)
+    prop_diff_matrix_boot, _ = calc_proportion_dist_matrix(differences,
+                                                           bootstrap = True)
 
-    hclust_out_boot = hierarchical_clustering(prop_diff_matrix_boot)
+    hclust_out_boot = hierarchical_clustering(prop_diff_matrix_boot, linkage_method)
 
     boot_cluster_dict = get_cluster_dict(hclust_out_boot, samples)
 
@@ -319,7 +392,8 @@ def calculate_bootstrap_values(true_cluster_dict,
                                differences,
                                samples,
                                n_bootstraps,
-                               threads):
+                               threads,
+                               linkage_method):
     with multiprocessing.Pool(processes=threads) as pool:
         bootstrap_conserved_node_vals = pool.starmap(
             bootstrap_worker,
@@ -327,7 +401,8 @@ def calculate_bootstrap_values(true_cluster_dict,
                 range(n_bootstraps),
                 repeat(differences),
                 repeat(true_cluster_dict),
-                repeat(samples)
+                repeat(samples),
+                repeat(linkage_method)
             )
         )
 
