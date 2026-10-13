@@ -49,9 +49,18 @@ echo "**Indexing file."
 bcftools index $wd_path/output/rna/vcfs/merged_shared.vcf.gz
 
 # now, keep any regions that has a variant at any of the shared sites, across all samples
+# use the below file for the tree
 bcftools view \
     -i 'GT[*]="alt"' \
     $wd_path/output/rna/vcfs/merged_shared.vcf.gz \
+    -O z \
+    -o $wd_path/output/rna/vcfs/merged_shared_variant.bcf
+
+bcftools index $wd_path/output/rna/vcfs/merged_shared_variant.bcf 
+
+# convert bcf file to vcf.gz for easy reading
+bcftools view \
+    $wd_path/output/rna/vcfs/merged_shared_variant.bcf \
     -O z \
     -o $wd_path/output/rna/vcfs/merged_shared_variant.vcf.gz
 
