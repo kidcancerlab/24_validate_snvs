@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --job-name=count_variant
-#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/count/count_%A_%a.txt
-#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/count/count_%A_%a.txt
-#SBATCH --array=0-57
+#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/count/logs/count_%A_%a.txt
+#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/count/logs/count_%A_%a.txt
+#SBATCH --array=0-29
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
 #SBATCH --time=2-00:00:00
@@ -45,13 +45,14 @@ echo "**Processing $sample_type ($accession)"
 
 mkdir -p $wd_path/output/rna/count/${sample_type}
 
-if [ ! -f "$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam" ]; then
-    echo "Input file not found for sample ${sample_type} (${accession}). Skipping." >&2
-    exit 0
+if [[ $accession == SRR* ]]; then
+    bam=$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam
+else
+    bam=$wd_path/output/rna/bwa/${sample_type}/${accession}_markdup.bam
 fi
 
-bam=$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam
-vcf=$wd_path/output/rna/vcfs/${sample_type}/${accession}.vcf.gz
+
+bcf=$wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
 
 mkdir -p $wd_path/output/rna/count
 
@@ -63,7 +64,7 @@ covered_mb=$(echo "scale=6; $covered_bases / 1000000" | bc)
 # keep only files that PASS in the quality filter
 # keep snps
 # wc -l = count them
-variant_count=$(bcftools view -H -f PASS -v snps "$vcf" | wc -l)
+variant_count=$(bcftools view -H -f PASS -v snps "$bcf" | wc -l)
 
 # mutations per Mb (guard against divide-by-zero)
 if (( $(echo "$covered_mb > 0" | bc -l) )); then
