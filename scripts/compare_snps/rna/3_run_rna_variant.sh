@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --job-name=call_variant
-#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant/variant_%A_%a.txt
-#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/variant/variant_%A_%a.txt
+#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/3_run_rna/logs/variant_%A_%a.txt
+#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/3_run_rna/logs/variant_%A_%a.txt
 #SBATCH --array=0-29
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
@@ -43,17 +43,17 @@ name=${new_names[$SLURM_ARRAY_TASK_ID]}
 
 echo "Processing $sample_type ($accession)"
 
-mkdir -p $wd_path/output/rna/vcfs/${sample_type}
+mkdir -p $wd_path/output/rna/3_run_rna/${sample_type}
 
-output_path=$wd_path/output/rna/bwa/${sample_type}
+output_path=$wd_path/output/rna/3_run_rna/${sample_type}
 
 if [[ $accession == SRR* ]]; then
 
-    input_file=$wd_path/output/rna/bwa/${sample_type}/${accession}/${accession}_markdup.bam
+    input_file=$wd_path/output/rna/2_align/${sample_type}/${accession}/${accession}_markdup.bam
 
 else
 
-    input_file=$wd_path/output/rna/bwa/${sample_type}/${accession}_markdup.bam
+    input_file=$wd_path/output/rna/2_align/${sample_type}/${accession}_markdup.bam
 
 fi
 

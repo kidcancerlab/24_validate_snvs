@@ -9,9 +9,9 @@
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
-files=($wd_path/output/rna/count/*/*_count.tsv)
+files=($wd_path/output/rna/5_count/*/*_count.tsv)
 
-out="$wd_path/output/rna/count/combined.csv"
+out="$wd_path/output/rna/6_combine/combined.csv"
 
 printf "accession,sample_type,sample_name,location,variant_count,covered_mb,mutations_per_mb\n" > "$out"
 
