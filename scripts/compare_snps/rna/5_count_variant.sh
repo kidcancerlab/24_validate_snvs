@@ -36,10 +36,17 @@ locations=($(cut \
         $wd_path/misc/compare_rna_snps_samples.tsv \
         | tail -n +2 \
         ))
+new_names=($(cut \
+        -f3 \
+        $wd_path/misc/compare_rna_snps_samples.tsv \
+        | tail -n +2 \
+        ))
+
 
 accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 sample_type=${sample_types[$SLURM_ARRAY_TASK_ID]}
 location=${locations[$SLURM_ARRAY_TASK_ID]}
+name=${new_names[$SLURM_ARRAY_TASK_ID]}
 
 echo "**Processing $sample_type ($accession)"
 
@@ -52,7 +59,7 @@ else
 fi
 
 
-bcf=$wd_path/output/rna/vcfs/${sample_type}/${accession}.bcf
+bcf=$wd_path/output/rna/vcfs/${sample_type}/${name}.bcf
 
 mkdir -p $wd_path/output/rna/count
 
@@ -76,4 +83,4 @@ fi
 # write this sample's row to its own file
 printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
     "$accession" "$sample_type" "$sample_name" "$location" "$variant_count" "$covered_mb" "$mut_per_mb" \
-    > $wd_path/output/rna/count/${sample_type}/${accession}_count.csv
+    > $wd_path/output/rna/count/${sample_type}/${name}_count.csv
