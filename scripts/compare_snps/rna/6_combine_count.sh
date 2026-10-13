@@ -11,6 +11,8 @@ wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
 files=($wd_path/output/rna/count/*/*_count.tsv)
 
-printf "accession\tsample_type\tlocation\tvariant_count\tcovered_mb\tmutations_per_mb\n" > $wd_path/output/rna/count/combined.tsv
+out="$wd_path/output/rna/count/combined.csv"
 
-cat "${files[@]}" >> $wd_path/output/rna/count/combined.tsv
+printf "accession,sample_type,sample_name,location,variant_count,covered_mb,mutations_per_mb\n" > "$out"
+
+cat "${files[@]}" | tr '\t' ',' >> "$out"
