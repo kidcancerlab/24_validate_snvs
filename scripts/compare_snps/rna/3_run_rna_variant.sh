@@ -31,9 +31,15 @@ SRR_IDs=($(cut \
         $wd_path/misc/compare_rna_snps_samples.tsv \
         | tail -n +2 \
         ))
+new_names=($(cut \
+        -f3 \
+        $wd_path/misc/compare_rna_snps_samples.tsv \
+        | tail -n +2 \
+        ))
 
 sample_type=${sample_types[$SLURM_ARRAY_TASK_ID]}
 accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
+name=${new_names[$SLURM_ARRAY_TASK_ID]}
 
 echo "Processing $sample_type ($accession)"
 
@@ -71,10 +77,10 @@ bcftools mpileup \
         -O u \
     | bcftools view \
         -O b \
-        -o $output_path/${accession}.bcf
+        -o $output_path/${name}.bcf
 
 echo "**Finished bcftools mpileup, call, & filter -- now indexing"
 
-bcftools index $output_path/${accession}.bcf
+bcftools index $output_path/${name}.bcf
 
 echo "**Finished bcftools index"
