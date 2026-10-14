@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=merge_variant
 #SBATCH --partition=himem
-#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/merge/merge_%A_%a.txt
-#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/vcfs/logs/merge/merge_%A_%a.txt
+#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/4_merge/logs/merge_%A_%a.txt
+#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/4_merge/logs/merge_%A_%a.txt
 #SBATCH --mem=100G
 #SBATCH --time=2-00:00:00
 #SBATCH --cpus-per-task=5
