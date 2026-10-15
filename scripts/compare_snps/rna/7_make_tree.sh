@@ -16,8 +16,13 @@ module load \
     matplotlib/3.0.0
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
+out_folder=${wd_path}/output/figures
 
 py_file="$wd_path/scripts/vcfToMatrix.py"
 bcf_file="$wd_path/output/rna/4_merge/merged_shared_variant.bcf"
 
-python "$py_file" --bcf "$bcf_file"
+python "$py_file" \
+    --bcf "$bcf_file" \
+    --figure_file ${out_folder}/dendrogram.pdf \
+    --n_comps_file ${out_folder}/n_comps_matrix.txt \
+    --dist_matrix_file ${out_folder}/dist_matrix.txt
