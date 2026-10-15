@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=gdrobertslab
 #SBATCH --job-name=count_variant
-#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/count/logs/count_%A_%a.txt
-#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/count/logs/count_%A_%a.txt
+#SBATCH --output=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/5_count/logs/count_%A_%a.txt
+#SBATCH --error=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs/output/rna/5_count/logs/count_%A_%a.txt
 #SBATCH --array=0-29
 #SBATCH --cpus-per-task=10
 #SBATCH --partition=himem,general
@@ -46,7 +46,7 @@ new_names=($(cut \
 accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
 sample_type=${sample_types[$SLURM_ARRAY_TASK_ID]}
 location=${locations[$SLURM_ARRAY_TASK_ID]}
-name=${new_names[$SLURM_ARRAY_TASK_ID]}
+sample_name=${new_names[$SLURM_ARRAY_TASK_ID]}
 
 echo "**Processing $sample_type ($accession)"
 
@@ -58,8 +58,7 @@ else
     bam=$wd_path/output/rna/2_align/${sample_type}/${accession}_markdup.bam
 fi
 
-
-bcf=$wd_path/output/rna/3_run_rna/${sample_type}/${name}.bcf
+bcf=$wd_path/output/rna/3_run_rna/${sample_type}/${sample_name}.bcf
 
 mkdir -p $wd_path/output/rna/5_count
 
@@ -83,4 +82,4 @@ fi
 # write this sample's row to its own file
 printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
     "$accession" "$sample_type" "$sample_name" "$location" "$variant_count" "$covered_mb" "$mut_per_mb" \
-    > $wd_path/output/rna/5_count/${sample_type}/${name}_count.csv
+    > $wd_path/output/rna/5_count/${sample_type}/${sample_name}_count.csv
