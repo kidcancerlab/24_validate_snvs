@@ -31,9 +31,15 @@ SRR_IDs=($(cut \
         $wd_path/misc/compare_rna_snps_samples.tsv \
         | tail -n +2 \
         ))
+new_names=($(cut \
+        -f3 \
+        $wd_path/misc/compare_rna_snps_samples.tsv \
+        | tail -n +2 \
+        ))
 
 sample_type=${sample_types[$SLURM_ARRAY_TASK_ID]}
 accession=${SRR_IDs[$SLURM_ARRAY_TASK_ID]}
+name=${new_names[$SLURM_ARRAY_TASK_ID]}
 
 echo "**Processing $sample_type ($accession)"
 
@@ -83,7 +89,7 @@ STAR --genomeDir /reference/mus_musculus/GRCm38/ensembl/release-86/Sequence/STAR
     --runThreadN 6 \
     --readFilesIn "$r1" "$r2" \
     --readFilesCommand zcat \
-    --outSAMattrRGline ID:${accession} SM:${accession} PL:ILLUMINA \
+    --outSAMattrRGline ID:${accession} SM:${name} PL:ILLUMINA \
     --outFileNamePrefix $output_path/${accession}_ \
     --outSAMtype BAM Unsorted \
     --twopassMode Basic \

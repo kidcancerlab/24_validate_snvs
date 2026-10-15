@@ -18,6 +18,6 @@ module load \
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
 py_file="$wd_path/scripts/vcfToMatrix.py"
-bcf_file="$wd_path/output/rna/vcfs/merged_shared_variant.bcf"
+bcf_file="$wd_path/output/rna/4_merge/merged_shared_variant.bcf"
 
 python "$py_file" --bcf "$bcf_file"
