@@ -7,7 +7,7 @@ library(ggplot2)
 
 # Read paths
 ```{r}
-input_path <- "./output/rna/count"
+input_path <- "./output/rna/6_combine"
 output_path <- "./output/rna/figures"
 
 plot_cols <- c("#D43F3AFF", "#EEA236FF", "#357EBDFF", "#5CB85CFF",
@@ -65,4 +65,20 @@ print(
 
 
 dev.off()
+```
+
+# after running 7_make_tree.sh, convert dist_matrix.txt -> .csv
+```{r}
+folder <- "./output/rna/figures"
+
+df <- read.delim("./dist_matrix.txt")            # tab-delimited
+# df <- read.table("input.txt", header = TRUE)   # whitespace-delimited
+write.csv(
+    df,
+    file.path(
+        folder,
+        "dist_matrix.csv"
+    ),
+    row.names = FALSE
+)
 ```
