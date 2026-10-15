@@ -11,8 +11,7 @@
 set -euo pipefail
 
 module load STAR/2.7.9a \
-    SAMtools/1.15 \
-    GATK/4.5.0.0-Java-17.0.2
+    SAMtools/1.15
 
 wd_path=/home/gdrobertslab/lab/Analysis/Katie/24_validate_snvs
 
