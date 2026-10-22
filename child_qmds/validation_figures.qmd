@@ -1,0 +1,84 @@
+# Purpose
+
+# Read libraries
+```{r}
+library(ggplot2)
+```
+
+# Read paths
+```{r}
+input_path <- "./output/rna/6_combine"
+output_path <- "./output/rna/figures"
+
+plot_cols <- c("#D43F3AFF", "#EEA236FF", "#357EBDFF", "#5CB85CFF",
+               "#B8B8B8FF", "#9632B8FF", "#46B8DAFF", "#90302DFF",
+               "#A66D04FF", "#2D577FFF", "#3E7E3EFF", "#7D7D7DFF",
+               "#6D1D87FF", "#097F9AFF", "#FF6E6AFF", "#FFBB70FF",
+               "#68A4E3FF", "#79D379FF", "#CDCDCDFF", "#BF6BE2FF",
+               "#69D1F3FF")
+```
+
+# Read in counts table
+This table marks the sample type, location, number of variants, and total covered Mb for that sample. The last column is the mutations per Mb, so that each sample's variants are normalized by the coverage from sequencing.
+```{r}
+counts <- read.csv(
+    file.path(
+        input_path,
+        "combined.csv"
+    )
+)
+```
+
+# Make plot
+```{r}
+png(
+    file.path(
+        output_path,
+        "vars_per_type.png"
+    ),
+    height = 2000,
+    width = 2000,
+    res = 600
+)
+
+print(
+    ggplot(
+        counts,
+        aes(x = sample_type, y = mutations_per_mb, color = sample_type)
+    ) +
+    geom_point() +
+    geom_jitter() +
+    scale_color_manual(
+        values = plot_cols
+    ) +
+    labs(
+        x = "Sample Type",
+        y = "Mutations per Mb"
+    ) +
+    theme_bw() +
+    theme(
+        legend.position = "none"
+    ) 
+    
+)
+
+
+
+dev.off()
+```
+
+# after running 7_make_tree.sh, convert dist_matrix.txt -> .csv
+```{r}
+folder <- "./output/rna/figures"
+
+df <- read.delim("./dist_matrix.txt")            # tab-delimited
+# df <- read.table("input.txt", header = TRUE)   # whitespace-delimited
+write.csv(
+    df,
+    file.path(
+        folder,
+        "dist_matrix.csv"
+    ),
+    row.names = FALSE
+)
+```

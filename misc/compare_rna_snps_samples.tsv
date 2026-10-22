@@ -1,0 +1,31 @@
+SRR_ID	sample_type	sample_name	tissue	biosample_description	experiment	design
+SRR39660984	BALBc	BALBc_colon_1	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660988	BALBc	BALBc_colon_2	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660989	BALBc	BALBc_colon_3	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660990	BALBc	BALBc_colon_4	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660991	BALBc	BALBc_colon_5	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660992	BALBc	BALBc_colon_6	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660993	BALBc	BALBc_colon_7	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660994	BALBc	BALBc_colon_8	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660995	BALBc	BALBc_colon_9	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39660996	BALBc	BALBc_colon_10	colon		RNAseq	BALBc sham; An orally active, gut-enriched AhR agonist demonstrates therapeutic efficacy in colitis through regulation of inflammation, barrier homeostasis, and fibrosis
+SRR39394558	C57BL6	C57BL6_liver_1	liver		RNAseq	Total RNA was extracted from hepatocellular carcinoma (HCC) tissue of mice with hydrodynamic-induced liver cancer using TRIzol reagent.
+SRR39394566	C57BL6	C57BL6_liver_2	liver		RNAseq	Total RNA was extracted from mouse liver tissue using TRIzol reagent.
+SRR39394559	C57BL6	C57BL6_liver_3	liver		RNAseq	Total RNA was extracted from mouse liver tissue using TRIzol reagent.
+SRR39394560	C57BL6	C57BL6_liver_4	liver		RNAseq	Total RNA was extracted from mouse liver tissue using TRIzol reagent.
+SRR39394569	C57BL6	C57BL6_placenta_1	placenta		RNAseq	Total RNA was extracted from mouse placental tissue using TRIzol reagent.
+SRR39394561	C57BL6	C57BL6_placenta_2	placenta		RNAseq	Total RNA was extracted from mouse placental tissue using TRIzol reagent. 
+SRR39394562	C57BL6	C57BL6_placenta_3	placenta		RNAseq	Total RNA was extracted from mouse placental tissue using TRIzol reagent.
+SRR39394563	C57BL6	C57BL6_fetus_1	fetus		RNAseq	Total RNA was extracted from mouse fetal tissue using TRIzol reagent.
+SRR39394574	C57BL6	C57BL6_fetus_2	fetus		RNAseq	Total RNA was extracted from mouse fetal tissue using TRIzol reagent.
+SRR39394575	C57BL6	C57BL6_fetus_3	fetus		RNAseq	Total RNA was extracted from mouse fetal tissue using TRIzol reagent.
+SRR36722024	C57BL6	C57BL6_lung_1	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_4, mRNA-seq; Mus musculus; RNA-Seq
+SRR36722025	C57BL6	C57BL6_lung_2	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_3, mRNA-seq; Mus musculus; RNA-Seq
+SRR36722028	C57BL6	C57BL6_lung_3	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_2, mRNA-seq; Mus musculus; RNA-Seq
+SRR36722043	C57BL6	C57BL6_lung_4	lung		RNAseq	bulk_mRNA-seq_uninfected_B6_lung_1, mRNA-seq; Mus musculus; RNA-Seq
+SRR36707628	C57BL6	C57BL6_lung_5	lung		RNAseq	uninfected, negative; G1m4_4; Mus musculus; RNA-Seq
+SRR36707629	C57BL6	C57BL6_lung_6	lung		RNAseq	uninfected, negative; G1m3_4; Mus musculus; RNA-Seq
+SRR36707630	C57BL6	C57BL6_lung_7	lung		RNAseq	uninfected, negative; G1m2_4; Mus musculus; RNA-Seq
+SRR36707631	C57BL6	C57BL6_lung_8	lung		RNAseq	uninfected, negative; G1m1_4; Mus musculus; RNA-Seq
+F420_culture	F420	F420_cell_culture	cell culture		RNAseq	cell culture, sequenced in Roberts lab
+K7M2_culture	K7M2	K7M2_cell_culture	cell culture		RNAseq	cell culture, sequenced in Roberts lab
