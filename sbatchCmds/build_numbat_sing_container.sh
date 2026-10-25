@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --output=slurmOut/build_numbat.out
 #SBATCH --error=slurmOut/build_numbat.err
-#SBATCH --job-name=sing
+#SBATCH --job-name=numbat_sing
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=5
