@@ -1,4 +1,5 @@
 ```{r}
+#| cache: false
 source("analysis_modules/01_process_raw/01_helper_functions.R")
 ```
 

@@ -1,4 +1,5 @@
 ```{r}
+#| cache: false
 source("analysis_modules/06_downsample_analysis/06_helper_functions.R")
 ```
 
@@ -294,31 +295,33 @@ pdf(
 )
 
 for (i in seq_len(nrow(tree_table))) {
-  print(
-    ggplot2::ggplot() +
-      ggpubr::background_image(
-        magick::image_read(tree_table$downsample_pdfs[i], density = 300)
-      ) +
-      ggplot2::coord_fixed() +
-      ggplot2::labs(
-        title = paste0(
-          "Sample: ",
-          tree_table$sample[i],
-          " with ",
-          tree_table$n_cells_str[i],
-          " cells per cluster"
-        ),
-        subtitle = paste(
-          "Min. read depth: 10, ",
-          "Mean UMIs per cluster: ",
-          format(
-            round(tree_table$mean_umi[i]),
-            big.mark = ",",
-            scientific = FALSE
+  if (file.size(tree_table$downsample_pdfs[i]) > 0) {
+    print(
+      ggplot2::ggplot() +
+        ggpubr::background_image(
+          magick::image_read(tree_table$downsample_pdfs[i], density = 300)
+        ) +
+        ggplot2::coord_fixed() +
+        ggplot2::labs(
+          title = paste0(
+            "Sample: ",
+            tree_table$sample[i],
+            " with ",
+            tree_table$n_cells_str[i],
+            " cells per cluster"
+          ),
+          subtitle = paste(
+            "Min. read depth: 10, ",
+            "Mean UMIs per cluster: ",
+            format(
+              round(tree_table$mean_umi[i]),
+              big.mark = ",",
+              scientific = FALSE
+            )
           )
         )
-      )
-  )
+    )
+  }
 }
 
 dev.off()
@@ -341,8 +344,8 @@ shared_sites_plot <-
   bind_rows() %>%
   left_join(
     bootstrap_downsample_data %>%
-    select(sample, bootstrap_val, cells) %>%
-    distinct() #%>%
+      select(sample, bootstrap_val, cells) %>%
+      distinct() #%>%
     #mutate(cells = as.character(cells))
   ) %>%
   filter(cells != "1") %>%

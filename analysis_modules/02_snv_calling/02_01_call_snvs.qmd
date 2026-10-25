@@ -1,4 +1,5 @@
 ```{r}
+#| cache: false
 source("analysis_modules/02_snv_calling/02_helper_functions.R")
 ```
 
@@ -207,6 +208,7 @@ snp_tree <-
         log_base = "slurmOut/mouse_snv",
         min_snvs_per_cluster = 200,
         n_bootstraps = 10000,
+        bootstrap_cutoff = 0.85,
         max_prop_missing_at_site = 0.9,
         tree_image_type = "pdf",
         cleanup = TRUE,
@@ -261,7 +263,10 @@ samples_worked <-
                 ploidy = "mm10",
                 ref_fasta = "custom_ref/gfp_rfp_mm10/fasta/genome.fa",
                 out_dir = "output/02_snv_calling/snv/transgene/",
-                temp_dir = "output/02_snv_calling/snv/transgene/tempdir"
+                temp_dir = paste0(
+                  "output/02_snv_calling/snv/transgene/tempdir/",
+                  this_sample
+                )
             )
         }
     )
@@ -295,7 +300,10 @@ samples_worked <-
                 ploidy = "GRCh38",
                 ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
                 out_dir = "output/02_snv_calling/snv/human/",
-                temp_dir = "output/02_snv_calling/snv/human/tempdir/"
+                temp_dir = paste0(
+                  "output/02_snv_calling/snv/human/tempdir/",
+                  this_sample
+                )
             )
         }
     )

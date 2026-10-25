@@ -1,4 +1,5 @@
 ```{r}
+#| cache: false
 source("analysis_modules/07_known_tumors/07_helper_functions.R")
 ```
 
@@ -113,8 +114,11 @@ merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
     group_by(Sample_ID, cell_group, tumor_cell) %>%
     summarize(n = n(), .groups = "drop") %>%
     group_by(Sample_ID, cell_group) %>%
-    mutate(proportion = n / sum(n)) %>%
-    filter(tumor_cell == "Has transgene") %>%
+    mutate(
+      proportion = n / sum(n),
+      tumor_cell = replace_na(tumor_cell, "No transgene")
+    ) %>%
+    #filter(tumor_cell == "Has transgene") %>%
     arrange(desc(proportion)) %>%
     write_tsv("output/07_known_tumors/snv/transgene/transgene_tumor_clust.txt")
 ```
@@ -240,8 +244,11 @@ marker_table <-
                 group_by(Sample_ID, cell_group, tumor_cell) %>%
                 summarize(n = n(), .groups = "drop") %>%
                 group_by(Sample_ID, cell_group) %>%
-                mutate(proportion = n / sum(n)) %>%
-                filter(tumor_cell == "Has transgene") %>%
+                mutate(
+                  proportion = n / sum(n),
+                  tumor_cell = replace_na(tumor_cell, "No transgene")
+                ) %>%
+                #filter(tumor_cell == "Has transgene") %>%
                 arrange(desc(proportion))
 
             return(marker_table)
@@ -287,6 +294,11 @@ snv_groups <-
         )
     )
 
+write_tsv(
+  snv_groups,
+  "output/07_known_tumors/snv/transgene/snv_tumor_clust.txt"
+)
+
 min_transgene_prop <- 0.2
 
 transgene_groups <-
@@ -296,7 +308,11 @@ transgene_groups <-
             "output/07_known_tumors/snv/transgene/transgene_tumor_clust_ltbc.txt"
         ),
         show_col_types = FALSE
-    )
+    ) #%>%
+    # pivot_wider(
+    #   names_from = "tumor_cell",
+    #   values_from = "proportion"
+    # )
 
 transgene_plot <-
     full_join(snv_groups, transgene_groups) %>%
