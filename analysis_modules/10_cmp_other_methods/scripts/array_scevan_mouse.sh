@@ -15,6 +15,10 @@ set -e
 mouse_data=(
   $(
     {
+      grep gfp_rfp_mm10 misc/validation_geo_metadata.tsv \
+        | cut -f 3 \
+        | sort \
+        | uniq
       cut -f 1 misc/mouse_samples_Roberts_metadata.tsv
       cut -f 1 misc/mouse_samples_Roberts_realign_metadata.tsv
     } |
