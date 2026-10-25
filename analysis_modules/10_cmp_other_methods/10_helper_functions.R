@@ -265,3 +265,70 @@ infercna_call_tumor <- function(infercna_out, sample_name) {
       )
   }
 }
+
+order_cells <- function(
+  x,
+  call_cols = c(
+    "scevan_call",
+    "scatomic_call",
+    "numbat_call",
+    "copykat_call",
+    "infercna_call",
+    "scanBit_call"
+  )
+) {
+  call_df <-
+    x |>
+    dplyr::select(cell, all_of(call_cols))
+
+  patterns <-
+    call_df |>
+    dplyr::count(across(all_of(call_cols)), name = "n_cells") |>
+    dplyr::arrange(desc(n_cells)) |>
+    dplyr::mutate(pattern_id = row_number())
+
+  x <-
+    dplyr::left_join(x, patterns)
+
+  #if(!missing(actual_state)) {
+  if ("actual_state" %in% colnames(x)) {
+    x <-
+      x |>
+      dplyr::arrange(actual_state, desc(n_cells))
+  } else {
+    x <-
+      x |>
+      dplyr::arrange(desc(n_cells))
+  }
+  x <- dplyr::mutate(x, cell_order = row_number())
+
+  return(x)
+}
+
+get_clusters_from_qs2 <- function(sample_names, species) {
+  sample_cluster_table <-
+    lapply(
+      sample_names,
+      function(x) {
+        qs_read(paste0(
+          "output/01_process_raw/rdata/individual/",
+          x,
+          "_",
+          species,
+          ".qs2"
+        )) %>%
+          .[[]] %>%
+          select(cell_barcode, cluster_label, individ_clusters, Sample_ID)
+      }
+    ) %>%
+    bind_rows() %>%
+    mutate(cluster_label = paste0(cluster_label, "_c", individ_clusters)) %>%
+    dplyr::rename(
+      cell = cell_barcode,
+      sample = Sample_ID
+    ) %>%
+    as_tibble() %>%
+    select(-individ_clusters)
+
+  return(sample_cluster_table)
+}
