@@ -217,7 +217,7 @@ DimPlot(
 ```{r human_val_g41}
 #| eval: FALSE
 calc_variant_variability(
-    merged_bcf_file = "output/02_snv_calling/snv/human/mergedsnvs_G0041_c10.bcf",
+    merged_bcf_file = "output/02_snv_calling/snv/human/G0041/mergedsnvs_G0041_c10.bcf",
     log_base = "output/G41_log",
     output_file = "output/08_human_validation/mergedsnvs_G0041_variable_variants.tsv",
     group_1 = "Ovary_pt_3_c7", # Group_1 is tumor
