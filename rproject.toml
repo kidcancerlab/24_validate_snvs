@@ -37,6 +37,8 @@ dependencies = [
   "gt",
   "downlit",
   "xml2",
+  "magick",
+  "ggbeeswarm",
  ]
 
   #{ name = "ggrepel", git = "https://github.com/slowkow/ggrepel", tag = "0.9.6"},

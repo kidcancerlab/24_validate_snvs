@@ -1158,6 +1158,13 @@ dependencies = [
 ]
 
 [[packages]]
+name = "beeswarm"
+version = "0.4.0"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = []
+
+[[packages]]
 name = "bigD"
 version = "0.3.1"
 source = { repository = "https://cran.rstudio.com/" }
@@ -2013,6 +2020,19 @@ force_source = false
 dependencies = []
 
 [[packages]]
+name = "ggbeeswarm"
+version = "0.7.3"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = [
+    { name = "ggplot2", requirement = "(>= 3.3.0)" },
+    "beeswarm",
+    "lifecycle",
+    "vipor",
+    "cli",
+]
+
+[[packages]]
 name = "ggforce"
 version = "0.5.0"
 source = { repository = "https://cran.rstudio.com/" }
@@ -2774,6 +2794,17 @@ force_source = false
 dependencies = [
     "generics",
     { name = "timechange", requirement = "(>= 0.4.0)" },
+]
+
+[[packages]]
+name = "magick"
+version = "2.9.1"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = [
+    { name = "Rcpp", requirement = "(>= 0.12.12)" },
+    "magrittr",
+    "curl",
 ]
 
 [[packages]]
@@ -4305,6 +4336,13 @@ dependencies = [
     { name = "lifecycle", requirement = "(>= 1.0.3)" },
     { name = "rlang", requirement = "(>= 1.1.7)" },
 ]
+
+[[packages]]
+name = "vipor"
+version = "0.4.7"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = []
 
 [[packages]]
 name = "viridisLite"
