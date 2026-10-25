@@ -92,6 +92,8 @@ for directoryName in \
     output/10_cmp_other_methods/copykat_results/rdata \
     output/10_cmp_other_methods/infercna_results/matrix/ \
     output/10_cmp_other_methods/infercna_results/cancer_call/ \
+    output/10_cmp_other_methods/scanbit_results \
+    output/10_cmp_other_methods/figures/dimplots \
     input \
     input/fastqs \
     custom_ref
