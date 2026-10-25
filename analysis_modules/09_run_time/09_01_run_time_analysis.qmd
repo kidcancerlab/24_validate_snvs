@@ -1,5 +1,7 @@
 ## Delete failed runs so they don't throw off our average
 ```{bash runtime_rm_failed_mpileup}
+
+!!!!!!!!!!!!!!!! Need to change all the paths!!!!!!!!!!!!!!!!!!!!
 del_files=($(grep FAILED \
     output/02_snv_calling/snv/human/tempdir/slurmOut/*_mpileup-*.out \
     output/02_snv_calling/snv/mouse/tempdir/slurmOut/*_mpileup-*.out \
