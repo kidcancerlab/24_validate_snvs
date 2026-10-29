@@ -1,13 +1,7 @@
 ## Test B6 and F420 split
 ```{r f420_k7m2_make_f420_sobj}
 #| dependson: [read_raw_mouse, scanbit_run_mouse]
-b6_f420_samples <-
-    read_tsv(
-        "misc/mouse_samples_Roberts_metadata.tsv",
-        show_col_types = FALSE
-    ) %>%
-    filter(grepl("B6|F420", Name, perl = TRUE)) %>%
-    pull(Sample_ID)
+b6_f420_samples <- c("S0066", "S0200")
 
 merged_mouse_b6_f420 <-
     qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
@@ -122,20 +116,7 @@ dist_worked <-
 ## Prep data to analyze only Balbc and K7M2
 ```{r f420_k7m2_make_k7m2_sobj}
 #| dependson: [read_raw_mouse, scanbit_run_mouse]
-balbc_k7m2_samples <-
-    read_tsv(
-        "misc/mouse_samples_Roberts_metadata.tsv",
-        show_col_types = FALSE
-    ) %>%
-    filter(grepl("Balb|K7M2", Name, perl = TRUE)) %>%
-    pull(Sample_ID) %>%
-    c(
-        read_tsv(
-            "misc/mouse_samples_Roberts_realign_metadata.tsv",
-            show_col_types = FALSE
-        ) %>%
-            pull(Sample_ID)
-    )
+balbc_k7m2_samples <- c("S0074", "S0201")
 
 merged_mouse_balbc_k7m2 <-
     qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
@@ -191,7 +172,7 @@ do
 bcftools \
     view \
     -S output/05_mouse_strain/F420_K7M2/keep_clusters_balbc_k7m2.txt \
-    output/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
+    output/02_snv_calling/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
     -o output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c${cutoff}_filtered.bcf
 done
 ```
@@ -223,10 +204,17 @@ dist_worked <-
                 min_snvs_per_cluster = min_snvs_per_cluster,
                 n_bootstraps = n_bootstraps,
                 bootstrap_cutoff = bootstrap_cutoff,
+                dist_method = "euclidian", 
+                linkage_method = "ward",
                 tree_figure_file = paste0(
                     "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
                     cutoff,
                     "_tree.pdf"
+                ),
+                n_comps_file = paste0(
+                  "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+                    cutoff,
+                    "_n_comps.txt"
                 ),
                 verbose = FALSE,
                 other_job_header_options = c(
@@ -245,4 +233,3 @@ dist_worked <-
         }
     )
 ```
-
