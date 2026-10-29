@@ -1,4 +1,4 @@
-```{bash}
+```{bash other_meth_run_infercna}
 human_data=(
   $(grep 10x-hg38 misc/validation_geo_metadata.tsv \
     | cut -f 3 \
