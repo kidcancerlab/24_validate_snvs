@@ -180,15 +180,8 @@ infercna_wrapper <- function(
     stop("Unsupported species: ", species)
   }
 
-  reference_cells <- get_ref_cells(
-    sobj = sobj,
-    ref_cell_types = ref_cell_types,
-    sample_name = sample_name
-  )
-
   run_infercna(
     sobj = sobj,
-    reference_cells = reference_cells,
     sample_name = sample_name
   ) |>
     infercna_call_tumor(sample_name = sample_name)
@@ -219,11 +212,10 @@ get_ref_cells <- function(sobj, ref_cell_types, sample_name) {
   return(reference_cells)
 }
 
-run_infercna <- function(sobj, reference_cells, sample_name) {
+run_infercna <- function(sobj, sample_name) {
   infercna_out <-
     infercna::infercna(
       m = Seurat::GetAssayData(sobj, layer = "counts") |> as.matrix(),
-      refCells = reference_cells,
       n = 5000,
       verbose = TRUE
     )
