@@ -139,64 +139,40 @@ read_tsv(
 
 ## Read in the scanBit results
 ```{r other_meth_compile_scanbit}
-snv_groups <-
-  list.files(
-    path = "output/02_snv_calling/snv/human",
-    pattern = "meta_data.tsv",
-    full.names = TRUE
-  ) %>%
+list.files(
+  path = "output/02_snv_calling/snv",
+  pattern = "meta_data.tsv",
+  full.names = TRUE,
+  recursive = TRUE
+) %>%
   read_tsv(
     show_col_types = FALSE,
-    id = "sample",
-    col_names = c(
-      "cell_group",
-      "group",
-      "top_lvl_group"
-    )
+    id = "sample"
   ) %>%
   mutate(
-    Sample_ID = str_remove(sample, ".+/snvs_") %>%
-      str_remove("_10_groups.txt")
-  ) %>%
-  select(-sample) %>%
-  group_by(Sample_ID) %>%
-  mutate(n_groups = length(unique(top_lvl_group))) %>%
-  ungroup() %>%
-  mutate(
-    top_lvl_group = if_else(
-      # if there is only one group, we can't assign tumor/normal
-      n_groups == 1,
-      "Unassigned",
-      top_lvl_group
-    )
+    sample = str_remove(sample, ".+/snvs_") %>%
+      str_remove("_meta_data.tsv")
   ) %>%
   dplyr::rename(
-    sample = Sample_ID,
-    cluster_label = cell_group
+    cell = cell_barcode,
+    scanBit_call = snv_tumor_call_10
+  ) %>%
+  select(sample, cell, scanBit_call) %>%
+  write_tsv(
+    "output/10_cmp_other_methods/scanbit_results/snv_tumor_calls.txt"
   )
-
-cell_cluster_key <- get_clusters_from_qs2(unique(snv_groups$sample), "human")
-
-snv_groups <-
-  full_join(snv_groups, cell_cluster_key, by = c("sample", "cluster_label")) %>%
-  dplyr::rename(scanBit_call = top_lvl_group) %>%
-  select(sample, cell, scanBit_call)
-
-write_tsv(
-  snv_groups,
-  "output/10_cmp_other_methods/scanbit_results/snv_tumor_clust_human.txt"
-)
 ```
 
 ## Merge all the human outputs together
 ```{r other_meth_compile_compile}
+#| dependson: [other_meth_compile_scevan, other_meth_compile_scatomic, other_meth_compile_numbat, other_meth_compile_copykat, other_meth_compile_infercna, other_meth_compile_scanbit]
 call_files <- c(
   "output/10_cmp_other_methods/scevan_results/compiled_scevan_output.tsv",
   "output/10_cmp_other_methods/scatomic_results/compiled_scatomic_output.tsv",
   "output/10_cmp_other_methods/numbat_results/compiled_numbat_output.tsv",
   "output/10_cmp_other_methods/copykat_results/compiled_copykat_output.tsv",
   "output/10_cmp_other_methods/infercna_results/compiled_infercna_output.tsv",
-  "output/10_cmp_other_methods/scanbit_results/snv_tumor_clust_human.txt"
+  "output/10_cmp_other_methods/scanbit_results/snv_tumor_calls.txt"
 )
 
 all_calls <-
@@ -219,9 +195,21 @@ all_calls <-
     infercna_call = str_replace(infercna_call, "nonmalignant", "Normal") %>%
       str_replace("malignant", "Tumor") %>%
       str_replace("unassigned", "Unassigned") %>%
+      replace_na("Unassigned"),
+    scanBit_call = str_replace(scanBit_call, "normal", "Normal") %>%
+      str_replace("tumor", "Tumor") %>%
+      str_replace("unknown", "Unassigned") %>%
       replace_na("Unassigned")
   )
 
+write_tsv(
+  all_calls,
+  "output/10_cmp_other_methods/all_calls.tsv"
+)
+```
+
+```{r other_meth_plot_human}
+#| dependson: [other_meth_compile_compile]
 human_samples <-
   read_tsv("misc/validation_geo_metadata.tsv", show_col_types = FALSE) %>%
   dplyr::filter(align_ref == "/home/gdrobertslab/lab/GenRef/10x-hg38") %>%
@@ -229,7 +217,10 @@ human_samples <-
   unique()
 
 human_calls <-
-  all_calls %>%
+  read_tsv(
+    "output/10_cmp_other_methods/all_calls.tsv",
+    show_col_types = FALSE
+  ) %>%
   filter(sample %in% human_samples) %>%
   left_join(
     read_tsv("misc/validation_geo_metadata.tsv", show_col_types = FALSE) %>%
@@ -243,7 +234,7 @@ human_calls <-
     by = "sample"
   ) %>%
   filter(!is.na(cell)) %>%
-  group_by(sample_group) %>%
+  group_by(sample_group, sample) %>%
   order_cells()
 
 write_tsv(
@@ -252,11 +243,9 @@ write_tsv(
 )
 
 color_key <- list(
-  "Normal" = plot_cols[1],
-  "Tumor" = plot_cols[2],
-  "Unassigned" = plot_cols[5],
-  "top_lvl_group0" = plot_cols[4],
-  "top_lvl_group1" = plot_cols[3]
+  "Normal" = plot_cols[2],
+  "Tumor" = plot_cols[1],
+  "Unassigned" = plot_cols[5]
 )
 
 alternate_method_call_plot <-
@@ -285,7 +274,8 @@ alternate_method_call_plot <-
           "SCATOMIC",
           "ScanBit"
         )
-      )
+      ),
+    sample_group = str_remove(sample_group, " Samples")
   ) %>%
   ggplot(
     aes(
@@ -295,8 +285,12 @@ alternate_method_call_plot <-
     )
   ) +
   geom_tile() +
-  scale_fill_manual(values = plot_cols) +
-  facet_grid(~sample_group, scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = color_key) +
+  facet_grid(
+    ~ sample_group + sample,
+    scales = "free_x",
+    space = "fixed"
+  ) +
   labs(
     x = "Cells",
     y = "Method",
@@ -306,20 +300,120 @@ alternate_method_call_plot <-
   theme(
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
-    panel.grid = element_blank()
+    panel.grid = element_blank(),
+    panel.spacing = unit(0, "lines"),
+    panel.border = element_blank(),
+    strip.text = element_text(
+      size = 8,
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0.5,
+      face = "bold"
+    )
   )
 
 ggsave(
   filename = "output/10_cmp_other_methods/figures/alternate_method_call_plot_human.pdf",
   plot = alternate_method_call_plot,
+  width = 20,
+  height = 6
+)
+
+set.seed(1337)
+chosen_healthy_samples <-
+  human_calls %>%
+  filter(sample_group == "Healthy Samples") %>%
+  select(sample, sample_group) %>%
+  distinct() %>%
+  group_by(sample_group) %>%
+  slice_sample(n = 4) %>%
+  pull(sample)
+
+chosen_tumor_samples <-
+  human_calls %>%
+  filter(sample_group == "Tumor Samples") %>%
+  select(sample, sample_group) %>%
+  distinct() %>%
+  group_by(sample_group) %>%
+  slice_sample(n = 6) %>%
+  pull(sample)
+
+alternate_method_call_plot_sub <-
+  human_calls %>%
+  filter(sample %in% c(chosen_healthy_samples, chosen_tumor_samples)) %>%
+  pivot_longer(
+    cols = ends_with("_call"),
+    names_to = "method",
+    values_to = "call"
+  ) %>%
+  mutate(
+    method = recode(
+      method,
+      "copykat_call" = "CopyKAT",
+      "infercna_call" = "InferCNA",
+      "numbat_call" = "Numbat",
+      "scevan_call" = "SCEVAN",
+      "scatomic_call" = "SCATOMIC",
+      "scanBit_call" = "ScanBit"
+    ) %>%
+      factor(
+        levels = c(
+          "CopyKAT",
+          "InferCNA",
+          "Numbat",
+          "SCEVAN",
+          "SCATOMIC",
+          "ScanBit"
+        )
+      ),
+    sample_group = str_remove(sample_group, " Samples")
+  ) %>%
+  ggplot(
+    aes(
+      x = cell_order,
+      y = method,
+      fill = call
+    )
+  ) +
+  geom_tile() +
+  scale_fill_manual(values = color_key) +
+  facet_grid(
+    ~ sample_group + sample,
+    scales = "free_x",
+    space = "fixed"
+  ) +
+  labs(
+    x = "Cells",
+    y = "Method",
+    fill = "Cell type",
+    title = "Tumor Cell Identification Discordance Between Methods"
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.grid = element_blank(),
+    panel.spacing = unit(0, "lines"),
+    panel.border = element_blank(),
+    strip.text = element_text(
+      size = 8,
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0.5,
+      face = "bold"
+    )
+  )
+
+ggsave(
+  filename = "output/10_cmp_other_methods/figures/alternate_method_call_plot_human_subset.pdf",
+  plot = alternate_method_call_plot_sub,
   width = 10,
   height = 6
 )
 ```
 
-## Lets make pdfs of dimplots for all samples to show all methods
-
-```{r}
+## Make pdfs of dimplots for all samples to show all methods
+```{r other_meth_plot_human_dimplots}
+#| dependson: [other_meth_plot_human]
 human_calls <- read_tsv("output/10_cmp_other_methods/human_calls.tsv")
 
 human_sample_metadata <- read_tsv(
@@ -344,8 +438,8 @@ title_key <- list(
 )
 
 color_key <- list(
-  "Normal" = plot_cols[1],
-  "Tumor" = plot_cols[2],
+  "Normal" = plot_cols[2],
+  "Tumor" = plot_cols[1],
   "Unassigned" = plot_cols[5],
   "top_lvl_group0" = plot_cols[4],
   "top_lvl_group1" = plot_cols[3]
@@ -395,8 +489,6 @@ for (this_sample in human_samples) {
         plot_obj <- DimPlot(
           sobj,
           group.by = x,
-          #label = TRUE,
-          #label.box = TRUE,
           repel = TRUE,
           pt.size = 0.5
         ) +
@@ -411,7 +503,6 @@ for (this_sample in human_samples) {
 
         if (x != "cell_type") {
           plot_obj <- plot_obj + scale_color_manual(values = use_colors)
-        #  plot_obj@layers$geom_label_repel$aes_params$fill <- use_colors[plot_obj@layers$geom_label_repel$data[[x]] %>% as.character()]
         } else {
           plot_obj <-
             LabelClusters(plot_obj, id = "cell_type", box = TRUE) +
@@ -452,11 +543,9 @@ for (this_sample in human_samples) {
 }
 ```
 
-
 ## Compare results for known mouse tumors
-
-
-```{r transgene_groups}
+```{r other_meth_plot_transgene}
+#| dependson: [other_meth_compile_compile]
 min_transgene_prop <- 0.2
 
 tumor_ids <-
@@ -470,9 +559,24 @@ tumor_ids <-
       show_col_types = FALSE
     )
   ) %>%
-  mutate(is_tumor = proportion >= min_transgene_prop) %>%
-  mutate(is_tumor = if_else(is_tumor, "Tumor", "Normal")) %>%
-  select(Sample_ID, cell_group, is_tumor) %>%
+  mutate(
+    tumor_cell = replace_na(tumor_cell, "no_transgene") %>%
+      str_replace("Has transgene", "has_transgene")
+  ) %>%
+  select(-n) %>%
+  pivot_wider(
+    names_from = tumor_cell,
+    values_from = proportion,
+    values_fill = 0
+  ) %>%
+  mutate(
+    actual_state = if_else(
+      has_transgene >= min_transgene_prop,
+      "Tumor",
+      "Normal"
+    )
+  ) %>%
+  select(Sample_ID, cell_group, actual_state) %>%
   dplyr::rename(cluster_label = cell_group, sample = Sample_ID)
 
 sample_cluster_table <-
@@ -495,45 +599,32 @@ sample_cluster_table <-
     sample = Sample_ID
   ) %>%
   as_tibble() %>%
-  left_join(tumor_ids) %>%
-  mutate(actual_state = if_else(is.na(is_tumor), "Unassigned", is_tumor)) %>%
-  left_join(
-    read_tsv("output/07_known_tumors/snv/transgene/snv_tumor_clust.txt") %>%
-      dplyr::rename(
-        cluster_label = cell_group,
-        sample = Sample_ID,
-        snv_call = top_lvl_group
-      ) %>%
-      dplyr::select(-group, -n_groups)
-  ) %>%
-  select(sample, cell, snv_call, actual_state) %>%
-  mutate(
-    snv_call = if_else(is.na(snv_call), "Unassigned", snv_call) %>%
-      # The top_lvl_group0 seems to always be tumor. I assume that when the
-      # dendrogram is made, the most distant cluster from the root is labeled
-      # as top_lvl_group0.
-      str_replace("top_lvl_group0", "Tumor") %>%
-      str_replace("top_lvl_group1", "Normal")
-  )
-
+  left_join(tumor_ids, by = c("sample", "cluster_label")) %>%
+  select(sample, cell, actual_state)
 
 mouse_samples <-
   tumor_ids$sample %>%
   unique()
 
 mouse_calls <-
-  all_calls %>%
+  read_tsv(
+    "output/10_cmp_other_methods/all_calls.tsv",
+    show_col_types = FALSE
+  ) %>%
   filter(sample %in% mouse_samples) %>%
-  left_join(sample_cluster_table, by = c("sample", "cell")) %>%
+  full_join(sample_cluster_table, by = c("sample", "cell")) %>%
+  group_by(sample) %>%
   order_cells(
     call_cols = c(
+      "actual_state",
       "scevan_call",
       "copykat_call",
-      "infercna_call"
+      "infercna_call",
+      "scanBit_call"
     )
   )
 
-alternate_method_call_plot <-
+alternate_method_known_plot <-
   mouse_calls %>%
   select(-scatomic_call, -numbat_call) %>%
   pivot_longer(
@@ -547,11 +638,11 @@ alternate_method_call_plot <-
       "scevan_call" = "SCEVAN",
       "copykat_call" = "CopyKAT",
       "infercna_call" = "InferCNA",
-      "snv_call" = "scanBit",
+      "scanBit_call" = "ScanBit",
       "actual_state" = "Actual State"
     ) %>%
       factor(
-        levels = c("SCEVAN", "CopyKAT", "InferCNA", "scanBit", "Actual State")
+        levels = c("SCEVAN", "CopyKAT", "InferCNA", "ScanBit", "Actual State")
       )
   ) %>%
   ggplot(
@@ -562,13 +653,63 @@ alternate_method_call_plot <-
     )
   ) +
   geom_tile() +
-  scale_fill_manual(values = plot_cols) +
-  theme(axis.text.x = element_blank())
+  scale_fill_manual(values = color_key) +
+  facet_grid(
+    ~sample,
+    scales = "free_x",
+    space = "fixed"
+  ) +
+  labs(
+    x = "Cells",
+    y = "Method",
+    fill = "Cell type",
+    title = "Tumor Cell Identification in Samples with Known Tumor States"
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.grid = element_blank(),
+    panel.spacing = unit(0, "lines"),
+    panel.border = element_blank(),
+    strip.text = element_text(
+      size = 8,
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0.5,
+      face = "bold"
+    )
+  )
 
 ggsave(
   filename = "output/10_cmp_other_methods/figures/alternate_method_call_plot_known_tumors.pdf",
-  plot = alternate_method_call_plot,
+  plot = alternate_method_known_plot,
   width = 10,
   height = 6
+)
+```
+
+```{r other_meth_merge_meth_plots}
+#| dependson: []
+tag_font_size <- 15
+y_font_size <- 10
+ggsave(
+  filename = "output/10_cmp_other_methods/figures/merged_alternate_method_call_plot.pdf",
+  plot = (alternate_method_known_plot +
+    labs(
+      tag = "A",
+      y = NULL
+    ) +
+    theme(
+      axis.text.y = element_text(size = y_font_size, face = "bold", ),
+      plot.tag = element_text(size = tag_font_size, face = "bold")
+    )) /
+    (alternate_method_call_plot_sub +
+      labs(tag = "B", y = NULL) +
+      theme(
+        axis.text.y = element_text(size = y_font_size, face = "bold"),
+        plot.tag = element_text(size = tag_font_size, face = "bold")
+      )),
+  width = 10,
+  height = 7.5
 )
 ```
