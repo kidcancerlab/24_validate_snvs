@@ -10,9 +10,9 @@ scanbit_one_sample <- function(
   control_celltypes = c(
     "T cells",
     "NK cells",
-    "B cells",
     "CD4+ T cells",
-    "CD8+ T cells"
+    "CD8+ T cells",
+    "Macrophages" ##########
   )
 ) {
   sobj <-
@@ -53,6 +53,7 @@ scanbit_one_sample <- function(
       max_prop_missing_at_site = 0.9,
       tree_image_type = "pdf",
       cleanup = TRUE,
+      allow_chr_mismatch = TRUE,
       other_job_header_options = c(
         "--time=8:00:00",
         "--partition=himem,general"
@@ -103,13 +104,37 @@ scanbit_one_sample <- function(
         ),
         new_columns = c("snv_group_20", "snv_top_lvl_group_20"),
         cell_group = "cell_group"
-      ) %>%
-      label_tumor_cells(
-        cell_group = "cell_group",
-        snv_group_col = "snv_top_lvl_group_10",
-        normal_clusters = normal_clusters,
-        tumor_call_column = "snv_tumor_call_10"
       )
+
+    called_clusters <-
+      sobj@meta.data %>%
+      select(cell_group, snv_top_lvl_group_10) %>% as_tibble() %>%
+      dplyr::filter(!is.na(snv_top_lvl_group_10)) %>%
+      dplyr::pull(cell_group) %>%
+      unique()
+
+    # if there are no genetically distinct clusters, mark all cells as unassigned
+    n_groups <-
+      sobj$snv_top_lvl_group_10 %>%
+      unique() %>%
+      na.omit() %>%
+      length()
+    if(n_groups == 1) {
+      sobj@meta.data$snv_tumor_call_10 <- "Unassigned"
+    } else if (any(normal_clusters %in% called_clusters)) {
+      # Make sure that one of the clusters in the tree output includes normal clusters
+      # Throws an error otherwise
+      sobj <-
+        label_tumor_cells(
+          sobj = sobj,
+          cell_group = "cell_group",
+          snv_group_col = "snv_top_lvl_group_10",
+          normal_clusters = normal_clusters,
+          tumor_call_column = "snv_tumor_call_10"
+        )
+    } else {
+      sobj@meta.data$snv_tumor_call_10 <- "Unassigned"
+    }
   }
 
   write_tsv(
