@@ -62,6 +62,7 @@ for directoryName in \
     output/02_snv_calling/snv/flex \
     output/02_snv_calling/snv/transgene \
     output/02_snv_calling/snv/mouse \
+    output/02_snv_calling/snv/mouse_single \
     output/02_snv_calling/snv/human \
     output/03_test_flex/counts/flex_var_counts_d1 \
     output/03_test_flex/counts/mouse \
