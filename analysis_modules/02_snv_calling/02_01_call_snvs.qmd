@@ -113,6 +113,40 @@ snp_tree <-
     )
 ```
 
+## Run scanBit on individual mouse samples
+```{r scanbit_single_mouse}
+mouse_samples <-
+    read_tsv(
+        "misc/mouse_samples_Roberts_metadata.tsv",
+        show_col_types = FALSE
+    ) %>%
+    pull(Sample_ID) %>%
+    unique()
+
+samples_worked <-
+    parallel::mclapply(
+        mouse_samples,
+        mc.cores = 5,
+        mc.preschedule = FALSE,
+        function(this_sample) {
+            scanbit_one_sample(
+                this_sample = this_sample,
+                species = "mouse",
+                ploidy = "mm10",
+                ref_fasta = "/reference/mus_musculus/mm10/ucsc_assmebly/illumina_download/Sequence/WholeGenomeFasta/genome.fa",
+                out_dir = "output/02_snv_calling/snv/mouse_single/",
+                temp_dir = paste0(
+                  "output/02_snv_calling/snv/mouse_single/tempdir/",
+                  this_sample
+                )
+            )
+        }
+    )
+names(samples_worked) <- mouse_samples
+
+print(samples_worked)
+```
+
 ## Prep the mouse samples to run scanBit
 We're going to merge all of these data together so the output is one big tree.
 We'll break it down further later on.
