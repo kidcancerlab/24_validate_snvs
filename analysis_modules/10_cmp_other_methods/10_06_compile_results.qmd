@@ -689,7 +689,7 @@ ggsave(
 ```
 
 ```{r other_meth_merge_meth_plots}
-#| dependson: []
+#| dependson: [other_meth_plot_transgene, other_meth_plot_human]
 tag_font_size <- 15
 y_font_size <- 10
 ggsave(
