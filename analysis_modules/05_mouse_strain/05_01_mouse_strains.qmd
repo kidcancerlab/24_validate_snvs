@@ -85,6 +85,13 @@ dist_worked <-
                     cutoff,
                     "_tree.pdf"
                 ),
+                n_comps_file = paste0(
+                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+                    cutoff,
+                    "_n_comps.txt"
+                ),
+                dist_method = "euclidian", 
+                linkage_method = "ward",
                 verbose = FALSE,
                 other_job_header_options = c(
                     "--time=8:00:00",
