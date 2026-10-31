@@ -308,11 +308,17 @@ transgene_groups <-
             "output/07_known_tumors/snv/transgene/transgene_tumor_clust_ltbc.txt"
         ),
         show_col_types = FALSE
-    ) #%>%
-    # pivot_wider(
-    #   names_from = "tumor_cell",
-    #   values_from = "proportion"
-    # )
+    ) %>%
+    select(-n) %>%
+    pivot_wider(
+      names_from = "tumor_cell",
+      values_from = "proportion",
+      values_fill = 0
+    ) %>%
+    dplyr::rename(
+      proportion = `Has transgene`
+    ) %>%
+    select(-`No transgene`)
 
 transgene_plot <-
     full_join(snv_groups, transgene_groups) %>%
@@ -376,8 +382,10 @@ transgene_boxplot <-
             y = proportion
         )
     ) +
-    ggbeeswarm::geom_beeswarm(cex = 1.2) +
-    facet_grid(~ Sample_ID == "S0122", scales = "free_x", space = "free_x") +
+    #ggbeeswarm::geom_beeswarm(cex = 1.2) +
+    #geom_violin() +
+    geom_jitter() +
+    # facet_grid(~ Sample_ID == "S0122", scales = "free_x", space = "free_x") +
     labs(
         x = "Group determined by SNVs",
         y = "Proportion of cells in cluster expressing transgene",
@@ -390,7 +398,7 @@ transgene_boxplot <-
 ggsave(
     "output/07_known_tumors/figures/transgene_boxplot_facet.pdf",
     transgene_boxplot,
-    width = 6,
-    height = 6
+    width = 4,
+    height = 4
 )
 ```
