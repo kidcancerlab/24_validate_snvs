@@ -22,12 +22,12 @@ roberts_transgene_samples <-
     ) %>%
     pull(Sample_ID)
 
-ltbc_transgene_samples <- c("S0260", "S0261")
+#ltbc_transgene_samples <- c("S0260", "S0261")
 
 transgene_samples <- c(
     transgene_samples,
-    roberts_transgene_samples,
-    ltbc_transgene_samples
+    roberts_transgene_samples#,
+    #ltbc_transgene_samples
 )
 
 plot_point_size <- 0.5
@@ -89,6 +89,9 @@ for (this_sample in transgene_samples) {
                 "No transgene"
             )
 
+        sobj_list[[this_sample]]$snv_top_lvl_group_10 <-
+            replace_na(sobj_list[[this_sample]]$snv_top_lvl_group_10, "Unassigned")
+
         transgene_panel_plot(
             sobj_list[[this_sample]],
             this_sample,
@@ -118,7 +121,6 @@ merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
       proportion = n / sum(n),
       tumor_cell = replace_na(tumor_cell, "No transgene")
     ) %>%
-    #filter(tumor_cell == "Has transgene") %>%
     arrange(desc(proportion)) %>%
     write_tsv("output/07_known_tumors/snv/transgene/transgene_tumor_clust.txt")
 ```
@@ -127,6 +129,7 @@ merge(sobj_list[[1]], sobj_list[-1])@meta.data %>%
 
 ```{r transgene_ltbc}
 #| eval: TRUE
+#| dependson: [transgene_read]
 ltbc_samples <- c("S0260", "S0261")
 
 plot_point_size <- 0.5
@@ -151,6 +154,14 @@ marker_table <-
                 ),
                 samtools_module = "GCC/9.3.0 SAMtools/1.10", verbose = TRUE
             )
+            write_tsv(
+                ltbc_table,
+                paste0(
+                    "output/07_known_tumors/snv/transgene/ltbc_",
+                    this_sample,
+                    ".txt"
+                )
+            )
 
             ltbc_sub <-
                 ltbc_table %>%
@@ -173,11 +184,7 @@ marker_table <-
 
             # replace data missing from ltbc_table with values
             sobj$tumor_marker_count <-
-                if_else(
-                    is.na(sobj$tumor_marker_count),
-                    0,
-                    sobj$tumor_marker_count
-                )
+                replace_na(sobj$tumor_marker_count, 0)
 
             sobj$has_barcode <-
                 if_else(
@@ -188,9 +195,9 @@ marker_table <-
 
             sobj$tumor_cell <-
                 if_else(
-                    sobj$has_barcode == TRUE,
-                    "Has transgene",
-                    "No transgene"
+                    is.na(sobj$has_barcode),
+                    "No transgene",
+                    "Has transgene"
                 )
 
             sobj$cell_group <- paste0(
@@ -216,6 +223,9 @@ marker_table <-
                     cell_group = "cell_group"
                 )
             }
+
+            sobj$snv_top_lvl_group_10 <-
+            replace_na(sobj$snv_top_lvl_group_10, "Unassigned")
 
             transgene_panel_plot(
                 sobj,
@@ -248,7 +258,6 @@ marker_table <-
                   proportion = n / sum(n),
                   tumor_cell = replace_na(tumor_cell, "No transgene")
                 ) %>%
-                #filter(tumor_cell == "Has transgene") %>%
                 arrange(desc(proportion))
 
             return(marker_table)
@@ -259,6 +268,21 @@ marker_table <-
 write_tsv(
     marker_table,
     "output/07_known_tumors/snv/transgene/transgene_tumor_clust_ltbc.txt"
+)
+```
+
+## Combine transgene panel plots
+```{r transgene_combine_panel_plots}
+#| dependson: [transgene_read, transgene_ltbc]
+panel_files <- list.files(
+    path = "output/07_known_tumors/figures/transgene",
+    pattern = "_plots.pdf",
+    full.names = TRUE
+)
+
+qpdf::pdf_combine(
+    input = panel_files,
+    output = "output/07_known_tumors/figures/transgene/combined_transgene_panels.pdf"
 )
 ```
 
@@ -382,10 +406,7 @@ transgene_boxplot <-
             y = proportion
         )
     ) +
-    #ggbeeswarm::geom_beeswarm(cex = 1.2) +
-    #geom_violin() +
     geom_jitter() +
-    # facet_grid(~ Sample_ID == "S0122", scales = "free_x", space = "free_x") +
     labs(
         x = "Group determined by SNVs",
         y = "Proportion of cells in cluster expressing transgene",

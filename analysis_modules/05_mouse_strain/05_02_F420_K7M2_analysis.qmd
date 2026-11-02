@@ -4,47 +4,47 @@
 b6_f420_samples <- c("S0066", "S0200")
 
 merged_mouse_b6_f420 <-
-    qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
-    JoinLayers() %>%
-    subset(Sample_ID %in% b6_f420_samples) %>%
-    process_seurat()
+  qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
+  JoinLayers() %>%
+  subset(Sample_ID %in% b6_f420_samples) %>%
+  process_seurat()
 
 qs_save(
-    merged_mouse_b6_f420,
-    "output/05_mouse_strain/rdata/merged/merged_mouse_b6_f420.qs2"
+  merged_mouse_b6_f420,
+  "output/05_mouse_strain/rdata/merged/merged_mouse_b6_f420.qs2"
 )
 
 # Write out which clusters were primarily identified as tumor by SingleR
 merged_mouse_b6_f420@meta.data %>%
-    as_tibble() %>%
-    select(Sample_ID, cell_group, cell_type) %>%
-    group_by(Sample_ID, cell_group, cell_type) %>%
-    summarize(n = n(), .groups = "drop") %>%
-    group_by(Sample_ID, cell_group) %>%
-    mutate(proportion = n / sum(n)) %>%
-    filter(cell_type == "Tumor" & proportion > 0.3) %>%
-    arrange(desc(proportion)) %>%
-    write_tsv("output/05_mouse_strain/b6_f420_singler_tumor_clust.txt")
+  as_tibble() %>%
+  select(Sample_ID, cell_group, cell_type) %>%
+  group_by(Sample_ID, cell_group, cell_type) %>%
+  summarize(n = n(), .groups = "drop") %>%
+  group_by(Sample_ID, cell_group) %>%
+  mutate(proportion = n / sum(n)) %>%
+  filter(cell_type == "Tumor" & proportion > 0.3) %>%
+  arrange(desc(proportion)) %>%
+  write_tsv("output/05_mouse_strain/b6_f420_singler_tumor_clust.txt")
 
 merged_mouse_b6_f420$cell_group %>%
-    unique() %>%
-    write_lines("output/05_mouse_strain/keep_clusters_b6_f420.txt")
+  unique() %>%
+  write_lines("output/05_mouse_strain/keep_clusters_b6_f420.txt")
 
 f420_b6_dimplot <-
-    DimPlot(
-        merged_mouse_b6_f420,
-        group.by = "cell_group",
-        label = TRUE,
-        label.box = TRUE,
-        repel = TRUE
-    ) +
-    NoLegend()
+  DimPlot(
+    merged_mouse_b6_f420,
+    group.by = "cell_group",
+    label = TRUE,
+    label.box = TRUE,
+    repel = TRUE
+  ) +
+  NoLegend()
 
 ggsave(
-    "output/05_mouse_strain/figures/b6_F420_dimplot_clusters.pdf",
-    plot = f420_b6_dimplot,
-    width = 10,
-    height = 10
+  "output/05_mouse_strain/figures/b6_F420_dimplot_clusters.pdf",
+  plot = f420_b6_dimplot,
+  width = 10,
+  height = 10
 )
 ```
 
@@ -71,53 +71,53 @@ n_bootstraps <- 10000
 bootstrap_cutoff <- 0.85
 
 dist_worked <-
-    parallel::mclapply(
-        c("5", "10", "20", "30"),
-        mc.cores = 4,
-        mc.preschedule = FALSE,
-        function(cutoff) {
-            group_clusters_by_dist(
-                merged_bcf_file = paste0(
-                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
-                    cutoff,
-                    "_filtered.bcf"
-                ),
-                output_file = paste0(
-                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
-                    cutoff,
-                    "_groups.txt"
-                ),
-                min_snvs_per_cluster = min_snvs_per_cluster,
-                n_bootstraps = n_bootstraps,
-                bootstrap_cutoff = bootstrap_cutoff,
-                tree_figure_file = paste0(
-                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
-                    cutoff,
-                    "_tree.pdf"
-                ),
-                n_comps_file = paste0(
-                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
-                    cutoff,
-                    "_n_comps.txt"
-                ),
-                dist_method = "euclidian", 
-                linkage_method = "ward",
-                verbose = FALSE,
-                other_job_header_options = c(
-                    "--time=8:00:00",
-                    "--partition=himem,general"
-                ),
-                other_batch_options = c(
-                    "ml purge",
-                    "ml miniforge3",
-                    'eval "$(conda shell.bash hook)"'
-                ),
-                sge_q = "",
-                sge_parallel_environment = "",
-                use_apptainer = TRUE
-            )
-        }
-    )
+  parallel::mclapply(
+    c("5", "10", "20", "30"),
+    mc.cores = 4,
+    mc.preschedule = FALSE,
+    function(cutoff) {
+      group_clusters_by_dist(
+        merged_bcf_file = paste0(
+          "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+          cutoff,
+          "_filtered.bcf"
+        ),
+        output_file = paste0(
+          "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+          cutoff,
+          "_groups.txt"
+        ),
+        min_snvs_per_cluster = min_snvs_per_cluster,
+        n_bootstraps = n_bootstraps,
+        bootstrap_cutoff = bootstrap_cutoff,
+        tree_figure_file = paste0(
+          "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+          cutoff,
+          "_tree.pdf"
+        ),
+        n_comps_file = paste0(
+          "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+          cutoff,
+          "_n_comps.txt"
+        ),
+        dist_method = "euclidian",
+        linkage_method = "ward",
+        verbose = FALSE,
+        other_job_header_options = c(
+          "--time=8:00:00",
+          "--partition=himem,general"
+        ),
+        other_batch_options = c(
+          "ml purge",
+          "ml miniforge3",
+          'eval "$(conda shell.bash hook)"'
+        ),
+        sge_q = "",
+        sge_parallel_environment = "",
+        use_apptainer = TRUE
+      )
+    }
+  )
 ```
 
 ## Prep data to analyze only Balbc and K7M2
@@ -126,46 +126,48 @@ dist_worked <-
 balbc_k7m2_samples <- c("S0074", "S0201")
 
 merged_mouse_balbc_k7m2 <-
-    qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
-    JoinLayers() %>%
-    subset(Sample_ID %in% balbc_k7m2_samples) %>%
-    process_seurat()
+  qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
+  JoinLayers() %>%
+  subset(Sample_ID %in% balbc_k7m2_samples) %>%
+  process_seurat()
 
 qs_save(
-    merged_mouse_balbc_k7m2,
-    "output/05_mouse_strain/rdata/merged/merged_mouse_balbc_k7m2.qs2"
+  merged_mouse_balbc_k7m2,
+  "output/05_mouse_strain/rdata/merged/merged_mouse_balbc_k7m2.qs2"
 )
 
 merged_mouse_balbc_k7m2@meta.data %>%
-    as_tibble() %>%
-    select(Sample_ID, cell_group, cell_type) %>%
-    group_by(Sample_ID, cell_group, cell_type) %>%
-    summarize(n = n(), .groups = "drop") %>%
-    group_by(Sample_ID, cell_group) %>%
-    mutate(proportion = n / sum(n)) %>%
-    filter(cell_type == "Tumor" & proportion > 0.3) %>%
-    arrange(desc(proportion)) %>%
-    write_tsv("output/05_mouse_strain/F420_K7M2/balb_k7m2_singler_tumor_clust.txt")
+  as_tibble() %>%
+  select(Sample_ID, cell_group, cell_type) %>%
+  group_by(Sample_ID, cell_group, cell_type) %>%
+  summarize(n = n(), .groups = "drop") %>%
+  group_by(Sample_ID, cell_group) %>%
+  mutate(proportion = n / sum(n)) %>%
+  filter(cell_type == "Tumor" & proportion > 0.3) %>%
+  arrange(desc(proportion)) %>%
+  write_tsv(
+    "output/05_mouse_strain/F420_K7M2/balb_k7m2_singler_tumor_clust.txt"
+  )
 
 merged_mouse_balbc_k7m2$cell_group %>%
-    unique() %>%
-    write_lines("output/05_mouse_strain/F420_K7M2/keep_clusters_balbc_k7m2.txt")
+  unique() %>%
+  write_lines("output/05_mouse_strain/F420_K7M2/keep_clusters_balbc_k7m2.txt")
 
 balbc_k7m2_dimplot <-
-    DimPlot(
-        merged_mouse_balbc_k7m2,
-        group.by = "cell_group",
-        label = TRUE,
-        label.box = TRUE,
-        repel = TRUE
-    ) +
-    NoLegend()
+  DimPlot(
+    merged_mouse_balbc_k7m2,
+    group.by = "cell_group",
+    label = TRUE,
+    label.box = TRUE,
+    repel = TRUE
+  ) +
+  NoLegend()
 
 ggsave(
-    "output/05_mouse_strain/figures/balbc_k7m2_dimplot_clusters.pdf",
-    plot = balbc_k7m2_dimplot,
-    width = 10,
-    height = 10
+  "output/05_mouse_strain/figures/balbc_k7m2_dimplot_clusters.pdf",
+  plot = balbc_k7m2_dimplot,
+  width = 10,
+  height = 10
 )
 ```
 
@@ -192,51 +194,98 @@ n_bootstraps <- 10000
 bootstrap_cutoff <- 0.85
 
 dist_worked <-
-    parallel::mclapply(
-        c("5", "10", "20", "30"),
-        mc.cores = 4,
-        mc.preschedule = FALSE,
-        function(cutoff) {
-            group_clusters_by_dist(
-                merged_bcf_file = paste0(
-                    "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
-                    cutoff,
-                    "_filtered.bcf"
-                ),
-                output_file = paste0(
-                    "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
-                    cutoff,
-                    "_groups.txt"
-                ),
-                min_snvs_per_cluster = min_snvs_per_cluster,
-                n_bootstraps = n_bootstraps,
-                bootstrap_cutoff = bootstrap_cutoff,
-                dist_method = "euclidian", 
-                linkage_method = "ward",
-                tree_figure_file = paste0(
-                    "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
-                    cutoff,
-                    "_tree.pdf"
-                ),
-                n_comps_file = paste0(
-                  "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
-                    cutoff,
-                    "_n_comps.txt"
-                ),
-                verbose = FALSE,
-                other_job_header_options = c(
-                    "--time=8:00:00",
-                    "--partition=himem,general"
-                ),
-                other_batch_options = c(
-                    "ml purge",
-                    "ml miniforge3",
-                    'eval "$(conda shell.bash hook)"'
-                ),
-                sge_q = "",
-                sge_parallel_environment = "",
-                use_apptainer = TRUE
-            )
-        }
+  parallel::mclapply(
+    c("5", "10", "20", "30"),
+    mc.cores = 4,
+    mc.preschedule = FALSE,
+    function(cutoff) {
+      group_clusters_by_dist(
+        merged_bcf_file = paste0(
+          "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+          cutoff,
+          "_filtered.bcf"
+        ),
+        output_file = paste0(
+          "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+          cutoff,
+          "_groups.txt"
+        ),
+        min_snvs_per_cluster = min_snvs_per_cluster,
+        n_bootstraps = n_bootstraps,
+        bootstrap_cutoff = bootstrap_cutoff,
+        dist_method = "euclidian",
+        linkage_method = "ward",
+        tree_figure_file = paste0(
+          "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+          cutoff,
+          "_tree.pdf"
+        ),
+        n_comps_file = paste0(
+          "output/05_mouse_strain/F420_K7M2/mergedmouse_balbc_k7m2_snvs_c",
+          cutoff,
+          "_n_comps.txt"
+        ),
+        verbose = FALSE,
+        other_job_header_options = c(
+          "--time=8:00:00",
+          "--partition=himem,general"
+        ),
+        other_batch_options = c(
+          "ml purge",
+          "ml miniforge3",
+          'eval "$(conda shell.bash hook)"'
+        ),
+        sge_q = "",
+        sge_parallel_environment = "",
+        use_apptainer = TRUE
+      )
+    }
+  )
+```
+
+## Combine trees into a single pdf for supplement
+```{r f420_k7m2_combine_trees}
+tree_files <- list.files(
+  path = "output/05_mouse_strain/F420_K7M2",
+  pattern = "_tree.pdf",
+  full.names = TRUE
+)
+
+sample_label_key <-
+  list(
+    b6_f420 = "C57BL/6 and F420 samples\n",
+    balbc_k7m2 = "BALB/c and K7M2 samples\n"
+  )
+
+pdf(
+  "output/05_mouse_strain/F420_K7M2/combined_trees.pdf",
+  width = 8,
+  height = 8
+)
+for (this_file in tree_files) {
+  depth <- str_remove(this_file, ".+snvs_c") %>%
+    str_remove("_tree.pdf")
+  sample_label <-
+    sample_label_key[
+      str_remove(this_file, ".+mergedmouse_") %>%
+        str_remove("_snvs_c.+")
+    ]
+
+  print(
+    ggplot2::ggplot() +
+    ggpubr::background_image(
+      magick::image_read(this_file, density = 300)
+    ) +
+    ggplot2::coord_fixed() +
+    ggplot2::labs(
+      title = paste0(sample_label, "Minimum read depth: ", depth),
+      y = "Genetic distance (arbitrary units)"
+    ) +
+    theme(
+      axis.text.y = element_text(size = 20),
+      panel.border = element_blank()
     )
+  )
+}
+dev.off()
 ```

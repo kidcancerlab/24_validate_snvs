@@ -110,6 +110,38 @@ dist_worked <-
     )
 ```
 
+## Merge the tree figures into a supplemental file
+```{r mouse_strain_merge_tree_figures}
+pdf(
+  "output/05_mouse_strain/figures/mergedmouse_snvs_all_trees.pdf",
+  width = 8,
+  height = 8
+)
+for (this_read_depth in c(5, 10, 20, 30)) {
+  this_pdf <- paste0(
+        "output/05_mouse_strain/snv/mergedmouse_snvs_c",
+        this_read_depth,
+        "_tree.pdf"
+      )
+  print(
+    ggplot2::ggplot() +
+    ggpubr::background_image(
+      magick::image_read(this_pdf, density = 300)
+    ) +
+    ggplot2::coord_fixed() +
+    ggplot2::labs(
+      title = paste0(
+        "Minimum read depth: ",
+        this_read_depth
+      ),
+      y = "Genetic distance (arbitrary units)"
+    ) +
+    theme(plot.margin = margin(10, 0, 10, 0, "pt"))
+  )
+}
+dev.off()
+```
+
 
 ##
 I want to look over the merged bcfs and quantify the proportion of positions covered by n reads has a variant call.

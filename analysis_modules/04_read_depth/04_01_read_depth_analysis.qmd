@@ -608,8 +608,7 @@ for (this_sample in unique(shared_sites$sample)) {
                 this_sample
             ),
             heatmap_legend_param = list(title = "Shared\nsites")
-        ) +
-        labs(fill = NULL)
+        )
     )
 }
 dev.off()

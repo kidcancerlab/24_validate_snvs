@@ -543,6 +543,21 @@ for (this_sample in human_samples) {
 }
 ```
 
+## Combine dimplot panel plots for supplement
+```{r other_meth_combine_dimplots}
+#| dependson: [other_meth_plot_human_dimplots]
+panel_files <- list.files(
+    path = "output/10_cmp_other_methods/figures/dimplots",
+    pattern = "\\.pdf$",
+    full.names = TRUE
+)
+
+qpdf::pdf_combine(
+    input = panel_files,
+    output = "output/10_cmp_other_methods/figures/combined_dimplots.pdf"
+)
+```
+
 ## Compare results for known mouse tumors
 ```{r other_meth_plot_transgene}
 #| dependson: [other_meth_compile_compile]
