@@ -3299,6 +3299,17 @@ dependencies = [
 ]
 
 [[packages]]
+name = "qpdf"
+version = "1.4.1"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = [
+    "Rcpp",
+    "askpass",
+    "curl",
+]
+
+[[packages]]
 name = "qs2"
 version = "0.3.1"
 source = { repository = "https://cran.rstudio.com/" }
