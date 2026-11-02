@@ -10,7 +10,10 @@
 #SBATCH --time=02:00:00
 #SBATCH --wait
 
-set -eo pipefail ### stops bash script if line ends with error
+set -euo pipefail ### stops bash script if line ends with error
+
+# Make conda activate not trigger set -u
+export PS1=${PS1:-}
 
 echo ${HOSTNAME}
 
@@ -20,9 +23,13 @@ ml load Miniconda3/4.9.2
 eval "$(conda shell.bash hook)"
 conda activate scanBit_xkcd_1337
 
+# Parallel is trying to use the wrong tempdir, so manually setting it here
+mkdir ${TMPDIR}/tempdir
+ls -l ${TMPDIR}/tempdir
+
 samples=$(ls -d output/04_read_depth_analysis/snv/geo/G00* | perl -pe 's/.+\///')
 
-for sample in ${samples}
+for sample in ${samples[@]}
 do
     echo "Processing sample ${sample}"
 
@@ -31,6 +38,7 @@ do
     parallel \
         -j 10 \
         --env this_sample \
+        --tmpdir ${TMPDIR}/tempdir \
         "bcftools view \
             -O u \
             -i 'GT[*]=\"alt\"' \

@@ -9,9 +9,17 @@
 #SBATCH --partition=general,himem
 #SBATCH --wait
 
-set -eo pipefail ### stops bash script if line ends with error
+set -euo pipefail ### stops bash script if line ends with error
 
-echo ${HOSTNAME}
+# Make conda activate not trigger set -u
+export PS1=${PS1:-}
+
+echo host: ${HOSTNAME}
+echo tempdir: ${TMPDIR}
+
+# Parallel is trying to use the wrong tempdir, so manually setting it here
+mkdir ${TMPDIR}/tempdir
+ls -l ${TMPDIR}/tempdir
 
 ml purge
 ml load Miniconda3/4.9.2
@@ -19,9 +27,9 @@ ml load Miniconda3/4.9.2
 eval "$(conda shell.bash hook)"
 conda activate scanBit_xkcd_1337
 
-samples=$(ls -d output/04_read_depth_analysis/snv/geo/G00* | perl -pe 's/.+\///')
+samples=($(ls -d output/04_read_depth_analysis/snv/geo/G00* | perl -pe 's/.+\///'))
 
-for sample in ${samples}
+for sample in ${samples[@]}
 do
     echo "Processing sample ${sample}"
 
@@ -31,6 +39,7 @@ do
     parallel \
         -j 10 \
         --env this_sample \
+        --tmpdir ${TMPDIR}/tempdir \
         'echo -e "depth\tcount" \
             > output/04_read_depth_analysis/depths/bcf_depth/bcf_depth_${this_sample}_{/.}.txt;
         bcftools query \
@@ -46,6 +55,7 @@ do
     parallel \
         -j 10 \
         --env this_sample \
+        --tmpdir ${TMPDIR}/tempdir \
         "echo -e 'depth\tcount' \
             > output/04_read_depth_analysis/depths/bcf_depth/variant_pos_${this_sample}_{/.}.txt;
         bcftools view \

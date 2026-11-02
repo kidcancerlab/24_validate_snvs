@@ -10,7 +10,10 @@
 #SBATCH --time=02:00:00
 #SBATCH --wait
 
-set -eo pipefail ### stops bash script if line ends with error
+set -euo pipefail ### stops bash script if line ends with error
+
+# Make conda activate not trigger set -u
+export PS1=${PS1:-}
 
 echo ${HOSTNAME}
 
@@ -24,7 +27,7 @@ samples=($(ls -d output/04_read_depth_analysis/snv/geo/G00* | perl -pe 's/.+\///
 
 cutoffs=(1 2 5 10 20)
 
-for sample in ${samples}
+for sample in ${samples[@]}
 do
     echo "Processing sample ${sample}"
     for cutoff in ${cutoffs[@]}
