@@ -1,0 +1,179 @@
+## Test snp calling on flex data
+
+## Quantify the number of SNVs for each level of coverage
+
+## Merge the bcf files from min depth of 1 from flex scanbit analysis
+This keeps all the positions, not just those with an alt position
+
+This requires that the `scanbit_run_flex` chunk has cleanup set to FALSE
+```{bash flex_merge_c1}
+#| dependson: [scanbit_run_flex]
+sbatch analysis_modules/03_test_flex/scripts/flex_merge_c1_all.sh 
+```
+
+### Count the total number of positions covered by flex data for each cluster
+```{bash flex_cov_alts}
+#| dependson: [flex_merge_c1]
+sbatch analysis_modules/03_test_flex/scripts/flex_count_vars.sh 
+```
+
+### Merge mouse data into a single bcf file
+```{bash flex_merge_mouse}
+#| dependson: [flex_merge_c1]
+# sbatch analysis_modules/03_test_flex/scripts/our_mouse_sbatchmerge_keep_all.sh
+```
+
+### Count the total number of positions that include an alt in flex data
+```{bash flex_alt_counting}
+#| dependson: [flex_merge_c1]
+sbatch analysis_modules/03_test_flex/scripts/count_alts.sh
+```
+
+### Calculate variant calling accuracy in flex data
+Any mutation called in the flex data is almost certainly a PCR/sequencing error since this method uses probes.
+```{r flex_prop_wrong}
+#| dependson: [flex_cov_alts, flex_alt_counting]
+all_flex_files <-
+    list.files(
+        path = "output/03_test_flex/counts/flex_var_counts_d1",
+        pattern = ".txt",
+        full.names = TRUE
+    )
+
+# In the future, break this down by mt vs non-mt to see if the non-mt are the wierd inaccurate calls ~ 500 - 1000 depth
+flex_accuracy <-
+    read_tsv(
+        all_flex_files,
+        id = "sample",
+        show_col_types = FALSE,
+        col_names = c("chr", "alt", "depth", "count")
+    ) %>%
+    mutate(
+        sample = basename(sample) %>%
+            str_remove(".txt"),
+        alt = if_else(
+            alt == ".",
+            "ref",
+            "variant"
+        )
+    ) %>%
+    group_by(sample, depth, alt) %>%
+    summarize(count = sum(count, na.rm = TRUE), .groups = "drop") %>%
+    group_by(sample, depth) %>%
+    mutate(total_count = sum(count, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(
+        id_cols = c(sample, depth, total_count),
+        names_from = "alt",
+        values_from = "count",
+        values_fill = 0
+    ) %>%
+    mutate(perc_wrong = variant / total_count * 100) %>%
+    group_by(depth) %>%
+    summarize(
+        mean_total_count = mean(total_count, na.rm = TRUE),
+        mean_perc_wrong = mean(perc_wrong, na.rm = TRUE),
+        .groups = "drop"
+    ) %>%
+    filter(depth != 1)
+
+write_tsv(
+    flex_accuracy,
+    "output/03_test_flex/counts/flex_accuracy.txt"
+)
+
+accuracy_plot <-
+    filter(flex_accuracy, depth <= 50) %>%
+    ggplot(aes(x = depth, y = mean_perc_wrong / 100)) +
+    #geom_smooth(alpha = 0.5) +
+    geom_point() +
+    # geom_text(
+    #     data = filter(flex_accuracy, depth <= 10),
+    #     aes(label = depth),
+    #     nudge_y = 0.00001
+    # ) +
+    scale_y_continuous(labels = scales::label_percent()) +
+    labs(
+        title = "Percent Inaccurate Calls by Read Depth",
+        x = "Read depth of variant calls",
+        y = "% inaccurate variant calls"
+    )
+
+ggsave_wrap(
+    "output/03_test_flex/figures/flex_accuracy_scatterplot",
+    file_type = c("png", "pdf"),
+    plot_variable = accuracy_plot,
+    width = 6,
+    height = 4
+)
+```
+
+## Calculate how many positions covered to each depth by normal data
+```{r flex_actual_covered}
+#| dependson: [flex_cov_alts, flex_alt_counting]
+all_flex_files <-
+    list.files(
+        path = "output/03_test_flex/counts/flex_var_counts_d1",
+        pattern = ".txt",
+        full.names = TRUE
+    )
+
+# In the future, break this down by mt vs non-mt to see if the non-mt are the weird inaccurate calls ~ 500 - 1000 depth
+flex_accuracy <-
+    read_tsv(
+        all_flex_files,
+        id = "sample",
+        show_col_types = FALSE,
+        col_names = c("chr", "alt", "depth", "count")
+    ) %>%
+    mutate(
+        sample = basename(sample) %>%
+            str_remove(".txt"),
+        alt = if_else(
+            alt == ".",
+            "ref",
+            "variant"
+        )
+    ) %>%
+    group_by(sample, depth, alt) %>%
+    summarize(count = sum(count, na.rm = TRUE), .groups = "drop") %>%
+    group_by(sample, depth) %>%
+    mutate(total_count = sum(count, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(
+        id_cols = c(sample, depth, total_count),
+        names_from = "alt",
+        values_from = "count",
+        values_fill = 0
+    ) %>%
+    mutate(perc_wrong = variant / ref * 100) %>%
+    group_by(depth) %>%
+    summarize(
+        mean_total_count = mean(total_count, na.rm = TRUE),
+        mean_perc_wrong = mean(perc_wrong, na.rm = TRUE),
+        .groups = "drop"
+    ) %>%
+    filter(depth != 1)
+
+flex_accuracy %>%
+    filter(depth <= 20) %>%
+    gt::gt() %>%
+    gt::cols_label(
+        depth = gt::md("**Read depth**"),
+        mean_total_count = gt::md("**Average covered bases**"),
+        mean_perc_wrong = gt::md("**% inaccurate variant calls**")
+    ) %>%
+    gt::fmt_percent(
+        columns = "mean_perc_wrong",
+        scale_values = FALSE,
+        decimals = 4
+    ) %>%
+    gt::fmt_number(columns = "mean_total_count") %>%
+    gt::cols_align(
+        align = "center"
+    ) %>%
+    gt::gtsave(
+        filename = "output/03_test_flex/figures/flex_accuracy_table.html"
+    )
+```
+

@@ -1,0 +1,658 @@
+## Run scanBit on individual cells with min_read_depth of 1 to use for read depth and accuracy analysis
+For this I'm keeping ten individual cells per cluster, and each cell is assigned to its own cell_group so that I am calculating read depth data for many individual cells.
+```{r readdepth_scanbit}
+samples_geo <-
+    read_tsv("misc/validation_geo_metadata.tsv", show_col_types = FALSE) %>%
+    filter(grepl("tumor validation|healthy samples", sample_group)) %>%
+    pull(Sample_ID) %>%
+    unique()
+
+n_cell_cutoffs <- 1
+
+# Keeping mc.cores low since each run submits 100+ jobs
+output <-
+    parallel::mclapply(
+        samples_geo,
+        mc.cores = 2,
+        mc.preschedule = FALSE,
+        function(this_sample) {
+            sobj <-
+                qs_read(paste0(
+                    "output/01_process_raw/rdata/individual/",
+                    this_sample,
+                    "_human.qs2"
+                ))
+
+            sobj$cell_group <-
+                paste0(
+                    "clust_",
+                    sobj$individ_clusters,
+                    "_",
+                    sobj$cell_barcode
+                )
+
+            Idents(sobj) <- sobj$individ_clusters
+            set.seed(1337)
+            sobj <- subset(sobj, downsample = 10)
+
+            Idents(sobj) <-
+                sobj$cell_group
+
+            scanbit_downsample_loop(
+                sobj,
+                cutoff_vector = n_cell_cutoffs,
+                min_read_depth = c(1, 2, 5, 10, 20),
+                out_dir_base = file.path(
+                    "output/04_read_depth_analysis/snv/geo",
+                    this_sample
+                ),
+                keep_temp_dir = TRUE,
+                sample_label = this_sample,
+                ploidy = "GRCh38",
+                ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa"
+            )
+        }
+    )
+```
+
+## Batch job to count site coverage of GEO human patient samples
+This includes any site with coverage, not just variant calls
+```{bash readdepth_count_depth}
+sbatch analysis_modules/04_read_depth/scripts/geo_bcf_depths.sh
+```
+
+## Calculate stats on nCount_RNA for single cell data
+```{r readdepth_ncount_rna_stats}
+#| dependson: [readdepth_scanbit]
+list.files(
+    path = "output/04_read_depth_analysis/snv/geo",
+    pattern = "cell_barcode_table_.+_1_cells.txt",
+    recursive = TRUE,
+    full.names = TRUE
+) %>%
+    read_tsv(
+        id = "sample",
+        show_col_types = FALSE
+    ) %>%
+    summarize(
+        mean_ncount = mean(nCount_RNA),
+        median_ncount = median(nCount_RNA),
+        min_ncount = min(nCount_RNA),
+        max_ncount = max(nCount_RNA)
+    ) %>%
+    write_tsv("output/04_read_depth_analysis/counts/ncount_summary.tsv")
+```
+
+## Calculate the # of positions covered where any cell has a variant
+```{r readdepth_var_positions}
+#| cache.vars: [var_depths, ave_var_depths]
+all_var_files <-
+    list.files(
+        path = "output/04_read_depth_analysis/depths/bcf_depth",
+        pattern = "variant_pos",
+        full.names = TRUE
+    )
+
+var_depths <-
+    read_tsv(
+        all_var_files,
+        id = "cell_sample",
+        show_col_types = FALSE,
+        skip_empty_rows = FALSE
+    ) %>%
+    mutate(
+        cell_sample = basename(cell_sample) %>%
+            str_remove("variant_pos_") %>%
+            str_remove(".txt"),
+        group = "Variant sites"
+    )
+
+ave_var_depths <-
+    var_depths %>%
+    pivot_wider(
+        names_from = "depth",
+        values_from = "count",
+        values_fill = 0
+    ) %>%
+    pivot_longer(
+        cols = c(-cell_sample, -group),
+        names_to = "depth",
+        values_to = "count"
+    ) %>%
+    group_by(depth) %>%
+    summarize(
+        mean_count_var = mean(count),
+        median_count_var = median(count),
+        se_count = sd(count) / sqrt(n()),
+        .groups = "drop",
+    ) %>%
+    mutate(depth = as.numeric(depth)) %>%
+    arrange(desc(depth)) %>%
+    mutate(cum_count_var = cumsum(mean_count_var)) %>%
+    arrange(depth)
+
+write_tsv(
+    ave_var_depths,
+    "output/04_read_depth_analysis/n_var_count_summary.tsv"
+)
+```
+
+## Compile all single-cell variant call depths
+```{r readdepth_compile_depths}
+#| cache.vars: [all_depths, ave_depths]
+all_depth_files <-
+    list.files(
+        path = "output/04_read_depth_analysis/depths/bcf_depth",
+        pattern = "bcf_depth_G",
+        full.names = TRUE
+    )
+all_depths <-
+    read_tsv(
+        all_depth_files,
+        id = "cell_sample",
+        show_col_types = FALSE,
+    ) %>%
+    mutate(
+        cell_sample = basename(cell_sample) %>%
+            str_remove("bcf_depth_") %>%
+            str_remove(".txt"),
+        group = "All sites"
+    )
+
+ave_depths <-
+    all_depths %>%
+    filter(depth != 1) %>%
+    pivot_wider(
+        names_from = "depth",
+        values_from = "count",
+        values_fill = 0
+    ) %>%
+    pivot_longer(
+        cols = c(-cell_sample, -group),
+        names_to = "depth",
+        values_to = "count"
+    ) %>%
+    group_by(depth) %>%
+    summarize(
+        mean_count = mean(count),
+        median_count_var = median(count),
+        se_count = sd(count) / sqrt(n()),
+        .groups = "drop"
+    ) %>%
+    mutate(depth = as.numeric(depth)) %>%
+    arrange(desc(depth)) %>%
+    mutate(cum_count_var = cumsum(mean_count)) %>%
+    arrange(depth)
+
+write_tsv(
+    ave_depths,
+    "output/04_read_depth_analysis/n_covered_count_summary.tsv"
+)
+```
+
+```{r readdepth_plot_coverage}
+site_covered_plot <-
+    ggplot() +
+    geom_point(
+        data = ave_depths %>% filter(depth <= 30),
+        aes(x = depth, y = mean_count),
+        color = "black"
+    ) +
+    geom_point(
+        data = ave_var_depths %>% filter(depth <= 30),
+        aes(x = depth, y = mean_count_var),
+        color = "red"
+    ) +
+    scale_y_log10(labels = scales::label_comma()) +
+    labs(
+        title = "Mean Sites Covered to a Given Depth",
+        subtitle = "Red: mean variable sites; Black: mean total sites",
+        x = "Depth",
+        y = "Average number of positions covered"
+    )
+
+ggsave(
+    "output/04_read_depth_analysis/figures/mean_coverage_1_cell.pdf",
+    site_covered_plot,
+    width = 6,
+    height = 4
+)
+
+set.seed(1337) # For jitter
+jitter_coverage_plot <-
+    rbind(all_depths, var_depths) %>%
+    group_by(group, cell_sample) %>%
+    arrange(desc(depth), .by_group = TRUE) %>%
+    mutate(cum_count = cumsum(count)) %>%
+    arrange(depth, .by_group = TRUE) %>%
+    ungroup() %>%
+    filter(depth <= 20 & depth != 1) %>%
+    select(-count) %>%
+    pivot_wider(
+        names_from = "depth",
+        values_from = "cum_count",
+        values_fill = 0
+    ) %>%
+    pivot_longer(
+        cols = c(-cell_sample, -group),
+        names_to = "depth",
+        values_to = "count"
+    ) %>%
+    mutate(
+        depth_factor = as.factor(depth) %>%
+            fct_reorder(as.numeric(depth))
+    ) %>%
+    ggplot(
+        aes(
+            x = depth_factor,
+            y = count,
+            color = group
+        )
+    ) +
+    geom_jitter(height = 0, alpha = 0.5, size = 0.5) +
+    scale_y_log10(labels = scales::label_comma()) +
+    scale_color_manual(values = plot_cols[1:2]) +
+    labs(
+        title = "Number of Total and Non-reference Sites Covered by Single Cells Using Varying Cutoffs",
+        x = "Read depth cutoff",
+        y = "Number of sites covered when using read-depth cutoff of X",
+        color = NULL
+    ) +
+    theme(
+        legend.position = c(0.9, 0.9)
+    )
+
+ggsave_wrap(
+    file_stub = "output/04_read_depth_analysis/figures/total_and_nonref_site_coverage",
+    file_types = c("png", "pdf"),
+    jitter_coverage_plot,
+    width = 8,
+    height = 6
+)
+
+#rm(all_depths, var_depths, ave_var_depths)
+```
+
+## Make a plot of the percentage of calls that are variant vs depth
+```{r readdepth_perc_variant_plot}
+all_depth_data <-
+    full_join(
+        all_depths %>%
+            dplyr::rename(total_depth = count) %>%
+            select(-group) %>%
+            filter(depth != 1),
+        var_depths %>%
+            dplyr::rename(variant_depth = count) %>%
+            select(-group)
+    ) %>%
+    mutate(
+        variant_depth = replace_na(variant_depth, 0),
+        perc_variant = variant_depth / total_depth,
+        depth_fct = as.factor(depth) %>% fct_reorder(depth)
+    ) %>%
+    filter(depth <= 30)
+
+all_depth_data %>%
+    group_by(depth) %>%
+    summarize(
+        mean_perc_variant = mean(perc_variant) * 100,
+        pct_no_variants = mean(variant_depth == 0) * 100,
+        .groups = "drop"
+    ) %>%
+    arrange(depth) %>%
+    write_tsv("output/04_read_depth_analysis/perc_variant_summary.tsv")
+
+perc_variant_plot <-
+    all_depth_data %>%
+    ggplot(
+        aes(
+            x = depth_fct,
+            y = perc_variant
+        )
+    ) +
+    geom_jitter(alpha = 0.8, size = 0.5) +
+    scale_y_log10(labels = scales::label_percent()) +
+    labs(
+        title = "Percent of Variant Calls by Read Depth",
+        x = "Read Depth",
+        y = "Percent of Calls That Are Variant"
+    )
+ggsave(
+    "output/04_read_depth_analysis/figures/percent_variant_calls_1_cell.pdf",
+    perc_variant_plot,
+    width = 6,
+    height = 4
+)
+
+perc_no_variants_plot <-
+    all_depth_data %>%
+    group_by(depth_fct) %>%
+    summarize(pct_no_variants = mean(variant_depth == 0), .groups = "drop") %>%
+    ggplot(
+        aes(
+            x = depth_fct,
+            y = pct_no_variants
+        )
+    ) +
+    geom_col() +
+    scale_y_continuous(labels = scales::label_percent()) +
+    labs(
+        title = "Percent of Cells With No Variant Calls by Read Depth",
+        x = "Read Depth",
+        y = "Percent of Cells With No Variant Calls"
+    )
+ggsave(
+    "output/04_read_depth_analysis/figures/percent_no_variant_calls_1_cell.pdf",
+    width = 6,
+    height = 4
+)
+```
+## Calculate expected number of mistakes for each depth
+Based on flex accuracy calculations
+```{r readdepth_accuracy_calc}
+#| cache.vars: [expected_mis_calls]
+# Make a named vector or accuracy - name is depth, value is % accurate
+flex_accuracy_prop <-
+    read_tsv("output/03_test_flex/counts/flex_accuracy.txt", show_col_types = FALSE) %>%
+    pull(mean_perc_wrong, name = depth) / 100
+
+expected_mis_calls <-
+    ave_depths %>%
+    mutate(exp_bad_variants = mean_count * flex_accuracy_prop[depth])
+
+expected_errors_plot <-
+    expected_mis_calls %>%
+    head(n = 100) %>%
+    ggplot() +
+    geom_point(aes(x = depth, y = mean_count), color = "black") +
+    geom_point(
+        aes(
+            x = depth,
+            y = exp_bad_variants
+        ),
+        color = "red",
+        size = 2
+    ) +
+    scale_y_log10(labels = scales::label_comma())
+
+ggsave(
+    "output/04_read_depth_analysis/figures/expected_errors_1_cell.png",
+    expected_errors_plot,
+    width = 6,
+    height = 4
+)
+```
+
+## Count the number of variant (non-reference) calls made in single cells
+```{bash readdepth_actual_n_vars}
+sbatch analysis_modules/04_read_depth/scripts/count_single_cell_variant_calls.sh
+```
+
+## Calculate the average number of variants actually called by depth
+```{r readdepth_compile_depths_ave}
+all_call_files <-
+    list.files(
+        path = "output/04_read_depth_analysis/depths/call_count",
+        pattern = "bcf_calls_depth_G0",
+        full.names = TRUE
+    )
+all_call_depths <-
+    read_tsv(
+        all_call_files,
+        id = "cell_sample",
+        show_col_types = FALSE,
+        col_names = c("chr", "alt", "depth")
+    ) %>%
+    mutate(
+        cell_sample = basename(cell_sample) %>%
+            str_remove("bcf_calls_depth_") %>%
+            str_remove(".txt")
+    ) %>%
+    select(-alt, -chr)
+
+average_num_calls <-
+    all_call_depths %>%
+    group_by(depth, cell_sample) %>%
+    summarize(n_vars = n(), .groups = "drop") %>%
+    pivot_wider(
+        names_from = "depth",
+        values_from = "n_vars",
+        values_fill = 0
+    ) %>%
+    pivot_longer(
+        cols = c(-cell_sample),
+        names_to = "depth",
+        values_to = "count"
+    ) %>%
+    group_by(depth) %>%
+    mutate(depth = as.numeric(depth)) %>%
+    summarize(mean_n_vars = mean(count)) %>%
+    arrange(depth)
+
+n_vars_plot <-
+    average_num_calls %>%
+    filter(depth <= 30) %>%
+    ggplot() +
+    geom_point(aes(x = depth, y = mean_n_vars), color = "black") +
+    labs(
+        title = "Average Number of Variants Called by Depth",
+        subtitle = "In Variant Call Data on Single Cells",
+        x = "Depth",
+        y = "Mean number of variants called per cell"
+    )
+
+ggsave(
+    "output/04_read_depth_analysis/figures/average_vars_1_cell.pdf",
+    n_vars_plot,
+    width = 6,
+    height = 4
+)
+
+calls_table <-
+    full_join(expected_mis_calls, average_num_calls, by = "depth") %>%
+    filter(depth != 1)
+
+calls_summary_plot <-
+    calls_table %>%
+    dplyr::rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
+    pivot_longer(
+        cols = c(wrong_variants, called_variants),
+        names_to = "var_type",
+        values_to = "count"
+    ) %>%
+    mutate(
+        var_type = str_replace(var_type, "_", " ") %>%
+            str_to_title()
+    ) %>%
+    filter(depth <= 30) %>%
+    ggplot(aes(x = depth, y = count, group = depth)) +
+    geom_line() +
+    geom_point(aes(color = var_type, shape = var_type), size = 2) +
+    scale_color_manual(values = c("black", "red"), name = NULL) +
+    scale_shape_manual(values = c(19, 4), name = NULL) +
+    labs(
+        title = "Total and Inaccurate Variant Calls",
+        subtitle = "For single cells from osteosarcoma and bone samples",
+        x = "Depth",
+        y = "Number of variant calls"
+    ) +
+    theme(
+        legend.position = c(0.85, 0.9),
+        legend.background = element_blank()
+    )
+
+ggsave(
+    "output/04_read_depth_analysis/figures/wrong_vs_called_nvars_1_cell.pdf",
+    calls_summary_plot,
+    width = 6,
+    height = 4
+)
+
+percent_wrong_table <-
+    calls_table %>%
+    dplyr::rename(wrong_variants = exp_bad_variants, called_variants = mean_n_vars) %>%
+    mutate(perc_wrong = wrong_variants / called_variants) %>%
+    arrange(desc(depth)) %>%
+    mutate(
+        mean_count = replace_na(mean_count, 0),
+        called_variants = replace_na(called_variants, 0),
+        wrong_variants = replace_na(wrong_variants, 0),
+        cum_sites_cov = cumsum(mean_count),
+        cum_var_sites = cumsum(called_variants),
+        cum_wrong_vars = cumsum(wrong_variants)
+    ) %>%
+    arrange(depth)
+
+write_tsv(
+    percent_wrong_table,
+    file = "output/04_read_depth_analysis/percent_wrong_table.tsv"
+)
+
+percent_wrong_plot <-
+    percent_wrong_table %>%
+    filter(depth <= 30) %>%
+    ggplot(
+        aes(
+            x = depth,
+            y = perc_wrong
+        )
+    ) +
+    geom_point() +
+    scale_y_continuous(labels = scales::label_percent()) +
+    labs(
+        title = "Percent of Inaccurate Variant Calls by Depth",
+        x = "Depth",
+        y = "Percent inaccurate variant calls"
+    ) +
+    theme_bw()
+
+ggsave(
+    "output/04_read_depth_analysis/figures/percent_wrong_1_cell.pdf",
+    percent_wrong_plot,
+    width = 6,
+    height = 4
+)
+```
+
+## Calculate how many sites have shared variant information per sample
+```{bash readdepth_calc_shared}
+#| dependson: [readdepth_scanbit]
+sbatch analysis_modules/04_read_depth/scripts/count_single_cell_shared_sites.sh
+```
+
+```{r readdepth_shared_sites}
+#| dependson: [readdepth_calc_shared]
+shared_files <-
+    list.files(
+        path = "output/04_read_depth_analysis/shared",
+        pattern = "shared.+\\.txt",
+        full.names = TRUE
+    )
+
+parse_shared <- function(file_name) {
+    dataset <- read_tsv(
+        file_name,
+        name_repair = "minimal",
+        show_col_types = FALSE,
+        id = "dataset"
+    ) |>
+        mutate(
+            dataset = str_remove(dataset, ".+shared_") |>
+                str_remove(".txt")
+        ) |>
+        pivot_longer(
+            cols = starts_with("clust"),
+            names_to = "cell_2",
+            values_to = "shared_sites"
+        ) |>
+        filter(cell_1 != cell_2) |>
+        separate(dataset, into = c("sample", "cutoff"), sep = "_") %>%
+        mutate(cutoff = factor(cutoff, levels = c("1", "2", "5", "10", "20")))
+
+    return(dataset)
+}
+
+shared_sites <-
+    lapply(
+        shared_files,
+        parse_shared
+    ) %>%
+    bind_rows()
+
+pdf(
+    "output/04_read_depth_analysis/figures/shared_sites/shared_sites_heatmaps.pdf",
+    width = 10,
+    height = 10
+)
+for (this_sample in unique(shared_sites$sample)) {
+    print(shared_sites %>%
+        filter(sample == this_sample & cutoff == 1) %>%
+        mutate(shared_sites = as.integer(shared_sites)) %>%
+        select(cell_1, cell_2, shared_sites) %>%
+        pivot_wider(
+            names_from = cell_2,
+            values_from = shared_sites,
+            values_fill = NA
+        ) %>%
+        column_to_rownames("cell_1") %>%
+        as.matrix() %>%
+        ComplexHeatmap::pheatmap(
+            display_numbers = TRUE,
+            fontsize_number = 10,
+            number_format =  "%.0f",
+            fontsize = 5,
+            use_raster = TRUE,
+            raster_quality = 4,
+            main = paste0(
+                "Number of Sites Shared Between Individual Cells for a Subset of Sample ",
+                this_sample
+            ),
+            heatmap_legend_param = list(title = "Shared\nsites")
+        )
+    )
+}
+dev.off()
+
+shared_sites_histograms <-
+    shared_sites %>%
+    filter(cutoff != "1") %>%
+    ggplot(
+        aes(
+            x = shared_sites,
+            fill = cutoff
+        )
+    ) +
+    geom_histogram(bins = 200) +
+    scale_x_continuous(n.breaks = 20) +
+    facet_wrap(
+        ~ cutoff,
+        ncol = 1,
+        scales = "free_y"
+    ) +
+    labs(
+        title = "Distribution of Number of Genomic Positions With Shared Variant\nInformation Between Two Cells",
+        subtitle = "For sites where either cell has a non-reference variant call",
+        x = "Shared covered genomic positions",
+        y = "Count",
+        fill = "Minimum read depth\nto call variants"
+    ) +
+    theme(
+        legend.position = "none"
+    )
+
+ggsave(
+    "output/04_read_depth_analysis/figures/shared_sites/shared_sites_histograms.pdf",
+    plot = shared_sites_histograms,
+    width = 8,
+    height = 5
+)
+
+shared_sites %>%
+    group_by(cutoff) %>%
+    filter(cutoff != "1") %>%
+    summarize(
+        mean_shared_sites = mean(shared_sites),
+        median_shared_sites = median(shared_sites)
+    ) %>%
+    write_tsv("output/04_read_depth_analysis/shared_sites_stats.tsv")
+```

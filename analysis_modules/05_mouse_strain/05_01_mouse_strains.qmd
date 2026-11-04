@@ -1,0 +1,151 @@
+## Validate with B6 and Balbc
+- S0066 - B6 lung
+- S0075 - Balbc lung
+```{r mouse_strain_make_sobj}
+#| dependson: [read_raw_mouse, scanbit_run_mouse]
+merged_norm_mouse <-
+    qs_read("output/02_snv_calling/rdata/merged/merged_mouse.qs2") %>%
+    JoinLayers() %>%
+    subset(Sample_ID %in% c("S0066", "S0074")) %>%
+    process_seurat()
+
+qs_save(
+    merged_norm_mouse,
+    "output/05_mouse_strain/rdata/merged/merged_norm_mouse.qs2"
+)
+
+merged_norm_mouse$cell_group %>%
+    unique() %>%
+    write_lines("output/05_mouse_strain/keep_clusters.txt")
+
+norm_mouse_dimplot <-
+    DimPlot(
+        merged_norm_mouse,
+        group.by = "cell_group",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE,
+        pt.size = 0.75
+    ) +
+    NoLegend()
+
+ggsave(
+    "output/05_mouse_strain/figures/norm_mouse_dimplot_clusters.pdf",
+    plot = norm_mouse_dimplot,
+    width = 10,
+    height = 10
+)
+```
+
+## Filter the merged bcf file for just these samples
+```{bash mouse_strain_filter_bcfs}
+#| dependson: [scanbit_run_mouse]
+# conda activate scanBit_xkcd_1337 #! Do this before rendering the quarto doc
+
+for cutoff in 5 10 20 30
+do
+bcftools \
+    view \
+    -S output/05_mouse_strain/keep_clusters.txt \
+    output/02_snv_calling/snv/mouse/mergedmouse_snvs_c${cutoff}.bcf \
+    -o output/05_mouse_strain/snv/mergedmouse_snvs_c${cutoff}_filtered.bcf
+done
+```
+
+## Make trees directly from merged bcfs
+This is so the figures and downstream analyses only have B6 and BALB/c
+```{r mouse_strain_trees}
+#| dependson: [mouse_strain_make_sobj]
+min_snvs_per_cluster <- 250
+n_bootstraps <- 10000
+bootstrap_cutoff <- 0.85
+
+dist_worked <-
+    parallel::mclapply(
+        c("5", "10", "20", "30"),
+        mc.cores = 4,
+        mc.preschedule = FALSE,
+        function(cutoff) {
+            group_clusters_by_dist(
+                merged_bcf_file = paste0(
+                    "output/05_mouse_strain/snv/mergedmouse_snvs_c",
+                    cutoff,
+                    "_filtered.bcf"
+                ),
+                output_file = paste0(
+                    "output/05_mouse_strain/snv/mergedmouse_snvs_c",
+                    cutoff,
+                    "_groups.txt"
+                ),
+                min_snvs_per_cluster = min_snvs_per_cluster,
+                n_bootstraps = n_bootstraps,
+                bootstrap_cutoff = bootstrap_cutoff,
+                tree_figure_file = paste0(
+                    "output/05_mouse_strain/snv/mergedmouse_snvs_c",
+                    cutoff,
+                    "_tree.pdf"
+                ),
+                n_comps_file = paste0(
+                    "output/05_mouse_strain/F420_K7M2/mergedmouse_b6_f420_snvs_c",
+                    cutoff,
+                    "_n_comps.txt"
+                ),
+                dist_method = "euclidian", 
+                linkage_method = "ward",
+                verbose = FALSE,
+                other_job_header_options = c(
+                    "--time=8:00:00",
+                    "--partition=himem,general"
+                ),
+                other_batch_options = c(
+                    "ml purge",
+                    "ml miniforge3",
+                    'eval "$(conda shell.bash hook)"'
+                ),
+                sge_q = "",
+                sge_parallel_environment = "",
+                use_apptainer = TRUE
+            )
+        }
+    )
+```
+
+## Merge the tree figures into a supplemental file
+```{r mouse_strain_merge_tree_figures}
+pdf(
+  "output/05_mouse_strain/figures/mergedmouse_snvs_all_trees.pdf",
+  width = 8,
+  height = 8
+)
+for (this_read_depth in c(5, 10, 20, 30)) {
+  this_pdf <- paste0(
+        "output/05_mouse_strain/snv/mergedmouse_snvs_c",
+        this_read_depth,
+        "_tree.pdf"
+      )
+  print(
+    ggplot2::ggplot() +
+    ggpubr::background_image(
+      magick::image_read(this_pdf, density = 300)
+    ) +
+    ggplot2::coord_fixed() +
+    ggplot2::labs(
+      title = paste0(
+        "Minimum read depth: ",
+        this_read_depth
+      ),
+      y = "Genetic distance (arbitrary units)"
+    ) +
+    theme(plot.margin = margin(10, 0, 10, 0, "pt"))
+  )
+}
+dev.off()
+```
+
+
+##
+I want to look over the merged bcfs and quantify the proportion of positions covered by n reads has a variant call.
+
+Then I want to compare these values between the flex data, where any variant call is artifactual and the B6 data, where an unknown proportion of variant calls at any depth are artifactual. This will allow me to estimate the false positive rate for SNV calls in the pipeline.
+
+{{< include analysis_modules/05_mouse_strain/05_02_F420_K7M2_analysis.qmd >}}

@@ -1,0 +1,114 @@
+## Delete failed runs so they don't throw off our average
+```{bash runtime_rm_failed_mpileup}
+del_files=($(grep FAILED \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*_mpileup-*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*_mpileup-*.out \
+    | perl -pe 's/:.+//' \
+    | uniq))
+
+if [ ${#del_files[@]} -gt 0 ]; then
+    rm -- "${del_files[@]}"
+fi
+```
+
+```{bash runtime_grep_mpileup_time}
+#| dependson: [runtime_rm_failed_mpileup]
+grep \
+    "Elapsed seconds" \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*_mpileup-*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*_mpileup-*.out \
+    | perl -pe 's/:Elapsed seconds://' \
+    | cut -f 2 -d " " \
+    | numberStats.pl \
+    > output/09_run_time/counts/mpileup_time.txt
+```
+
+I'm grepping M; here because slurm output double summaries for a couple samples
+```{bash runtime_grep_mpileup_ram}
+#| dependson: [runtime_rm_failed_mpileup]
+grep \
+    "Maximum CPU Memory" \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*_mpileup-*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*_mpileup-*.out \
+    | grep "M;" \
+    | perl -pe 's/.+Maximum CPU Memory://' \
+    | perl -pe 's/M;.+//' \
+    | numberStats.pl \
+    > output/09_run_time/counts/mpileup_ram_M.txt
+```
+
+## Delete failed runs so they don't throw off our average
+```{bash runtime_rm_failed_merge}
+del_files=($(grep FAILED \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*_merge-*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*_merge-*.out \
+    | perl -pe 's/:.+//' \
+    | uniq))
+
+if [ ${#del_files[@]} -gt 0 ]; then
+    rm -- "${del_files[@]}"
+fi
+```
+
+```{bash runtime_grep_merge_time}
+#| dependson: [runtime_rm_failed_merge]
+grep \
+    "Elapsed seconds" \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*_merge-*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*_merge-*.out \
+    | perl -pe 's/:Elapsed seconds://' \
+    | cut -f 2 -d " " \
+    | numberStats.pl \
+    > output/09_run_time/counts/merge_time.txt
+```
+
+I'm grepping M; here because slurm output double summaries for a couple samples
+```{bash runtime_grep_merge_ram}
+#| dependson: [runtime_rm_failed_merge]
+grep \
+    "Maximum CPU Memory" \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*_merge-*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*_merge-*.out \
+    | perl -pe 's/.+Maximum CPU Memory://' \
+    | perl -pe 's/M;.+//' \
+    | numberStats.pl \
+    > output/09_run_time/counts/merge_ram_M.txt
+```
+
+## Delete failed runs so they don't throw off our average
+```{bash runtime_rm_failed_dist}
+del_files=($(grep FAILED \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*dist*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*dist-*.out \
+    | perl -pe 's/:.+//' \
+    | uniq))
+
+if [ ${#del_files[@]} -gt 0 ]; then
+    rm -- "${del_files[@]}"
+fi
+```
+
+```{bash runtime_grep_dist_time}
+#| dependson: [runtime_rm_failed_dist]
+grep \
+    "Elapsed seconds" \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*dist-*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*dist-*.out \
+    | perl -pe 's/:Elapsed seconds://' \
+    | cut -f 2 -d " " \
+    | numberStats.pl \
+    > output/09_run_time/counts/dist_time.txt
+```
+
+I'm grepping M; here because slurm output double summaries for a couple samples
+```{bash runtime_grep_dist_ram}
+#| dependson: [runtime_rm_failed_dist]
+grep \
+    "Maximum CPU Memory" \
+    output/02_snv_calling/snv/human/tempdir/*/slurmOut/*dist-*.out \
+    output/02_snv_calling/snv/mouse/tempdir/slurmOut/*dist-*.out \
+    | perl -pe 's/.+Maximum CPU Memory://' \
+    | perl -pe 's/M;.+//' \
+    | numberStats.pl \
+    > output/09_run_time/counts/dist_ram_M.txt
+```

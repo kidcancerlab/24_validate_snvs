@@ -1,0 +1,326 @@
+run_scevan <- function(
+  sobj,
+  organism,
+  sample_name,
+  temp_dir
+) {
+  # SCEVAN writes a bunch of files to whatever directory you're in and if you
+  # run two instances simultaneously, we need separate temporary directories for
+  # each sample.
+  temp_dir <- tempfile(pattern = sample_name, tmpdir = temp_dir)
+  dir.create(temp_dir, recursive = TRUE)
+
+  counts <- Seurat::GetAssayData(sobj, layer = "counts")
+
+  orig_wd <- getwd()
+
+  setwd(temp_dir)
+  on.exit(setwd(orig_wd), add = TRUE)
+
+  scevan_out <-
+    tryCatch(
+      {
+        SCEVAN::pipelineCNA(
+          count_mtx = counts,
+          sample = sample_name,
+          organism = organism,
+          par_cores = parallelly::availableCores(),
+          SUBCLONES = FALSE
+        )
+      },
+      error = function(e) {
+        message("Error running SCEVAN: ", e)
+        return(NULL)
+      }
+    )
+
+  setwd(orig_wd)
+
+  # Clean up temporary directory
+  unlink(temp_dir, recursive = TRUE)
+
+  scevan_out |>
+    tibble::rownames_to_column(var = "barcode") |>
+    readr::write_tsv(
+      paste0(
+        "output/10_cmp_other_methods/scevan_results/",
+        sample_name,
+        "_scevan_results.tsv"
+      )
+    )
+}
+
+run_scatomic <- function(
+  sobj,
+  sample_name,
+  use_cnvs = TRUE
+) {
+  counts <- Seurat::GetAssayData(sobj, layer = "counts")
+
+  cell_predictions <-
+    scATOMIC::run_scATOMIC(
+      rna_counts = counts,
+      mc.cores = parallelly::availableCores()
+    )
+  scatomic_results <-
+    tryCatch(
+      {
+        scATOMIC::create_summary_matrix(
+          prediction_list = cell_predictions,
+          use_CNVs = use_cnvs,
+          modify_results = TRUE,
+          mc.cores = parallelly::availableCores(),
+          raw_counts = counts,
+          min_prop = 0.5
+        ) |>
+          dplyr::select(
+            dplyr::starts_with("layer_"),
+            dplyr::any_of(c(
+              "scATOMIC_pred",
+              "classification_confidence",
+              "CNV_status",
+              "pan_cancer_cluster"
+            ))
+          )
+      },
+      error = function(e) {
+        message("scATOMIC failed for ", sample_name, " with error: ", e)
+      }
+    )
+
+  if (is.data.frame(scatomic_results)) {
+    scatomic_results |>
+      tibble::rownames_to_column(var = "barcode") |>
+      readr::write_tsv(
+        paste0(
+          "output/10_cmp_other_methods/scatomic_results/",
+          sample_name,
+          "_scatomic_results.tsv"
+        )
+      )
+  }
+}
+
+
+##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Maybe not needed
+get_human_count_matrix <- function(sobj, species = "human") {
+  if (species == "mouse") {
+    counts <- convert_mouse_to_human(Seurat::GetAssayData(
+      sobj,
+      layer = "counts"
+    ))
+  } else if (species == "human") {
+    counts <- Seurat::GetAssayData(sobj, layer = "counts")
+  } else {
+    stop("Unsupported species: ", species)
+  }
+
+  return(counts)
+}
+
+convert_mouse_to_human <- function(counts) {
+  human_genenames <-
+    nichenetr::convert_mouse_to_human_symbols() |>
+    as.character()
+
+  counts <- counts[!is.na(human_genenames), ]
+  rownames(counts) <- human_genenames[!is.na(human_genenames)]
+
+  return(counts)
+}
+
+run_copykat <- function(count_mat, species, temp_dir, sample_name) {
+  if (species == "mouse") {
+    genome <- "mm10"
+  } else if (species == "human") {
+    genome <- "hg20" # same as hg38 - https://github.com/navinlabcode/copykat/issues/4
+  } else {
+    stop("Unsupported species: ", species)
+  }
+
+  orig_wd <- getwd()
+
+  if (!dir.exists(temp_dir)) {
+    dir.create(temp_dir, recursive = TRUE)
+  }
+  setwd(temp_dir)
+  on.exit(setwd(orig_wd), add = TRUE)
+
+  copykat_results <-
+    copykat(
+      rawmat = count_mat,
+      sam.name = sample_name,
+      genome = genome,
+      n.cores = 5
+    )
+
+  setwd(orig_wd)
+
+  qs2::qs_save(
+    copykat_results,
+    paste0(
+      "output/10_cmp_other_methods/copykat_results/rdata/",
+      sample_name,
+      "_copykat_results.qs2"
+    )
+  )
+}
+
+infercna_wrapper <- function(
+  sobj,
+  species,
+  ref_cell_types = c("T cells", "B cells", "NK cells"),
+  sample_name
+) {
+  if (species == "mouse") {
+    infercna::useGenome("mm10")
+  } else if (species == "human") {
+    infercna::useGenome("hg38")
+  } else {
+    stop("Unsupported species: ", species)
+  }
+
+  run_infercna(
+    sobj = sobj,
+    sample_name = sample_name
+  ) |>
+    infercna_call_tumor(sample_name = sample_name)
+}
+
+get_ref_cells <- function(sobj, ref_cell_types, sample_name) {
+  use_ref_cell_types <-
+    ref_cell_types[ref_cell_types %in% unique(sobj$cell_type)]
+
+  # Stop if none of the reference cell types are present in the data
+  if (length(use_ref_cell_types) == 0) {
+    warning(
+      "None of the reference cell types are present in the data for ",
+      "sample: ",
+      sample_name
+    )
+    return(FALSE)
+  }
+
+  reference_cells <-
+    sapply(
+      use_ref_cell_types,
+      function(x) {
+        Seurat::Cells(sobj)[sobj$cell_type %in% x]
+      }
+    )
+
+  return(reference_cells)
+}
+
+run_infercna <- function(sobj, sample_name) {
+  infercna_out <-
+    infercna::infercna(
+      m = Seurat::GetAssayData(sobj, layer = "counts") |> as.matrix(),
+      n = 5000,
+      verbose = TRUE
+    )
+
+  qs2::qs_save(
+    infercna_out,
+    paste0(
+      "output/10_cmp_other_methods/infercna_results/matrix/",
+      sample_name,
+      "_infercna_results.qs2"
+    )
+  )
+
+  return(infercna_out)
+}
+
+infercna_call_tumor <- function(infercna_out, sample_name) {
+  cancer_call <- tryCatch(
+    {
+      infercna::findMalignant(infercna_out, samples = NULL)
+    },
+    error = function(e) {
+      warning("Error in findMalignant: ", e$message)
+      return(FALSE)
+    }
+  )
+
+  if (is.list(cancer_call)) {
+    lapply(names(cancer_call), function(x) {
+      data.frame(group = x, cell = cancer_call[[x]])
+    }) |>
+      dplyr::bind_rows() |>
+      readr::write_tsv(
+        paste0(
+          "output/10_cmp_other_methods/infercna_results/cancer_call/",
+          sample_name,
+          "_infercna_cancer_call.tsv"
+        )
+      )
+  }
+}
+
+order_cells <- function(
+  x,
+  call_cols = c(
+    "scevan_call",
+    "scatomic_call",
+    "numbat_call",
+    "copykat_call",
+    "infercna_call",
+    "scanBit_call"
+  )
+) {
+  call_df <-
+    x |>
+    dplyr::select(cell, all_of(call_cols))
+
+  patterns <-
+    call_df |>
+    dplyr::count(across(all_of(call_cols)), name = "n_cells") |>
+    dplyr::arrange(desc(n_cells)) |>
+    dplyr::mutate(pattern_id = row_number())
+
+  x <-
+    dplyr::left_join(x, patterns)
+
+  #if(!missing(actual_state)) {
+  if ("actual_state" %in% colnames(x)) {
+    x <-
+      x |>
+      dplyr::arrange(actual_state, desc(n_cells))
+  } else {
+    x <-
+      x |>
+      dplyr::arrange(desc(n_cells))
+  }
+  x <- dplyr::mutate(x, cell_order = row_number())
+
+  return(x)
+}
+
+get_clusters_from_qs2 <- function(sample_names, species) {
+  sample_cluster_table <-
+    lapply(
+      sample_names,
+      function(x) {
+        qs_read(paste0(
+          "output/01_process_raw/rdata/individual/",
+          x,
+          "_",
+          species,
+          ".qs2"
+        )) %>%
+          .[[]] %>%
+          select(cell_barcode, cluster_label, individ_clusters, Sample_ID)
+      }
+    ) %>%
+    bind_rows() %>%
+    mutate(cluster_label = paste0(cluster_label, "_c", individ_clusters)) %>%
+    dplyr::rename(
+      cell = cell_barcode,
+      sample = Sample_ID
+    ) %>%
+    as_tibble() %>%
+    select(-individ_clusters)
+
+  return(sample_cluster_table)
+}

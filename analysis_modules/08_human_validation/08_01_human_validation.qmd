@@ -1,0 +1,462 @@
+## Plot bootstraps from human sample validation
+```{r human_val_bootstraps}
+bootstrap_pointplot <-
+    read_tsv(
+        "output/human_bootstraps.txt",
+        show_col_types = FALSE
+    ) %>%
+    pivot_longer(
+        cols = -sample,
+        names_to = "cutoff",
+        values_to = "bootstrap"
+    ) %>%
+    mutate(
+        cutoff = str_remove(cutoff, "c") %>%
+            factor(levels = c("5", "10", "20", "30"))
+    ) %>%
+    left_join(
+        read_tsv(
+            "misc/validation_geo_metadata.tsv",
+            show_col_types = FALSE
+        ) %>%
+            select("Sample_ID", "tumor_type", "sample_group") %>%
+            distinct() %>%
+            filter(
+                sample_group %in%
+                    c("tumor validation", "healthy samples")
+            ) %>%
+            dplyr::rename(sample = "Sample_ID") %>%
+            mutate(
+                sample_group = str_remove(sample_group, " .+") %>%
+                    str_to_sentence(),
+                tumor_type = str_replace(tumor_type, "healthy", "Healthy"),
+            ),
+        by = "sample"
+    ) %>%
+    ggplot(
+        aes(
+            x = cutoff,
+            y = bootstrap,
+            color = tumor_type,
+            shape = sample_group
+        )
+    ) +
+    ggbeeswarm::geom_beeswarm(cex = 1, size = 4) +
+    scale_shape_manual(values = c(18, 16)) +
+    scale_color_manual(values = c(
+        "#D43F3AFF",
+        "#EEA236FF",
+        "#3E7E3EFF",
+        "blue",
+        "#5CB85CFF",
+        "#46B8DAFF",
+        "#9632B8FF"
+    )) +
+    labs(
+        x = "Minimum read depth cutoff",
+        y = "Top node bootstrap value",
+        color = "Tumor type",
+        shape = "Tumor or healthy",
+        title = "Top Node Bootstrap Value of Human Tumor and Normal Samples"
+    )
+
+# Size points by median nCount to show quality
+# Maybe violin
+
+ggsave(
+    "output/08_human_validation/figures/human_bootstrap_beeswarm.pdf",
+    bootstrap_pointplot,
+    width = 8,
+    height = 6
+)
+
+dodge_width <- 0.75
+
+bootstrap_boxplot <-
+    read_tsv(
+        "output/human_bootstraps.txt",
+        show_col_types = FALSE
+    ) %>%
+    #filter(!sample %in% c("G0039", "G0040", "G0041", "G0042", "G0043")) %>% # low quality samples
+    pivot_longer(
+        cols = -sample,
+        names_to = "cutoff",
+        values_to = "bootstrap"
+    ) %>%
+    mutate(
+        cutoff = str_remove(cutoff, "c") %>%
+            factor(levels = c("5", "10", "20", "30"))
+    ) %>%
+    left_join(
+        read_tsv(
+            "misc/validation_geo_metadata.tsv",
+            show_col_types = FALSE
+        ) %>%
+            select("Sample_ID", "tumor_type", "sample_group") %>%
+            distinct() %>%
+            filter(
+                sample_group %in%
+                    c("tumor validation", "healthy samples")
+            ) %>%
+            dplyr::rename(sample = "Sample_ID") %>%
+            mutate(
+                sample_group = str_remove(sample_group, " .+") %>%
+                    str_to_sentence(),
+                tumor_type = str_replace(tumor_type, "healthy", "Healthy") %>%
+                    as.factor() %>%
+                    fct_relevel("Healthy"),
+            ),
+        by = "sample"
+    ) %>%
+    ggplot(
+        aes(
+            x = cutoff,
+            y = bootstrap,
+            fill = tumor_type
+        )
+    ) +
+    geom_hline(yintercept = 85, linetype = "dashed", color = "red") +
+    geom_boxplot(
+        position = position_dodge(width = dodge_width),
+        outlier.alpha = 0,
+        alpha = 0.5
+    ) +
+    geom_point(
+        aes(
+            group = tumor_type,
+            color = tumor_type
+        ),
+        position = ggbeeswarm::position_beeswarm(
+            dodge.width = dodge_width,
+            cex = 0.1
+        ),
+        alpha = 1
+    ) +
+    labs(
+        x = "Minimum read depth cutoff",
+        y = "Top node bootstrap value",
+        title = "Top Node Bootstrap Value of Human Tumor and Normal Samples",
+        color = "Tumor type"
+    )
+
+ggsave(
+    "output/08_human_validation/figures/human_bootstrap_boxplot2.pdf",
+    bootstrap_boxplot,
+    width = 8,
+    height = 4
+)
+```
+
+## FeaturePlots for figure 4
+```{r human_val_featureplots}
+g0013 <- qs_read("output/01_process_raw/rdata/individual/G0013_human.qs2")
+
+g0013$cluster_label <-
+    paste0(g0013$cluster_label, "_c", g0013$individ_clusters)
+
+g13_vlnplot <-
+    VlnPlot(
+        g0013,
+        features = c("RUNX2", "SATB2", "COL1A1", "COL1A2"),
+        ncol = 1,
+        group.by = "cluster_label",
+        alpha = 0,
+        pt.size = 0
+    )
+
+ggsave(
+    "output/08_human_validation/figures/g13_vlnplot.pdf",
+    g13_vlnplot,
+    width = 6,
+    height = 15
+)
+
+g13_cluster_dimplot <-
+    DimPlot(
+        g0013,
+        group.by = "cluster_label",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE
+    ) +
+    NoLegend() +
+    coord_fixed()
+
+ggsave(
+    "output/08_human_validation/figures/g13_cluster_dimplot.pdf",
+    g13_cluster_dimplot,
+    width = 6,
+    height = 6
+)
+```
+
+cluster 7 in G0041 had low XIST and a bit high for ZP3 - maybe oocytes?
+Cluster 0 in G0042 was distinct
+We are no longer doing this since we removed healthy ovary samples
+```{r human_val_oocyte}
+#| eval: false
+ovary_samples <-
+    merge(
+        qs_read("output/01_process_raw/rdata/individual/G0041_human.qs2"),
+        qs_read("output/01_process_raw/rdata/individual/G0042_human.qs2")
+    ) %>%
+    process_seurat()
+
+ovary_samples$cluster <-
+    paste(ovary_samples$Sample_ID, ovary_samples$individ_clusters)
+
+DimPlot(
+    ovary_samples,
+    group.by = "cluster",
+    label = TRUE,
+    label.box = TRUE,
+    repel = TRUE
+)
+```
+
+```{r human_val_g41}
+#| eval: FALSE
+calc_variant_variability(
+    merged_bcf_file = "output/02_snv_calling/snv/human/G0041/mergedsnvs_G0041_c10.bcf",
+    log_base = "output/G41_log",
+    output_file = "output/08_human_validation/mergedsnvs_G0041_variable_variants.tsv",
+    group_1 = "Ovary_pt_3_c7", # Group_1 is tumor
+    group_2 = paste(
+        "Ovary_pt_3_c0",
+        "Ovary_pt_3_c1",
+        "Ovary_pt_3_c2",
+        "Ovary_pt_3_c3",
+        "Ovary_pt_3_c4",
+        "Ovary_pt_3_c5",
+        "Ovary_pt_3_c6",
+        "Ovary_pt_3_c8",
+        "Ovary_pt_3_c9",
+        sep = ","
+    ),
+    other_job_header_options = c("--time=05:00:00"),
+    other_batch_options = c(
+        "module purge",
+        "module load miniforge3",
+        'eval "$(conda shell.bash hook)"'
+    ),
+    job_scheduler = "slurm",
+    use_apptainer = TRUE
+)
+
+g41 <- qs_read("output/01_process_raw/rdata/individual/G0041_human.qs2")
+g41_cell_barcodes <-
+    g41 %>%
+    colnames() %>%
+    paste(collapse = " ")
+
+# I should filter variable_variants_file before I give it to call_variants_single_cell
+
+call_variants_single_cell(
+    bam_to_use = "output/cellranger_out/G0041/possorted_genome_bam.bam",
+    variable_variants_file = "output/08_human_validation/mergedsnvs_G0041_variable_variants.tsv",
+    cell_barcodes = g41_cell_barcodes,
+    output_file = "output/08_human_validation/cell_variant_calls_g41.tsv",
+    min_depth = 3,
+    variant_diff_cutoff = 1,
+    ploidy = "GRCh38",
+    ref_fasta = "/home/gdrobertslab/lab/GenRef/10x-hg38/fasta/genome.fa",
+    job_base = "cell_vars",
+    log_base = "slurm_cell_vars",
+    submit = TRUE,
+    other_job_header_options = c("--time=12:00:00"),
+    other_batch_options = c( # Just here as examples of things you might put
+        "module purge",
+        "module load miniforge3",
+        'eval "$(conda shell.bash hook)"'
+    )
+)
+
+count_to_call <-
+    c(
+        "0" = "0/0",
+        "1" = "0/1",
+        "2" = "1/1"
+    )
+
+genotype_info <-
+    read_tsv(
+        "output/08_human_validation/mergedsnvs_G0041_variable_variants.tsv",
+        show_col_types = FALSE
+    ) %>%
+    filter(cross_minus_within_dist >= 1) %>%
+    select(
+        -group_1_within_dist,
+        -group_2_within_dist,
+        -cross_group_dist,
+        -within_groups_mean_dist,
+        -cross_minus_within_dist
+    ) %>%
+    mutate(
+        mean_group_1_alts = round(mean_group_1_alts),
+        mean_group_2_alts = round(mean_group_2_alts),
+        group_1_genotype = count_to_call[as.character(mean_group_1_alts)],
+        group_2_genotype = count_to_call[as.character(mean_group_2_alts)],
+        pos = paste(chr, pos, sep = "_")
+    )
+
+tumor_genotype_profile <-
+    genotype_info %>%
+    pull(group_1_genotype, name = pos)
+
+normal_genotype_profile <-
+    genotype_info %>%
+    pull(group_2_genotype, name = pos)
+
+single_call_meta <-
+    read_tsv(
+        "output/08_human_validation/cell_variant_calls_g41.tsv",
+        show_col_types = FALSE
+    ) %>%
+    mutate(
+        pos = paste(chr, pos, sep = "_"),
+        tumor_genotype = tumor_genotype_profile[pos],
+        normal_genotype = normal_genotype_profile[pos],
+        call = if_else(
+            call == 1,
+            "0/1",
+            call
+        )
+    ) %>%
+    mutate(
+        call = if_else(
+            call == 0,
+            "0/0",
+            call
+        )
+    ) %>%
+    select(-chr, -ref, -alt) %>%
+    select(-tumor_genotype, -normal_genotype) %>%
+    pivot_wider( # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!This is making a tibble with a bunch of lists for columns
+        id_cols = c(cell_barcode),
+        names_from = pos,
+        values_from = call
+    ) %>%
+    column_to_rownames("cell_barcode")
+
+single_call_meta <- single_call_meta[colnames(g41), ]
+
+
+g41$test <- single_call_meta$chrM_13071
+g412 <- AddMetaData(g41, single_call_meta[, 1:10])
+g41$has_calls <- !is.na(g41$prop_tumor_call)
+g41$prop_tumor_call[!g41$has_calls] <- 0.1
+```
+
+```{r human_val_ncount_clust}
+#| eval: FALSE
+sample_names <-
+    read_tsv(
+        "output/human_bootstraps.txt",
+        show_col_types = FALSE
+    ) %>%
+    pull(sample)
+
+cluster_ncounts <-
+    parallel::mclapply(
+        sample_names,
+        mc.preschedule = FALSE,
+        mc.cores = 5,
+        function(x) {
+            qs_read(paste0(
+                "output/01_process_raw/rdata/individual/",
+                x,
+                "_human.qs2"
+            ))@meta.data %>%
+                group_by(Sample_ID, individ_clusters) %>%
+                summarize(
+                    mean_ncount = mean(nCount_RNA),
+                    median_ncount = median(nCount_RNA),
+                    sum_ncount = sum(nCount_RNA),
+                    .groups = "drop"
+                )
+        }
+    ) %>%
+    bind_rows()
+```
+
+## Make a pdf for supplemental figure showing all human validation trees
+```{r human_val_trees_pdf}
+tree_table <-
+    tibble(
+        downsample_pdfs =
+            list.files(
+                path = "output/02_snv_calling/snv/human",
+                pattern = "*_10_tree.pdf",
+                full.names = TRUE
+            )
+    )
+
+tree_table$sample <-
+    tree_table$downsample_pdfs %>%
+    str_remove(".+snvs_") %>%
+    str_remove("_.+")
+
+pdf(
+    "output/08_human_validation/figures/combined_human_validation_trees.pdf",
+    width = 6,
+    height = 15
+)
+
+for (i in seq_len(nrow(tree_table))) {
+    sobj <-
+        qs_read(paste0(
+            "output/01_process_raw/rdata/individual/",
+            tree_table$sample[i],
+            "_human.qs2"
+        ))
+    tree <-
+        ggplot2::ggplot() +
+        ggpubr::background_image(
+            magick::image_read(tree_table$downsample_pdfs[i], density = 300)
+        ) +
+        ggplot2::coord_fixed() +
+        ggplot2::labs(
+            title = paste0(
+                "Sample: ",
+                tree_table$sample[i]
+            )
+        ) +
+        theme(plot.margin = margin(10, 0, 10, 0, "pt"))
+
+    dimplot_clusters <-
+        DimPlot(
+            sobj,
+            group.by = "individ_clusters",
+            label = TRUE,
+            label.box = TRUE,
+            repel = TRUE,
+            label.size = 1.5
+        ) +
+        NoLegend() +
+        labs(title = "Transcriptional Clusters") +
+        theme(plot.margin = margin(10, 10, 10, 10, "pt"))
+
+    dimplot_celltypes <-
+        DimPlot(
+            sobj,
+            group.by = "cell_type",
+            label = TRUE,
+            label.box = TRUE,
+            repel = TRUE,
+            label.size = 1.5
+        ) +
+        NoLegend() +
+        labs(title = "Cell Type Annotations") +
+        theme(plot.margin = margin(10, 10, 10, 10, "pt"))
+
+    # Merge the three plots
+    print(
+        gridExtra::grid.arrange(
+            grobs = list(tree, dimplot_clusters, dimplot_celltypes)
+        )
+    )
+    rm(sobj, tree, dimplot_clusters, dimplot_celltypes)
+}
+
+dev.off()
+```
