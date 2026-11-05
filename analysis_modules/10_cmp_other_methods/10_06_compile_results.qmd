@@ -728,3 +728,67 @@ ggsave(
   height = 7.5
 )
 ```
+
+## Interrater reliability
+```{r other_meth_irr}
+human_calls <- read_tsv(
+  "output/10_cmp_other_methods/human_calls.tsv",
+  show_col_types = FALSE
+)
+colnames(human_calls) <- recode(
+      colnames(human_calls),
+      "scevan_call" = "SCEVAN",
+      "copykat_call" = "CopyKAT",
+      "infercna_call" = "InferCNA",
+      "scanBit_call" = "ScanBit",
+      "actual_state" = "Actual State",
+      "scatomic_call" = "SCATOMIC",
+      "numbat_call" = "Numbat"
+    )
+
+combinations <-
+  c("SCEVAN", "CopyKAT", "InferCNA", "ScanBit", "SCATOMIC", "Numbat") %>%
+  combn(2, simplify = FALSE)
+
+all_irr <- lapply(
+  combinations,
+  function(this_combination) {
+    this_combination <- sort(this_combination)
+    out <- tibble(
+      method1 = this_combination[1],
+      method2 = this_combination[2],
+      irr = irr::agree(human_calls %>% select(all_of(this_combination)))$value
+    )
+
+    return(out)
+  }
+) %>%
+  bind_rows()
+
+ggsave(
+  filename = "output/10_cmp_other_methods/figures/irr_heatmap.pdf",
+  plot = ggplot(
+    all_irr,
+    aes(
+      x = method1,
+      y = method2,
+      fill = irr,
+      label = round(irr, 2)
+    )
+  ) +
+    geom_tile() +
+    geom_text(color = "black", size = 3) +
+    scale_fill_gradient(low = "gray", high = "red") +
+    coord_fixed() +
+    labs(
+      x = NULL,
+      y = NULL,
+      fill = "Interrater\nreliability",
+      title = "Interrater Reliability Between Orthogonal Methods"
+    ),
+  width = 6,
+  height = 6
+)
+
+
+```
