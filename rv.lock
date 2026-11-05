@@ -2565,6 +2565,15 @@ dependencies = [
 ]
 
 [[packages]]
+name = "irr"
+version = "0.85"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = [
+    "lpSolve",
+]
+
+[[packages]]
 name = "isoband"
 version = "0.3.0"
 source = { repository = "https://cran.rstudio.com/" }
@@ -2785,6 +2794,13 @@ force_source = false
 dependencies = [
     "zoo",
 ]
+
+[[packages]]
+name = "lpSolve"
+version = "5.6.23"
+source = { repository = "https://cran.rstudio.com/" }
+force_source = false
+dependencies = []
 
 [[packages]]
 name = "lubridate"
