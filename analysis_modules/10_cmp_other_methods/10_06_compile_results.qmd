@@ -250,6 +250,11 @@ color_key <- list(
 
 alternate_method_call_plot <-
   human_calls %>%
+  left_join(
+    read_tsv("misc/sample_type_table.tsv", show_col_types = FALSE)
+  ) %>%
+  mutate(sample = paste0(sample, "\n", sample_type)) %>%
+  select(-sample_type) %>%
   pivot_longer(
     cols = ends_with("_call"),
     names_to = "method",
@@ -341,6 +346,10 @@ chosen_tumor_samples <-
 alternate_method_call_plot_sub <-
   human_calls %>%
   filter(sample %in% c(chosen_healthy_samples, chosen_tumor_samples)) %>%
+  left_join(
+    read_tsv("misc/sample_type_table.tsv", show_col_types = FALSE)
+  ) %>%
+  mutate(sample = paste0(sample, "\n", sample_type)) %>%
   pivot_longer(
     cols = ends_with("_call"),
     names_to = "method",
@@ -419,7 +428,12 @@ human_calls <- read_tsv("output/10_cmp_other_methods/human_calls.tsv")
 human_sample_metadata <- read_tsv(
   "misc/validation_geo_metadata.tsv",
   show_col_types = FALSE
-)
+) %>%
+  left_join(
+    read_tsv("misc/sample_type_table.tsv", show_col_types = FALSE) %>%
+    dplyr::rename(Sample_ID = sample)
+  ) %>%
+  mutate(sample = paste0(Sample_ID, "\n", sample_type))
 
 human_samples <-
   human_sample_metadata %>%
@@ -533,7 +547,7 @@ for (this_sample in human_samples) {
           "Sample: ",
           this_sample,
           ": ",
-          this_metadata$description[1]
+          this_metadata$sample_type[1]
         )
       ),
     width = 10,
@@ -547,14 +561,14 @@ for (this_sample in human_samples) {
 ```{r other_meth_combine_dimplots}
 #| dependson: [other_meth_plot_human_dimplots]
 panel_files <- list.files(
-    path = "output/10_cmp_other_methods/figures/dimplots",
-    pattern = "\\.pdf$",
-    full.names = TRUE
+  path = "output/10_cmp_other_methods/figures/dimplots",
+  pattern = "\\.pdf$",
+  full.names = TRUE
 )
 
 qpdf::pdf_combine(
-    input = panel_files,
-    output = "output/10_cmp_other_methods/figures/combined_dimplots.pdf"
+  input = panel_files,
+  output = "output/10_cmp_other_methods/figures/combined_dimplots.pdf"
 )
 ```
 
@@ -628,6 +642,10 @@ mouse_calls <-
   ) %>%
   filter(sample %in% mouse_samples) %>%
   full_join(sample_cluster_table, by = c("sample", "cell")) %>%
+  left_join(
+    read_tsv("misc/sample_type_table.tsv", show_col_types = FALSE)
+  ) %>%
+  mutate(sample = paste0(sample, "\n", sample_type)) %>%
   group_by(sample) %>%
   order_cells(
     call_cols = c(
@@ -638,6 +656,24 @@ mouse_calls <-
       "scanBit_call"
     )
   )
+
+mouse_calls %>%
+  select(-scatomic_call, -numbat_call) %>%
+  pivot_longer(
+    cols = c(ends_with("_call")),
+    names_to = "method",
+    values_to = "call"
+  ) %>%
+  group_by(method) %>%
+  select(sample, method, call, actual_state) %>%
+  summarize(
+    total_right = sum(call == actual_state),
+    total = n(),
+    perc_right = sum(call == actual_state) / n() * 100,
+    perc_right_no_unassigned = sum(call == actual_state & call != "Unassigned") / sum(call != "Unassigned") * 100
+  ) %>%
+  write_tsv("output/10_cmp_other_methods/known_tumor_summary_results.tsv")
+
 
 alternate_method_known_plot <-
   mouse_calls %>%
@@ -705,8 +741,11 @@ ggsave(
 
 ```{r other_meth_merge_meth_plots}
 #| dependson: [other_meth_plot_transgene, other_meth_plot_human]
-tag_font_size <- 15
+tag_font_size <- 25
+title_font_size <- 15
 y_font_size <- 10
+x_font_size <- 15
+legend_font_size <- 10
 ggsave(
   filename = "output/10_cmp_other_methods/figures/merged_alternate_method_call_plot.pdf",
   plot = (alternate_method_known_plot +
@@ -715,16 +754,145 @@ ggsave(
       y = NULL
     ) +
     theme(
-      axis.text.y = element_text(size = y_font_size, face = "bold", ),
-      plot.tag = element_text(size = tag_font_size, face = "bold")
+      axis.title.x = element_text(size = x_font_size, face = "bold"),
+      axis.text.y = element_text(size = y_font_size, face = "bold"),
+      title = element_text(size = title_font_size, face = "bold"),
+      plot.tag = element_text(size = tag_font_size, face = "bold"),
+      legend.title = element_text(size = legend_font_size, face = "bold")
     )) /
     (alternate_method_call_plot_sub +
       labs(tag = "B", y = NULL) +
       theme(
+        axis.title.x = element_text(size = x_font_size, face = "bold"),
         axis.text.y = element_text(size = y_font_size, face = "bold"),
-        plot.tag = element_text(size = tag_font_size, face = "bold")
+        title = element_text(size = title_font_size, face = "bold"),
+        plot.tag = element_text(size = tag_font_size, face = "bold"),
+        legend.title = element_text(size = legend_font_size, face = "bold")
       )),
   width = 10,
   height = 7.5
+)
+```
+
+## Interrater reliability
+```{r other_meth_irr}
+human_calls <-
+  read_tsv(
+    "output/10_cmp_other_methods/human_calls.tsv",
+    show_col_types = FALSE
+  ) %>%
+  left_join(
+    read_tsv("misc/sample_type_table.tsv", show_col_types = FALSE)
+  ) %>%
+  mutate(sample = paste0(sample, ": ", sample_type))
+
+colnames(human_calls) <- recode(
+  colnames(human_calls),
+  "scevan_call" = "SCEVAN",
+  "copykat_call" = "CopyKAT",
+  "infercna_call" = "InferCNA",
+  "scanBit_call" = "ScanBit",
+  "actual_state" = "Actual State",
+  "scatomic_call" = "SCATOMIC",
+  "numbat_call" = "Numbat"
+)
+
+calc_irr <- function(
+  table,
+  columns = c("SCEVAN", "CopyKAT", "InferCNA", "ScanBit", "SCATOMIC", "Numbat"),
+  sample_name = "sample"
+) {
+  combinations <-
+    columns %>%
+    combn(2, simplify = FALSE)
+
+  all_irr <- lapply(
+    combinations,
+    function(this_combination) {
+      this_combination <- sort(this_combination)
+      out <- tibble(
+        sample = sample_name,
+        method1 = this_combination[1],
+        method2 = this_combination[2],
+        irr = irr::agree(table %>% select(all_of(this_combination)))$value
+      )
+
+      return(out)
+    }
+  ) %>%
+    bind_rows()
+
+  return(all_irr)
+}
+
+irr_results <- calc_irr(human_calls)
+
+ggsave(
+  filename = "output/10_cmp_other_methods/figures/irr_heatmap.pdf",
+  plot = ggplot(
+    irr_results,
+    aes(
+      x = method1,
+      y = method2,
+      fill = irr,
+      label = round(irr, 1)
+    )
+  ) +
+    geom_tile() +
+    geom_text(color = "black", size = 4, fontface = "bold") +
+    scale_fill_gradient(low = "gray", high = "red") +
+    coord_fixed() +
+    labs(
+      x = NULL,
+      y = NULL,
+      fill = "Interrater\nreliability",
+      title = "Interrater Reliability Between Orthogonal Methods"
+    ) +
+    theme(
+      axis.text.x = element_text(face = "bold", size = 10),
+      axis.text.y = element_text(face = "bold", size = 10),
+      title = element_text(size = 12, face = "bold"),
+      legend.title = element_text(size = 10, face = "bold")
+    ),
+  width = 6,
+  height = 6
+)
+
+samplewise_irr <-
+  human_calls %>%
+  group_by(sample) %>%
+  group_map(~ calc_irr(.x, sample_name = .y$sample)) %>%
+  bind_rows()
+
+ggsave(
+  filename = "output/10_cmp_other_methods/figures/samplewise_irr_heatmap.pdf",
+  plot = ggplot(
+    samplewise_irr,
+    aes(
+      x = method1,
+      y = method2,
+      fill = irr,
+      label = round(irr, 1)
+    )
+  ) +
+    geom_tile() +
+    geom_text(color = "black", size = 3) +
+    scale_fill_gradient(low = "gray", high = "red") +
+    coord_fixed() +
+    labs(
+      x = NULL,
+      y = NULL,
+      fill = "Interrater\nreliability",
+      title = "Interrater Reliability Between Orthogonal Methods For Each Sample"
+    ) +
+    facet_wrap(~sample) +
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1, face = "bold"),
+      axis.text.y = element_text(face = "bold"),
+      title = element_text(size = 15, face = "bold"),
+      legend.title = element_text(size = 10, face = "bold")
+    ),
+  width = 15,
+  height = 15
 )
 ```
